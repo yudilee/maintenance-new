@@ -276,6 +276,14 @@
                         text: '<i class="bi bi-layout-three-columns me-1"></i> Columns',
                         columns: ':not(.noVis)' // Exclude columns with class noVis from toggle
                     },
+                    { 
+                        text: '<i class="bi bi-arrow-counterclockwise me-1"></i> Reset',
+                        className: 'btn btn-warning btn-sm text-dark',
+                        action: function (e, dt, node, config) {
+                            dt.state.clear();
+                            window.location.reload();
+                        }
+                    },
                     { extend: 'excel', className: 'btn btn-success btn-sm', text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel' },
                     { extend: 'csv', className: 'btn btn-primary btn-sm', text: '<i class="bi bi-filetype-csv me-1"></i> CSV' },
                     { extend: 'print', className: 'btn btn-secondary btn-sm', text: '<i class="bi bi-printer me-1"></i> Print' }

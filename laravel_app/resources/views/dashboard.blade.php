@@ -523,6 +523,11 @@
                                 <div class="text-center p-2 rounded" style="background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);">
                                     <div class="stat-value text-primary" style="font-size: 1.3rem;">{{ number_format($summary['rental_type_summary']['Subscription'] ?? 0) }}</div>
                                     <div class="small text-muted">Subscription</div>
+                                    @if(isset($summary['unique_rental_contracts']['Subscription']))
+                                    <div class="text-muted" style="font-size: 0.65rem; margin-top: 2px;">
+                                        <i class="bi bi-file-text"></i> {{ number_format($summary['unique_rental_contracts']['Subscription']) }} contracts
+                                    </div>
+                                    @endif
                                 </div>
                             </a>
                         </div>
@@ -531,6 +536,11 @@
                                 <div class="text-center p-2 rounded" style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);">
                                     <div class="stat-value text-warning" style="font-size: 1.3rem;">{{ number_format($summary['rental_type_summary']['Regular'] ?? 0) }}</div>
                                     <div class="small text-muted">Regular</div>
+                                    @if(isset($summary['unique_rental_contracts']['Regular']))
+                                    <div class="text-muted" style="font-size: 0.65rem; margin-top: 2px;">
+                                        <i class="bi bi-file-text"></i> {{ number_format($summary['unique_rental_contracts']['Regular']) }} contracts
+                                    </div>
+                                    @endif
                                 </div>
                             </a>
                         </div>
@@ -622,7 +632,7 @@
                     <!-- Replacement Sub-items -->
                     <div style="margin-left: 1rem; border-left: 2px solid var(--border-color); padding-left: 0.5rem; margin-bottom: 0.5rem;">
                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Replacement - Service']) }}" class="breakdown-item">
-                            <span>Service</span>
+                            <span>Service/In Stock</span>
                             <span class="badge badge-info">{{ $summary['rented_in_customer']['details']['Replacement - Service'] ?? 0 }}</span>
                         </a>
                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Replacement - RBO']) }}" class="breakdown-item">

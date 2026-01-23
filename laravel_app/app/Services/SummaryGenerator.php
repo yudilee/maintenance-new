@@ -41,6 +41,10 @@ class SummaryGenerator
                 'Subscription' => 0,
                 'Regular' => 0,
             ],
+            'unique_rental_contracts' => [
+                'Subscription' => 0,
+                'Regular' => 0,
+            ],
             'in_stock' => [
                 'total' => 0,
                 'details' => [
@@ -143,6 +147,10 @@ class SummaryGenerator
         // Calculate today's Excel serial number
         $todaySerial = $baseDate->diffInDays($today); // e.g., ~46044 for 2026-01-23
 
+        // Track unique rental IDs for contract counting
+        $uniqueSubscriptionRentals = [];
+        $uniqueRegularRentals = [];
+
         $items = [];
         foreach ($data as $i => $row) {
              // if ($i < 2) echo "Row $i: " . print_r($row, true) . "\n";
@@ -189,12 +197,18 @@ class SummaryGenerator
                 }
                 
                 // Rental Type Count (Subscription/Regular) - Count for ALL active fleet (excluding Sold)
-                // MODIFIED: Only count if isActiveRental is true
-                if ($isActiveRental) {
-                    if ($rentalType === 'Subscription') {
-                        $summary['rental_type_summary']['Subscription'] += $qty;
-                    } elseif ($rentalType === 'Regular') {
-                        $summary['rental_type_summary']['Regular'] += $qty;
+                // MODIFIED: Include Pending in Total Count (User preference: 2992)
+                if ($rentalType === 'Subscription') {
+                    $summary['rental_type_summary']['Subscription'] += $qty;
+                    // Track unique rental contracts (not double-counting replacements)
+                    if (!empty($rentalId) && !isset($uniqueSubscriptionRentals[$rentalId])) {
+                        $uniqueSubscriptionRentals[$rentalId] = true;
+                    }
+                } elseif ($rentalType === 'Regular') {
+                    $summary['rental_type_summary']['Regular'] += $qty;
+                    // Track unique rental contracts
+                    if (!empty($rentalId) && !isset($uniqueRegularRentals[$rentalId])) {
+                        $uniqueRegularRentals[$rentalId] = true;
                     }
                 }
             }
@@ -388,6 +402,10 @@ class SummaryGenerator
             }
         }
         $summary['rental_pairs_count'] = $rentalPairsCount;
+        
+        // Populate unique rental contract counts
+        $summary['unique_rental_contracts']['Subscription'] = count($uniqueSubscriptionRentals);
+        $summary['unique_rental_contracts']['Regular'] = count($uniqueRegularRentals);
         
         return ['summary' => $summary, 'items' => $items];
     }
