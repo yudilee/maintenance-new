@@ -417,7 +417,7 @@
             query: {
                 operator: 'AND',
                 rules: [
-                    { field: 'lot_number', operator: 'contains', value: '' }
+                    { logic: 'AND', field: 'lot_number', operator: 'contains', value: '' }
                 ]
             },
 
@@ -475,7 +475,7 @@
             },
 
             addRule(group) {
-                group.rules.push({ field: 'lot_number', operator: 'contains', value: '' });
+                group.rules.push({ logic: 'AND', field: 'lot_number', operator: 'contains', value: '' });
             },
 
             removeRule(group, index) {
@@ -483,7 +483,7 @@
             },
 
             resetQuery() {
-                this.query = { operator: 'AND', rules: [{ field: 'lot_number', operator: 'contains', value: '' }] };
+                this.query = { operator: 'AND', rules: [{ logic: 'AND', field: 'lot_number', operator: 'contains', value: '' }] };
                 this.page = 1;
                 this.fetchData();
             },

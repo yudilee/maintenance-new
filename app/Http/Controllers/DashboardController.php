@@ -313,37 +313,32 @@ class DashboardController extends Controller
 
     private function applyAdvancedFilters($query, $group)
     {
-        // $group is { operator: 'AND'|'OR', rules: [] }
-        $operator = strtoupper($group['operator'] ?? 'AND');
         $rules = $group['rules'] ?? [];
+        
+        $query->where(function ($q) use ($rules) {
+            foreach ($rules as $index => $rule) {
+                // Logic: AND / OR for this rule relative to the chain
+                $logic = isset($rule['logic']) ? strtoupper($rule['logic']) : 'AND';
 
-        $query->where(function ($q) use ($operator, $rules) {
-            foreach ($rules as $rule) {
-                // If rule has 'rules', it's a nested group
-                if (isset($rule['rules'])) {
-                    if ($operator === 'OR') {
-                        $q->orWhere(function ($subQ) use ($rule) {
-                            $this->applyAdvancedFilters($subQ, $rule);
-                        });
+                // Closure to apply the single rule
+                $applyRule = function($subQ) use ($rule) {
+                    // Check if it's a nested group (recursive)
+                    if (isset($rule['rules'])) {
+                        $this->applyAdvancedFilters($subQ, $rule);
                     } else {
-                        $q->where(function ($subQ) use ($rule) {
-                            $this->applyAdvancedFilters($subQ, $rule);
-                        });
+                        // It's a condition
+                        $this->applyCondition($subQ, $rule['field'], $rule['operator'], $rule['value']);
                     }
-                    continue;
-                }
+                };
 
-                // It's a condition
-                $field = $rule['field'];
-                $op = $rule['operator'];
-                $value = $rule['value'];
-
-                if ($operator === 'OR') {
-                    $q->orWhere(function ($subQ) use ($field, $op, $value) {
-                         $this->applyCondition($subQ, $field, $op, $value);
-                    });
+                if ($index === 0) {
+                    $q->where($applyRule);
                 } else {
-                    $this->applyCondition($q, $field, $op, $value);
+                    if ($logic === 'OR') {
+                        $q->orWhere($applyRule);
+                    } else {
+                        $q->where($applyRule);
+                    }
                 }
             }
         });
