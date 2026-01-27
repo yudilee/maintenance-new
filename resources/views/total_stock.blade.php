@@ -3,7 +3,7 @@
 @section('title', 'Total Stock - Advanced Search')
 
 @section('content')
-<div x-data="queryBuilder()" x-init="init()" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden min-h-[600px]">
+<div x-data="queryBuilder()" x-init="init()" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden h-[calc(100vh-140px)] flex flex-col">
     
     <!-- Top Bar -->
     <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

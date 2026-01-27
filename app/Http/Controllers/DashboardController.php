@@ -286,7 +286,7 @@ class DashboardController extends Controller
 
     public function filterTotalStock(Request $request)
     {
-        $query = Item::query()->where('is_sold', false);
+        $query = Item::query()->where('is_sold', false)->where('on_hand_quantity', '>', 0);
         $filters = $request->input('filters', []);
 
         if (!empty($filters)) {
