@@ -19,6 +19,35 @@
         </div>
 
         <div class="flex gap-2">
+            <!-- Saved Views Dropdown -->
+            <div x-data="{ open: false }" class="relative">
+                <button @click="open = !open" @click.away="open = false" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path></svg>
+                    Views
+                </button>
+                <div x-show="open" class="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-20 overflow-hidden">
+                    <div class="px-4 py-2 border-b border-slate-50">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Saved Views</span>
+                    </div>
+                    <div class="max-h-64 overflow-y-auto">
+                        <template x-for="(view, index) in savedViews" :key="index">
+                            <div class="flex items-center justify-between px-4 py-2 hover:bg-slate-50 group">
+                                <button @click="loadView(view); open = false" class="text-sm text-slate-700 font-medium text-left flex-1" x-text="view.name"></button>
+                                <button @click="deleteView(index)" class="text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                </button>
+                            </div>
+                        </template>
+                        <div x-show="savedViews.length === 0" class="px-4 py-3 text-sm text-slate-400 text-center italic">No views saved</div>
+                    </div>
+                    <div class="px-4 py-2 border-t border-slate-50">
+                        <button @click="showSaveModal = true; open = false" class="w-full text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center justify-center gap-1 py-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Save Current
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Columns Dropdown -->
             <div x-data="{ open: false }" class="relative">
                 <button @click="open = !open" @click.away="open = false" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors shadow-sm">
@@ -39,6 +68,11 @@
                 <svg x-show="!isLoading" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 <svg x-show="isLoading" class="animate-spin -ml-1 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                 <span x-text="isLoading ? 'Searching...' : 'Apply Filters'"></span>
+            </button>
+
+            <button @click="exportData()" class="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-md shadow-emerald-200 font-medium whitespace-nowrap">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Export
             </button>
         </div>
     </div>
@@ -415,6 +449,27 @@
             </div>
         </div>
     </div>
+
+    <!-- Save View Modal -->
+    <div x-show="showSaveModal" class="fixed inset-0 z-[100] overflow-y-auto" x-cloak>
+        <div class="flex items-center justify-center min-h-screen p-4 text-center">
+            <div @click="showSaveModal = false" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+            
+            <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 text-left transform transition-all">
+                <h3 class="text-lg font-bold text-slate-800 mb-4">Save Current View</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1">View Name</label>
+                        <input type="text" x-model="newViewName" @keyup.enter="saveView()" placeholder="e.g. Sales Q1, Urgent Stock" class="w-full text-sm border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 py-2">
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                        <button @click="showSaveModal = false" class="flex-1 px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors">Cancel</button>
+                        <button @click="saveView()" class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-100">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -427,6 +482,11 @@
             totalItems: 0,
             page: 1,
             perPage: 50,
+            
+            // Saved Views
+            savedViews: [],
+            showSaveModal: false,
+            newViewName: '',
             
             // Query State
             query: {
@@ -470,6 +530,14 @@
                         }
                     } catch (e) {}
                 }
+
+                // Load saved views
+                let views = localStorage.getItem('total_stock_saved_views');
+                if (views) {
+                    try {
+                        this.savedViews = JSON.parse(views);
+                    } catch (e) {}
+                }
                 
                 this.$watch('columns', (val) => {
                     localStorage.setItem('total_stock_table_columns', JSON.stringify(val));
@@ -501,6 +569,71 @@
                 this.query = { operator: 'AND', rules: [{ logic: 'AND', field: 'lot_number', operator: 'contains', value: '' }] };
                 this.page = 1;
                 this.fetchData();
+            },
+
+            saveView() {
+                if (!this.newViewName.trim()) return;
+                
+                const newView = {
+                    name: this.newViewName.trim(),
+                    query: JSON.parse(JSON.stringify(this.query)),
+                    columns: JSON.parse(JSON.stringify(this.columns)),
+                    createdAt: new Date().toISOString()
+                };
+
+                this.savedViews.push(newView);
+                localStorage.setItem('total_stock_saved_views', JSON.stringify(this.savedViews));
+                
+                this.newViewName = '';
+                this.showSaveModal = false;
+            },
+
+            loadView(view) {
+                this.query = JSON.parse(JSON.stringify(view.query));
+                this.columns = JSON.parse(JSON.stringify(view.columns));
+                this.page = 1;
+                this.fetchData();
+            },
+
+            deleteView(index) {
+                if (confirm('Are you sure you want to delete this view?')) {
+                    this.savedViews.splice(index, 1);
+                    localStorage.setItem('total_stock_saved_views', JSON.stringify(this.savedViews));
+                }
+            },
+
+            exportData() {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '{{ route('total.stock.export') }}';
+                
+                const csrf = document.createElement('input');
+                csrf.type = 'hidden';
+                csrf.name = '_token';
+                csrf.value = '{{ csrf_token() }}';
+                form.appendChild(csrf);
+
+                const filtersInput = document.createElement('input');
+                filtersInput.type = 'hidden';
+                filtersInput.name = 'filters';
+                filtersInput.value = JSON.stringify(this.query);
+                form.appendChild(filtersInput);
+
+                const sortColInput = document.createElement('input');
+                sortColInput.type = 'hidden';
+                sortColInput.name = 'sortCol';
+                sortColInput.value = this.sortCol;
+                form.appendChild(sortColInput);
+
+                const sortAscInput = document.createElement('input');
+                sortAscInput.type = 'hidden';
+                sortAscInput.name = 'sortAsc';
+                sortAscInput.value = this.sortAsc;
+                form.appendChild(sortAscInput);
+
+                document.body.appendChild(form);
+                form.submit();
+                document.body.removeChild(form);
             },
             
             startResize(e, colId) {

@@ -284,13 +284,13 @@ class DashboardController extends Controller
         return view('total_stock', compact('locations', 'products', 'types'));
     }
 
-    public function filterTotalStock(Request $request)
+    public function filterTotalStock(Request $request, InventoryService $inventory)
     {
         $query = Item::query()->where('is_sold', false)->where('on_hand_quantity', '>', 0);
         $filters = $request->input('filters', []);
 
         if (!empty($filters)) {
-            $this->applyAdvancedFilters($query, $filters);
+            $inventory->applyAdvancedFilters($query, $filters);
         }
 
         // Apply sorting
@@ -311,144 +311,19 @@ class DashboardController extends Controller
         return response()->json($items);
     }
 
-    private function applyAdvancedFilters($query, $group)
+    public function exportTotalStock(Request $request)
     {
-        $rules = $group['rules'] ?? [];
+        $filters = $request->input('filters', []);
         
-        $query->where(function ($q) use ($rules) {
-            foreach ($rules as $index => $rule) {
-                // Logic: AND / OR for this rule relative to the chain
-                $logic = isset($rule['logic']) ? strtoupper($rule['logic']) : 'AND';
-
-                // Closure to apply the single rule
-                $applyRule = function($subQ) use ($rule) {
-                    // Check if it's a nested group (recursive)
-                    if (isset($rule['rules'])) {
-                        $this->applyAdvancedFilters($subQ, $rule);
-                    } else {
-                        // It's a condition
-                        $this->applyCondition($subQ, $rule['field'], $rule['operator'], $rule['value']);
-                    }
-                };
-
-                if ($index === 0) {
-                    $q->where($applyRule);
-                } else {
-                    if ($logic === 'OR') {
-                        $q->orWhere($applyRule);
-                    } else {
-                        $q->where($applyRule);
-                    }
-                }
-            }
-        });
-    }
-
-    private function applyCondition($query, $field, $op, $value)
-    {
-        if ($field === 'category') {
-            $inventory = app(\App\Services\InventoryService::class);
-            
-            // Map 'value' to logic
-            if ($value === 'in_stock') $inventory->scopeInStock($query);
-            elseif ($value === 'rented') $inventory->scopeRented($query);
-            elseif ($value === 'in_service') $inventory->scopeInService($query);
-            elseif ($value === 'vendor_rent') $query->where('is_vendor_rent', true);
-            elseif ($value === 'stock_pure') {
-                $inventory->scopeInStock($query)->where(function($q) {
-                    $q->whereNull('rental_id')->orWhere('rental_id', '');
-                });
-            }
-            elseif ($value === 'stock_reserve') {
-                $today = now()->format('Y-m-d');
-                $inventory->scopeInStock($query)->whereNotNull('rental_id')->where('actual_start_rental', '>', $today);
-            }
-            elseif ($value === 'rented_visual') {
-                // Rented in Customer (Location based)
-                $query->where('location', \App\Constants\Location::RENTAL_CUSTOMER);
-            }
-            elseif ($value === 'rented_original') {
-                $inventory->scopeRented($query)
-                    ->whereColumn('lot_number', 'reserved_lot')
-                    ->whereNotNull('reserved_lot')
-                    ->where('reserved_lot', '!=', '')
-                    ->where('is_vendor_rent', false);
-            }
-            elseif ($value === 'rented_replacement_service') {
-                 $inventory->scopeRented($query)
-                    ->whereNotNull('rental_id')
-                    ->where('rental_id', '!=', '')
-                    ->whereColumn('lot_number', '!=', 'reserved_lot')
-                    ->where('is_vendor_rent', false)
-                    ->where('rental_id_count', '>', 1);
-            }
-            elseif ($value === 'rented_replacement_rbo') {
-                 $inventory->scopeRented($query)
-                    ->whereNotNull('rental_id')
-                    ->where('rental_id', '!=', '')
-                    ->whereColumn('lot_number', '!=', 'reserved_lot')
-                    ->where('is_vendor_rent', false)
-                    ->where('rental_id_count', 1);
-            }
-             elseif ($value === 'rented_check_position') {
-                 $inventory->scopeRented($query)
-                    ->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); })
-                    ->where('is_vendor_rent', false);
-            }
-            elseif ($value === 'stock_original_with_replace') {
-                $inventory->scopeInStock($query)->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id_count', '>', 1);
-            }
-            elseif ($value === 'stock_original_no_replace') {
-                $inventory->scopeInStock($query)->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id_count', 1);
-            }
-            elseif (str_starts_with($value, 'service_')) {
-                 $parts = explode('_', $value, 3); // service, TYPE, SUB
-                 // Handle base types
-                 if (count($parts) < 3) {
-                     if ($value == 'service_external') $inventory->scopeExternalService($query);
-                     elseif ($value == 'service_internal') $inventory->scopeInternalService($query);
-                     elseif ($value == 'service_insurance') $inventory->scopeInsurance($query);
-                     return;
-                 }
-                 
-                 $type = $parts[1]; // external, internal, insurance
-                 $sub = $parts[2]; // original_with_replace, etc.
-                 
-                 if ($type == 'external') $inventory->scopeExternalService($query);
-                 elseif ($type == 'internal') $inventory->scopeInternalService($query);
-                 elseif ($type == 'insurance') $inventory->scopeInsurance($query);
-                 
-                 if ($sub == 'original_with_replace') {
-                      $query->whereNotNull('rental_id')->whereColumn('lot_number', 'reserved_lot')->where('rental_id_count', '>', 1);
-                 } elseif ($sub == 'original_no_replace') {
-                      $query->whereNotNull('rental_id')->whereColumn('lot_number', 'reserved_lot')->where('rental_id_count', 1);
-                 } elseif ($sub == 'rented_replacement') {
-                      $query->whereNotNull('rental_id')->whereColumn('lot_number', '!=', 'reserved_lot');
-                 } elseif ($sub == 'stock') {
-                      $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); });
-                 }
-            }
-            
-            return;
-        }
-
-        if ($op === 'contains') {
-            $query->where($field, 'like', '%' . $value . '%');
-        } elseif ($op === 'not_contains') {
-            $query->where($field, 'not like', '%' . $value . '%');
-        } elseif ($op === 'starts_with') {
-            $query->where($field, 'like', $value . '%');
-        } elseif ($op === 'ends_with') {
-            $query->where($field, 'like', '%' . $value);
-        } elseif ($op === 'is_empty') {
-            $query->where(function($q) use ($field) {
-                $q->whereNull($field)->orWhere($field, '');
-            });
-        } elseif ($op === 'is_not_empty') {
-             $query->whereNotNull($field)->where($field, '!=', '');
-        } else {
-            // =, !=, >, <, >=, <=
-            $query->where($field, $op, $value);
-        }
+        // Handle sorting from request
+        $sortCol = $request->input('sortCol', 'lot_number');
+        $sortAsc = filter_var($request->input('sortAsc', true), FILTER_VALIDATE_BOOLEAN);
+        
+        $filename = 'total_stock_' . now()->format('Ymd_His') . '.xlsx';
+        
+        return Excel::download(
+            new \App\Exports\TotalStockExport($filters, $sortCol, $sortAsc), 
+            $filename
+        );
     }
 }

@@ -16,4 +16,5 @@ Route::post('/generate', [DashboardController::class, 'upload'])->name('summary.
 
 Route::get('/total-stock', [DashboardController::class, 'totalStock'])->name('total.stock');
 Route::post('/total-stock/filter', [DashboardController::class, 'filterTotalStock'])->name('total.stock.filter');
+Route::post('/total-stock/export', [DashboardController::class, 'exportTotalStock'])->name('total.stock.export');
 
