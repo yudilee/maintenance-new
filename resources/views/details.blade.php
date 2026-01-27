@@ -1,387 +1,373 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Details - {{ ucfirst(str_replace('_', ' ', $category ?? 'All')) }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.2/css/buttons.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/colreorder/1.7.0/css/colReorder.bootstrap5.min.css">
-    <style>
-        .dt-buttons .btn { margin-right: 5px; }
-        .filter-row select { 
-            font-size: 0.7rem; 
-            padding: 0.2rem 1.5rem 0.2rem 0.4rem; /* more padding on right for arrow */
-            min-width: 95px;
-            height: auto;
-            line-height: 1.2;
-            background-position: right 0.3rem center;
-            background-size: 10px;
-        }
-        .filter-row th { padding: 0.4rem 0.3rem !important; background: #f8f9fa; }
-        
-        /* Location badge colors */
-        .loc-operation { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; }
-        .loc-jakarta { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; }
-        .loc-surabaya { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; }
-        .loc-semarang { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; }
-        .loc-bandung { background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); color: white; }
-        .loc-yogya { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: white; }
-        .loc-transit { background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%); color: #333; }
-        .loc-customer { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; }
-        .loc-external { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; }
-        .loc-internal { background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); color: white; }
-        .loc-insurance { background: linear-gradient(135deg, #a855f7 0%, #9333ea 100%); color: white; }
-        .loc-other { background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; }
-        .loc-sold { background: linear-gradient(135deg, #1f2937 0%, #111827 100%); color: white; }
-        
-        .location-badge { font-size: 0.75rem; padding: 0.35em 0.65em; border-radius: 0.375rem; font-weight: 500; }
-        
-        /* Role badges */
-        .role-badge-main { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-size: 0.7rem; padding: 0.25em 0.5em; border-radius: 4px; }
-        .role-badge-replacement { background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: white; font-size: 0.7rem; padding: 0.25em 0.5em; border-radius: 4px; }
-        .linked-vehicle-link { color: #3b82f6; text-decoration: none; font-weight: 500; }
-        .linked-vehicle-link:hover { text-decoration: underline; }
-        
-        /* Table container with visible scrollbar */
-        .table-scroll-container {
-            overflow-x: auto;
-            overflow-y: visible;
-            max-width: 100%;
-            padding-bottom: 15px;
-            margin-bottom: -15px;
-        }
-        .table-scroll-container::-webkit-scrollbar {
-            height: 10px;
-        }
-        .table-scroll-container::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 5px;
-        }
-        .table-scroll-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 5px;
-        }
-        .table-scroll-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(135deg, #5a67d8 0%, #6b46a1 100%);
-        }
-        
-        /* Compact table styling */
-        #detailsTable { width: 100% !important; min-width: 100%; font-size: 0.8rem; border-collapse: collapse; }
-        #detailsTable th { padding: 0.5rem 0.75rem !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        #detailsTable td { padding: 0.4rem 0.75rem !important; white-space: nowrap; vertical-align: middle; }
-        #detailsTable td:first-child { white-space: normal; min-width: 150px; }
-        
-        /* Draggable and Resizable styles */
-        table.dataTable thead th { position: relative; }
-        .dt-colresizable-handle { position: absolute; right: 0; top: 0; bottom: 0; width: 5px; cursor: col-resize; z-index: 10; }
-        .dt-colresizable-handle:hover { background-color: #0d6efd; opacity: 0.5; }
+@extends('layouts.app')
 
-        /* Highlight important columns */
-        #detailsTable th:nth-child(2), #detailsTable td:nth-child(2) { font-weight: 600; color: #1e40af; } /* Lot Number */
-        
-        /* DataTables wrapper */
-        .dataTables_wrapper { width: 100%; }
-        .dataTables_scrollHead { overflow: visible !important; }
-        
-        /* Scroll indicator */
-        .scroll-hint {
-            text-align: center;
-            padding: 5px;
-            background: linear-gradient(90deg, transparent 0%, #e2e8f0 50%, transparent 100%);
-            color: #64748b;
-            font-size: 0.75rem;
-            margin-bottom: 5px;
-        }
-        
-        /* Column Visibility Dropdown Styling */
-        .dt-button-collection { width: auto !important; }
-        .dt-button-collection .dropdown-menu { display: block; position: static; }
-    </style>
-</head>
-<body class="bg-light">
-    <!-- Navbar omitted for brevity, same as before -->
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{{ route('dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>SDP DASHBOARD</a>
-            <a href="{{ route('dashboard') }}" class="btn btn-outline-light btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to Dashboard</a>
-        </div>
-    </nav>
+@section('title', 'Details - SDP Stock')
 
-    <div class="container pb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
+@section('content')
+<div x-data="itemTable()" x-init="init()" class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+    
+    <!-- Toolbar -->
+    <div class="p-6 border-b border-slate-100 flex flex-col gap-4">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-                <h3 class="mb-0">{{ ucfirst(str_replace('_', ' ', $category ?? 'All Items')) }}</h3>
-                @if($sub)<p class="text-muted mb-0">Filter: {{ $sub }}</p>@endif
+                <h1 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                    <a href="{{ route('dashboard') }}" class="text-slate-400 hover:text-indigo-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                    </a>
+                    {{ ucfirst(str_replace('_', ' ', $category ?? 'All Items')) }}
+                    @if($sub)
+                    <span class="text-slate-300">/</span>
+                    <span class="text-indigo-600 font-medium">{{ $sub }}</span>
+                    @endif
+                </h1>
+                <p class="text-slate-500 text-sm mt-1">Showing <span x-text="filteredItems.length"></span> items</p>
             </div>
-            <div>
-                <span class="badge bg-dark">{{ count($items) }} items</span>
+
+            <div class="flex flex-wrap gap-2 w-full md:w-auto">
+                <!-- Search -->
+                <div class="relative flex-grow md:flex-grow-0 md:w-64">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <input x-model="search" type="text" class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" placeholder="Search...">
+                </div>
+
+                <!-- Columns Dropdown -->
+                <div x-data="{ open: false }" class="relative">
+                    <button @click="open = !open" @click.away="open = false" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-slate-600 font-medium hover:bg-slate-50 transition-colors shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"></path></svg>
+                        Cols
+                    </button>
+                    <div x-show="open" class="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-20 max-h-96 overflow-y-auto">
+                        <template x-for="(col, id) in columns" :key="id">
+                            <label class="flex items-center px-4 py-2 hover:bg-slate-50 cursor-pointer">
+                                <input type="checkbox" x-model="col.visible" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 mr-2">
+                                <span class="text-sm text-slate-700" x-text="col.label"></span>
+                            </label>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Export Dropdown -->
+                <div x-data="{ open: false }" class="relative">
+                    <button @click="open = !open" @click.away="open = false" class="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-100 transition-colors font-medium text-sm border border-emerald-100">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Export
+                        <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                    <div x-show="open" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 py-2 z-20">
+                        <a href="{{ route('export', array_merge(request()->all(), ['format' => 'csv'])) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">CSV (.csv)</a>
+                        <a href="{{ route('export', array_merge(request()->all(), ['format' => 'xlsx'])) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">Excel (.xlsx)</a>
+                        <a href="{{ route('export', array_merge(request()->all(), ['format' => 'pdf'])) }}" class="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-50">PDF (.pdf)</a>
+                    </div>
+                </div>
             </div>
         </div>
-        
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <div class="scroll-hint"><i class="bi bi-arrows-expand"></i> Drag column headers to reorder • Use 'Columns' button to show/hide</div>
-                <div class="table-scroll-container">
-                <table id="detailsTable" class="table table-striped table-hover" style="width:100%">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Product</th>
-                            <th>Lot Number</th>
-                            <th>Internal Ref</th>
-                            <th>Location</th>
-                            <th>Role</th>
-                            <th>Linked Vehicle</th>
-                            <th>On Hand Qty</th>
-                            <th>Rental ID</th>
-                            <th>Rental Type</th>
-                            <th>Actual Start</th>
-                            <th>Actual End</th>
-                            <th>Vendor Rent</th>
-                            <th>In Stock</th>
-                        </tr>
-                        <tr class="filter-row">
-                            <th></th>
-                            <th></th>
-                            <th></th>
-                            <th><select id="filterLocation" class="form-select form-select-sm"><option value="">All Locations</option></select></th>
-                            <th><select id="filterRole" class="form-select form-select-sm"><option value="">All Roles</option><option value="Main">Main</option><option value="Replacement">Replacement</option></select></th>
-                            <th><select id="filterLinked" class="form-select form-select-sm"><option value="">All</option><option value="Linked">Linked</option><option value="Not Linked">Not Linked</option></select></th>
-                            <th></th>
-                            <th></th>
-                            <th><select id="filterRentalType" class="form-select form-select-sm"><option value="">All Types</option><option value="Subscription">Subscription</option><option value="Regular">Regular</option></select></th>
-                            <th></th>
-                            <th></th>
-                            <th><select id="filterVendorRent" class="form-select form-select-sm"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select></th>
-                            <th><select id="filterInStock" class="form-select form-select-sm"><option value="">All</option><option value="Yes">Yes</option><option value="No">No</option></select></th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($items as $item)
-                        @php
-                            $loc = $item['location'] ?? '';
-                            $locClass = 'loc-other';
-                            if (stripos($loc, 'Operation') !== false || stripos($loc, 'SDP/OP') !== false) $locClass = 'loc-operation';
-                            elseif (stripos($loc, 'JKT') !== false || stripos($loc, 'Jakarta') !== false) $locClass = 'loc-jakarta';
-                            elseif (stripos($loc, 'SUB') !== false || stripos($loc, 'SBY') !== false || stripos($loc, 'Surabaya') !== false) $locClass = 'loc-surabaya';
-                            elseif (stripos($loc, 'SMG') !== false || stripos($loc, 'Semarang') !== false) $locClass = 'loc-semarang';
-                            elseif (stripos($loc, 'BDG') !== false || stripos($loc, 'Bandung') !== false) $locClass = 'loc-bandung';
-                            elseif (stripos($loc, 'YOG') !== false || stripos($loc, 'Yogya') !== false) $locClass = 'loc-yogya';
-                            elseif (stripos($loc, 'Transit') !== false) $locClass = 'loc-transit';
-                            elseif (stripos($loc, 'Partners/Customers') !== false) $locClass = 'loc-customer';
-                            elseif (stripos($loc, 'Partners/Vendors/Service') !== false) $locClass = 'loc-external';
-                            elseif (stripos($loc, 'Partners/Vendors/Insurance') !== false) $locClass = 'loc-insurance';
-                            elseif (stripos($loc, 'Physical Locations/Service') !== false) $locClass = 'loc-internal';
-                            elseif (stripos($loc, 'SOLD') !== false) $locClass = 'loc-sold';
-                            
-                            // Short display name for locations
-                            $locShort = $loc;
-                            if ($loc === 'Partners/Customers/Rental') $locShort = 'Customer Rental';
-                            elseif (stripos($loc, 'Partners/Vendors/Service') === 0) $locShort = 'Ext Service';
-                            elseif (stripos($loc, 'Partners/Vendors/Insurance') === 0) $locShort = 'Insurance';
-                            elseif ($loc === 'Physical Locations/Service') $locShort = 'Int Service';
-                            elseif (stripos($loc, 'SDP/OPERATION') === 0) $locShort = 'Operation';
-                            elseif (preg_match('/^SD([A-Z]{2,3})\//', $loc, $m)) $locShort = $m[1]; // Extract city code
-                            elseif (stripos($loc, '/') !== false) $locShort = basename(str_replace('/', DIRECTORY_SEPARATOR, $loc));
-                        @endphp
-                        <tr>
-                            <td>{{ $item['product'] }}</td>
-                            <td>{{ $item['lot_number'] }}</td>
-                            <td>{{ $item['internal_reference'] ?? '' }}</td>
-                            <td><span class="location-badge {{ $locClass }}" title="{{ $item['location'] }}">{{ $locShort }}</span></td>
-                            <td>
-                                @if(!empty($item['vehicle_role']))
-                                    <span class="{{ $item['vehicle_role'] == 'Main' ? 'role-badge-main' : 'role-badge-replacement' }}">{{ $item['vehicle_role'] }}</span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if(!empty($item['linked_vehicle']))
-                                    <a href="{{ route('details', ['category' => 'search', 'q' => $item['linked_vehicle']]) }}" class="linked-vehicle-link" title="View linked vehicle">{{ $item['linked_vehicle'] }}</a>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td>{{ $item['on_hand_quantity'] }}</td>
-                            <td>{{ $item['rental_id'] }}</td>
-                            <td>
-                                @if(!empty($item['rental_type']))
-                                    <span class="badge {{ $item['rental_type'] == 'Subscription' ? 'bg-primary' : 'bg-info' }}">{{ $item['rental_type'] }}</span>
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if(!empty($item['rental_id']) && !empty($item['actual_start_rental']))
-                                    {{ is_numeric($item['actual_start_rental']) ? \Carbon\Carbon::createFromTimestamp(($item['actual_start_rental'] - 25569) * 86400)->format('Y-m-d') : $item['actual_start_rental'] }}
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if(!empty($item['rental_id']) && !empty($item['actual_end_rental']))
-                                    {{ is_numeric($item['actual_end_rental']) ? \Carbon\Carbon::createFromTimestamp(($item['actual_end_rental'] - 25569) * 86400)->format('Y-m-d') : $item['actual_end_rental'] }}
-                                @else
-                                    <span class="text-muted">-</span>
-                                @endif
-                            </td>
-                            <td><span class="badge {{ $item['is_vendor_rent'] ? 'bg-info' : 'bg-secondary' }}">{{ $item['is_vendor_rent'] ? 'Yes' : 'No' }}</span></td>
-                            <td><span class="badge {{ $item['in_stock'] ? 'bg-success' : 'bg-warning text-dark' }}">{{ $item['in_stock'] ? 'Yes' : 'No' }}</span></td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="13" class="text-center">No items found for this category.</td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-                </div><!-- end table-scroll-container -->
-            </div>
+
+        <!-- Filter Row -->
+        <div class="flex flex-wrap gap-3 pb-2">
+            <!-- Location Filter -->
+            <select x-model="filters.location" class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 focus:outline-none focus:border-indigo-500 bg-white">
+                <option value="">All Locations</option>
+                @foreach($locations as $loc)
+                <option value="{{ $loc }}">{{ $loc }}</option>
+                @endforeach
+            </select>
+
+            <!-- Role Filter -->
+            <select x-model="filters.role" class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 focus:outline-none focus:border-indigo-500 bg-white">
+                <option value="">All Roles</option>
+                @foreach($roles as $role)
+                <option value="{{ $role }}">{{ $role }}</option>
+                @endforeach
+            </select>
+
+            <!-- Type Filter -->
+            <select x-model="filters.type" class="px-3 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-600 focus:outline-none focus:border-indigo-500 bg-white">
+                <option value="">All Types</option>
+                @foreach($types as $type)
+                <option value="{{ $type }}">{{ $type }}</option>
+                @endforeach
+            </select>
+            
+            <button @click="resetFilters()" x-show="hasActiveFilters" class="px-3 py-1.5 rounded-lg text-sm text-red-500 hover:bg-red-50 font-medium transition-colors">
+                Reset
+            </button>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-    <!-- DataTables Buttons -->
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.bootstrap5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.colVis.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.print.min.js"></script>
-    <!-- ColReorder -->
-    <script src="https://cdn.datatables.net/colreorder/1.7.0/js/dataTables.colReorder.min.js"></script>
-    <!-- ColResizable -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/colresizable/1.6.0/colResizable-1.6.min.js"></script>
+    <!-- Table -->
+    <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse" style="table-layout: fixed;">
+            <thead>
+                <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 uppercase tracking-wider text-xs font-semibold">
+                    <th x-show="columns.lot_number.visible" :style="'width: ' + columns.lot_number.width + 'px'" class="relative p-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group">
+                        <div @click="sortBy('lot_number')" class="flex items-center gap-1">Lot Number <span x-show="sortCol === 'lot_number'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                        <div @mousedown="startResize($event, 'lot_number')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.product.visible" :style="'width: ' + columns.product.width + 'px'" class="relative p-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group">
+                        <div @click="sortBy('product')" class="flex items-center gap-1">Product <span x-show="sortCol === 'product'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                         <div @mousedown="startResize($event, 'product')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.location.visible" :style="'width: ' + columns.location.width + 'px'" class="relative p-4 cursor-pointer hover:bg-slate-100 transition-colors select-none group">
+                        <div @click="sortBy('location')" class="flex items-center gap-1">Location <span x-show="sortCol === 'location'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                         <div @mousedown="startResize($event, 'location')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.qty.visible" :style="'width: ' + columns.qty.width + 'px'" class="relative p-4 text-center select-none group">
+                        Qty
+                         <div @mousedown="startResize($event, 'qty')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.type.visible" :style="'width: ' + columns.type.width + 'px'" class="relative p-4 text-center select-none group">
+                        Type
+                         <div @mousedown="startResize($event, 'type')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.status.visible" :style="'width: ' + columns.status.width + 'px'" class="relative p-4 text-center select-none group">
+                        Rental Status
+                         <div @mousedown="startResize($event, 'status')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <!-- New Columns -->
+                    <th x-show="columns.start_date.visible" :style="'width: ' + columns.start_date.width + 'px'" class="relative p-4 text-center select-none group">
+                        Start
+                        <div @mousedown="startResize($event, 'start_date')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.end_date.visible" :style="'width: ' + columns.end_date.width + 'px'" class="relative p-4 text-center select-none group">
+                        End
+                        <div @mousedown="startResize($event, 'end_date')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.vehicle_role.visible" :style="'width: ' + columns.vehicle_role.width + 'px'" class="relative p-4 text-center select-none group">
+                        Role
+                        <div @mousedown="startResize($event, 'vehicle_role')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.linked.visible" :style="'width: ' + columns.linked.width + 'px'" class="relative p-4 text-center select-none group">
+                        Linked
+                        <div @mousedown="startResize($event, 'linked')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.in_stock.visible" :style="'width: ' + columns.in_stock.width + 'px'" class="relative p-4 text-center select-none group">
+                        Stock
+                        <div @mousedown="startResize($event, 'in_stock')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 transition-colors"></div>
+                    </th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+                <template x-for="item in paginatedItems" :key="item.id">
+                    <tr class="hover:bg-slate-50 transition-colors group">
+                        <td x-show="columns.lot_number.visible" class="p-4 font-mono text-sm font-medium text-indigo-600 group-hover:text-indigo-800 break-words" x-text="item.lot_number"></td>
+                        <td x-show="columns.product.visible" class="p-4 break-words">
+                            <div class="font-medium text-slate-800" x-text="item.product"></div>
+                            <div class="text-xs text-slate-400" x-text="item.internal_reference || 'No Ref'"></div>
+                        </td>
+                        <td x-show="columns.location.visible" class="p-4 break-words">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-800" x-text="item.location"></span>
+                        </td>
+                        <td x-show="columns.qty.visible" class="p-4 text-center text-slate-600 font-bold" x-text="item.on_hand_quantity"></td>
+                        <td x-show="columns.type.visible" class="p-4 text-center">
+                            <span x-show="item.is_vendor_rent" class="px-2 py-1 rounded text-xs font-bold bg-cyan-100 text-cyan-700">Vendor</span>
+                            <span x-show="!item.is_vendor_rent" class="px-2 py-1 rounded text-xs font-bold bg-indigo-100 text-indigo-700">Owned</span>
+                        </td>
+                        <td x-show="columns.status.visible" class="p-4 text-center">
+                            <template x-if="item.rental_id">
+                                <div class="flex flex-col items-center">
+                                    <span class="px-2 py-1 rounded text-xs font-bold bg-amber-100 text-amber-700 mb-1 break-all" x-text="item.rental_id"></span>
+                                    <span class="text-[10px] text-slate-400" x-text="item.rental_type"></span>
+                                </div>
+                            </template>
+                            <template x-if="!item.rental_id && item.in_stock">
+                                <span class="px-2 py-1 rounded text-xs font-bold bg-emerald-100 text-emerald-700">In Stock</span>
+                            </template>
+                            <template x-if="!item.rental_id && !item.in_stock">
+                                <span class="px-2 py-1 rounded text-xs font-bold bg-slate-100 text-slate-500">-</span>
+                            </template>
+                        </td>
+                        <!-- New Columns Data -->
+                        <td x-show="columns.start_date.visible" class="p-4 text-center text-xs text-slate-500" x-text="formatDate(item.actual_start_rental)"></td>
+                        <td x-show="columns.end_date.visible" class="p-4 text-center text-xs text-slate-500" x-text="formatDate(item.actual_end_rental)"></td>
+                        <td x-show="columns.vehicle_role.visible" class="p-4 text-center">
+                            <span x-show="item.vehicle_role" class="px-2 py-0.5 rounded text-[10px] bg-slate-100 border border-slate-200" x-text="item.vehicle_role"></span>
+                        </td>
+                        <td x-show="columns.linked.visible" class="p-4 text-center text-xs text-slate-400 font-mono" x-text="item.linked_vehicle || '-'"></td>
+                        <td x-show="columns.in_stock.visible" class="p-4 text-center">
+                            <span class="w-2 h-2 inline-block rounded-full" :class="item.in_stock ? 'bg-green-500' : 'bg-red-200'"></span>
+                        </td>
+                    </tr>
+                </template>
+                <tr x-show="filteredItems.length === 0">
+                    <td :colspan="Object.values(columns).filter(c => c.visible).length" class="p-8 text-center text-slate-400">
+                        No items found matching your filters.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Pagination -->
+    <div class="p-4 border-t border-slate-100 flex items-center justify-between" x-show="filteredItems.length > pageSize">
+        <button @click="prevPage" :disabled="currentPage === 1" class="px-3 py-1 rounded-lg border border-slate-200 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">Previous</button>
+        <span class="text-sm text-slate-500">Page <span x-text="currentPage"></span> of <span x-text="totalPages"></span></span>
+        <button @click="nextPage" :disabled="currentPage === totalPages" class="px-3 py-1 rounded-lg border border-slate-200 text-sm font-medium hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">Next</button>
+    </div>
+</div>
+@endsection
 
-    <script>
-        $(document).ready(function() {
-            var table = $('#detailsTable').DataTable({
-                dom: '<"row mb-3"<"col-md-6"B><"col-md-6"f>>rt<"row mt-3"<"col-md-6"l><"col-md-6"p>>i',
-                stateSave: true, // Enable state saving (cookies/localStorage)
-                colReorder: true, // Enable Drag & Drop Reordering
-                buttons: [
-                    { 
-                        extend: 'colvis', 
-                        className: 'btn btn-info btn-sm text-white', 
-                        text: '<i class="bi bi-layout-three-columns me-1"></i> Columns',
-                        columns: ':not(.noVis)' // Exclude columns with class noVis from toggle
-                    },
-                    { 
-                        text: '<i class="bi bi-arrow-counterclockwise me-1"></i> Reset',
-                        className: 'btn btn-warning btn-sm text-dark',
-                        action: function (e, dt, node, config) {
-                            dt.state.clear();
-                            window.location.reload();
+@section('scripts')
+<script>
+    function itemTable() {
+        return {
+            items: @json($items),
+            search: '',
+            filters: {
+                location: '',
+                role: '',
+                type: ''
+            },
+            sortCol: 'product',
+            sortAsc: true,
+            currentPage: 1,
+            pageSize: 20,
+            
+            // Column State
+            columns: {
+                lot_number: { label: 'Lot Number', visible: true, width: 150 },
+                product: { label: 'Product', visible: true, width: 250 },
+                location: { label: 'Location', visible: true, width: 140 },
+                qty: { label: 'Qty', visible: true, width: 60 },
+                type: { label: 'Type', visible: true, width: 80 },
+                status: { label: 'Rental Status', visible: true, width: 140 },
+                start_date: { label: 'Start', visible: false, width: 100 },
+                end_date: { label: 'End', visible: false, width: 100 },
+                vehicle_role: { label: 'Role', visible: false, width: 80 },
+                linked: { label: 'Linked', visible: false, width: 100 },
+                in_stock: { label: 'Stock', visible: false, width: 60 }
+            },
+            
+            resizingCol: null,
+            startX: 0,
+            startWidth: 0,
+
+            init() {
+                // Load saved columns
+                let saved = localStorage.getItem('sdp_table_columns');
+                if (saved) {
+                    try {
+                        let parsed = JSON.parse(saved);
+                        // Merge saved config with default structure (handles new columns)
+                        for (let key in this.columns) {
+                            if (parsed[key]) {
+                                this.columns[key].visible = parsed[key].visible;
+                                this.columns[key].width = parsed[key].width;
+                            }
                         }
-                    },
-                    { extend: 'excel', className: 'btn btn-success btn-sm', text: '<i class="bi bi-file-earmark-excel me-1"></i> Excel' },
-                    { extend: 'csv', className: 'btn btn-primary btn-sm', text: '<i class="bi bi-filetype-csv me-1"></i> CSV' },
-                    { extend: 'print', className: 'btn btn-secondary btn-sm', text: '<i class="bi bi-printer me-1"></i> Print' }
-                ],
-                pageLength: 25,
-                lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "All"]],
-                order: [[0, 'asc']],
-                orderCellsTop: true,
-                language: {
-                    search: "_INPUT_",
-                    searchPlaceholder: "Search...",
-                    lengthMenu: "Show _MENU_ entries",
-                    info: "Showing _START_ to _END_ of _TOTAL_ items"
-                },
-                initComplete: function() {
-                    // Enable colResizable after Table init
-                    // Note: colResizable and DataTables scrolling/auto-width can conflict.
-                    // We disable DataTables autoWidth (it is false by default in BS5 config usually)
-                    // and use colResizable on the table.
-                    $('#detailsTable').colResizable({
-                        liveDrag: true,
-                        gripInnerHtml: "<div class='dt-colresizable-handle'></div>",
-                        draggingClass: "dragging",
-                        resizeMode: 'fit'
-                    });
+                    } catch (e) {
+                        console.error('Failed to load table prefs', e);
+                    }
                 }
-            });
 
-            // Populate location filter from unique values in column 3
-            var locationColumn = table.column(3);
-            var locations = [];
-            
-            // Note when using StateSave, column visibility might change indexes.
-            // Using name or fixed content is better.
-            
-            locationColumn.nodes().each(function(node) {
-                var text = $(node).text().trim();
-                if (text && locations.indexOf(text) === -1) {
-                    locations.push(text);
-                }
-            });
-            locations.sort().forEach(function(loc) {
-                $('#filterLocation').append('<option value="' + loc + '">' + loc + '</option>');
-            });
+                // Save columns on change
+                this.$watch('columns', (val) => {
+                    localStorage.setItem('sdp_table_columns', JSON.stringify(val));
+                }, { deep: true });
 
-            // Column filters - Need to be careful with indexing if columns are reordered.
-            // DataTables handles this internally if using API.
+                // Resize Listeners
+                window.addEventListener('mousemove', (e) => {
+                    if (this.resizingCol) {
+                        const diff = e.clientX - this.startX;
+                        // Min width 50
+                        this.columns[this.resizingCol].width = Math.max(50, this.startWidth + diff);
+                    }
+                });
+                window.addEventListener('mouseup', () => {
+                    this.resizingCol = null;
+                    document.body.style.cursor = 'default';
+                    // Trigger save explicitly after resize ends (mouse up) to ensure final width is saved? 
+                    // $watch should catch it as width updates in real-time.
+                });
+            },
+
+            formatDate(dateStr) {
+                if (!dateStr) return '-';
+                // Simple date format
+                return dateStr.substring(0, 10);
+            },
+
+            startResize(e, colId) {
+                this.resizingCol = colId;
+                this.startX = e.clientX;
+                this.startWidth = this.columns[colId].width;
+                document.body.style.cursor = 'col-resize';
+                e.stopPropagation(); // Prevent sorting
+            },
             
-            $('#filterLocation').on('change', function() {
-                var val = $(this).val();
-                if (val) {
-                    table.column(3).search(val, false, false).draw();
+            get hasActiveFilters() {
+                return this.filters.location || this.filters.role || this.filters.type;
+            },
+            
+            resetFilters() {
+                this.filters.location = '';
+                this.filters.role = '';
+                this.filters.type = '';
+                this.search = '';
+            },
+
+            get filteredItems() {
+                let term = this.search.toLowerCase();
+                
+                let result = this.items.filter(item => {
+                    // Global Search
+                    let matchesSearch = true;
+                    if (term) {
+                        matchesSearch = (item.lot_number && item.lot_number.toLowerCase().includes(term)) ||
+                                        (item.product && item.product.toLowerCase().includes(term)) ||
+                                        (item.location && item.location.toLowerCase().includes(term)) ||
+                                        (item.rental_id && item.rental_id.toLowerCase().includes(term));
+                    }
+                    
+                    // Specific Filters
+                    let matchesLoc = !this.filters.location || (item.location === this.filters.location);
+                    let matchesRole = !this.filters.role || (item.vehicle_role === this.filters.role);
+                    let matchesType = !this.filters.type || (item.rental_type === this.filters.type);
+
+                    return matchesSearch && matchesLoc && matchesRole && matchesType;
+                });
+                
+                // Sorting
+                result.sort((a, b) => {
+                    let valA = a[this.sortCol] || '';
+                    let valB = b[this.sortCol] || '';
+                    if (typeof valA === 'string') valA = valA.toLowerCase();
+                    if (typeof valB === 'string') valB = valB.toLowerCase();
+                    
+                    if (valA < valB) return this.sortAsc ? -1 : 1;
+                    if (valA > valB) return this.sortAsc ? 1 : -1;
+                    return 0;
+                });
+                
+                return result;
+            },
+            
+            get totalPages() {
+                return Math.ceil(this.filteredItems.length / this.pageSize);
+            },
+            
+            get paginatedItems() {
+                let start = (this.currentPage - 1) * this.pageSize;
+                return this.filteredItems.slice(start, start + this.pageSize);
+            },
+            
+            nextPage() {
+                if (this.currentPage < this.totalPages) this.currentPage++;
+            },
+            
+            prevPage() {
+                if (this.currentPage > 1) this.currentPage--;
+            },
+            
+            sortBy(col) {
+                if (this.sortCol === col) {
+                    this.sortAsc = !this.sortAsc;
                 } else {
-                    table.column(3).search('').draw();
+                    this.sortCol = col;
+                    this.sortAsc = true;
                 }
-            });
-
-            $('#filterRole').on('change', function() {
-                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                table.column(4).search(val ? '^' + val + '$' : '', true, false).draw();
-            });
-
-            // Linked Vehicle Filter (Column 5)
-            $('#filterLinked').on('change', function() {
-                var val = $(this).val();
-                if (val === 'Linked') {
-                     // Regex: Match any character that isn't a dash or empty
-                     // Actually, if we use text content, it's usually the vehicle name or "-"
-                     // Let's assume if it contains "-" it is Not Linked, or if it has text it is Linked.
-                     // A safer regex for "Not Linked" is "^-$|^\s*$"
-                     // For "Linked", we want inverse of "Not Linked".
-                     // DataTables regex search doesn't support "NOT" directly easily without lookahead?
-                     // Easiest is to search for specific negation if possible.
-                     // Or, since we only have two states, matching "Linked" means "Not -"
-                     table.column(5).search('^[^\\-]+.*$', true, false).draw(); 
-                } else if (val === 'Not Linked') {
-                     table.column(5).search('^-$|^\\s*$', true, false).draw();
-                } else {
-                     table.column(5).search('').draw();
-                }
-            });
-
-            $('#filterRentalType').on('change', function() {
-                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                table.column(8).search(val ? val : '', true, false).draw();
-            });
-
-            $('#filterVendorRent').on('change', function() {
-                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                table.column(11).search(val ? '^' + val + '$' : '', true, false).draw();
-            });
-
-            $('#filterInStock').on('change', function() {
-                var val = $.fn.dataTable.util.escapeRegex($(this).val());
-                table.column(12).search(val ? '^' + val + '$' : '', true, false).draw();
-            });
-        });
-    </script>
-</body>
-</html>
-
+            }
+        }
+    }
+</script>
+@endsection

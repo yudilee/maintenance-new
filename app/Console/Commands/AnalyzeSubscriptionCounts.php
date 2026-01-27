@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use App\Services\SummaryGenerator;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Constants\Location;
 
 class AnalyzeSubscriptionCounts extends Command
 {
@@ -13,14 +14,14 @@ class AnalyzeSubscriptionCounts extends Command
      *
      * @var string
      */
-    protected $signature = 'analyze:subscription-counts {file : Path to the Excel file}';
+    protected $signature = 'analyze:subscription-counts {file? : Optional path to the Excel file. If omitted, uses database.}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Analyze subscription counts using two methods and identify discrepancies';
+    protected $description = 'Analyze subscription counts using current database state or a provided file';
 
     /**
      * Execute the console command.
@@ -31,16 +32,27 @@ class AnalyzeSubscriptionCounts extends Command
     {
         $filePath = $this->argument('file');
 
-        if (!file_exists($filePath)) {
-            $this->error("File not found: $filePath");
-            return 1;
+        if ($filePath) {
+            if (!file_exists($filePath)) {
+                $this->error("File not found: $filePath");
+                return 1;
+            }
+            $this->info("Analyzing file: $filePath");
+            $result = $generator->generate($filePath);
+            $items = $result['items'];
+            // summary unused in logic below
+        } else {
+            $this->info("Analyzing from Database...");
+            // Use Item model
+            $items = \App\Models\Item::all()->toArray();
+            if (empty($items)) {
+                $this->error("Database is empty. Please upload a file first.");
+                return 1;
+            }
         }
+        
+        // $summary = ...; // Not used in analysis logic below except for $result['summary'] reference which was unused.
 
-        $this->info("Analyzing file: $filePath");
-
-        $result = $generator->generate($filePath);
-        $items = $result['items'];
-        $summary = $result['summary'];
 
         // --- ANALYSIS METHOD: Group by Rental ID ---
         $rentalGroups = [];
@@ -59,7 +71,14 @@ class AnalyzeSubscriptionCounts extends Command
         $listStockWithReplace = [];
         $listStockWithoutReplace = [];
 
+        // Track global Vendor Rent items
+        $allVendorRents = [];
+        
         foreach ($items as $item) {
+             if ($item['is_vendor_rent']) {
+                 $allVendorRents[] = $item;
+             }
+        
             // Filter: Only Active Subscriptions
             if (!$item['is_active_rental'] || $item['rental_type'] !== 'Subscription') {
                 continue;
@@ -84,17 +103,17 @@ class AnalyzeSubscriptionCounts extends Command
             
             // User Rules:
             // 1. Original in Customer
-            if ($location == 'Partners/Customers/Rental' && $isOriginal) $userCountedThis = $qty;
+            if ($location == Location::RENTAL_CUSTOMER && $isOriginal) $userCountedThis = $qty;
             // 2. Original in Internal Service
-            elseif ($location == 'Physical Locations/Service' && $isOriginal) $userCountedThis = $qty;
+            elseif ($location == Location::SERVICE_INTERNAL && $isOriginal) $userCountedThis = $qty;
             // 3. Replacement in Internal Service
-            elseif ($location == 'Physical Locations/Service' && $isReplacement) $userCountedThis = $qty;
+            elseif ($location == Location::SERVICE_INTERNAL && $isReplacement) $userCountedThis = $qty;
             // 4. Original in External Service
-            elseif (stripos($location, 'Partners/Vendors/Service') === 0 && $isOriginal) $userCountedThis = $qty;
+            elseif (stripos($location, Location::SERVICE_EXTERNAL) === 0 && $isOriginal) $userCountedThis = $qty;
             // 5. Replacement in External Service
-            elseif (stripos($location, 'Partners/Vendors/Service') === 0 && $isReplacement) $userCountedThis = $qty;
+            elseif (stripos($location, Location::SERVICE_EXTERNAL) === 0 && $isReplacement) $userCountedThis = $qty;
             // 6. Original in Insurance
-            elseif (stripos($location, 'Partners/Vendors/Insurance') === 0 && $isOriginal) $userCountedThis = $qty;
+            elseif (stripos($location, Location::INSURANCE) === 0 && $isOriginal) $userCountedThis = $qty;
             
             if (!isset($userMethodCounts[$rentalId])) $userMethodCounts[$rentalId] = 0;
             $userMethodCounts[$rentalId] += $userCountedThis;
@@ -109,6 +128,18 @@ class AnalyzeSubscriptionCounts extends Command
             // So we must calculate Method 3 AFTER the loop, or build a preliminary flag list.
             // We'll process Method 3 in the group loop below.
 
+
+            if ($isVendorRent) {
+                // Determine raw value if possible, or just report we found it
+                // We don't have raw row here easily without modifying generator, but we have the item data
+                $vendorRentList[] = [
+                    'rid' => $rentalId, 
+                    'lot' => $lotNo, 
+                    'product' => $item['product'],
+                    'qty' => $qty,
+                    'location' => $location
+                ];
+            }
 
             if (!isset($rentalGroups[$rentalId])) {
                 $rentalGroups[$rentalId] = [
@@ -148,7 +179,7 @@ class AnalyzeSubscriptionCounts extends Command
             
             // 1. All Rented in Customer (Sum Qty)
             foreach ($group['items'] as $item) {
-                if ($item['location'] == 'Partners/Customers/Rental') {
+                if ($item['location'] == Location::RENTAL_CUSTOMER) {
                     $rentedInCustomer += $item['on_hand_quantity'];
                 }
                 
@@ -193,11 +224,11 @@ class AnalyzeSubscriptionCounts extends Command
                     $qty = $item['on_hand_quantity'];
                     
                     // 2. Original without replace internal service
-                    if ($item['location'] == 'Physical Locations/Service') {
+                    if ($item['location'] == Location::SERVICE_INTERNAL) {
                         $originalWithoutReplaceService += $qty;
                     }
                     // 3. Original without replace external service
-                    elseif (stripos($item['location'], 'Partners/Vendors/Service') === 0) {
+                    elseif (stripos($item['location'], Location::SERVICE_EXTERNAL) === 0) {
                         $originalWithoutReplaceService += $qty;
                     }
                     // 4. Original in stock without replace
@@ -205,7 +236,7 @@ class AnalyzeSubscriptionCounts extends Command
                         $originalWithoutReplaceStock += $qty;
                     }
                     // 8. Original without replace in Insurance (NEW)
-                    elseif (stripos($item['location'], 'Partners/Vendors/Insurance') === 0) {
+                    elseif (stripos($item['location'], Location::INSURANCE) === 0) {
                         $originalWithoutReplaceInsurance += $qty;
                     }
                 }
@@ -311,15 +342,15 @@ class AnalyzeSubscriptionCounts extends Command
                 $loc = $item['location'];
                 
                 // Group A: Replacement in Customer
-                if ($isReplacement && $loc == 'Partners/Customers/Rental') {
+                if ($isReplacement && $loc == Location::RENTAL_CUSTOMER) {
                     $hasReplInCustomer = true;
                 }
                 
                 // Group B Condition: Original in Service/Insurance/External
                 if ($isOriginal) {
-                    if ($loc == 'Physical Locations/Service') $hasOrigInService = true;
-                    if (stripos($loc, 'Partners/Vendors/Service') === 0) $hasOrigInExtService = true;
-                    if (stripos($loc, 'Partners/Vendors/Insurance') === 0) $hasOrigInInsurance = true;
+                    if ($loc == Location::SERVICE_INTERNAL) $hasOrigInService = true;
+                    if (stripos($loc, Location::SERVICE_EXTERNAL) === 0) $hasOrigInExtService = true;
+                    if (stripos($loc, Location::INSURANCE) === 0) $hasOrigInInsurance = true;
                 }
             }
             
@@ -363,6 +394,31 @@ class AnalyzeSubscriptionCounts extends Command
             $this->warn("IN GROUP B BUT NOT A (" . count($diffB) . ")");
             $this->info("These have Original in Service with Replacement, but that Replacement is NOT in Customer (maybe Replacement is in Service too?)");
             $this->info("IDs: " . implode(', ', array_slice($diffB, 0, 10)) . (count($diffB)>10 ? '...' : ''));
+        }
+
+        // --- VENDOR RENT DEBUG ---
+        if (count($allVendorRents) > 0) {
+            $this->info("--------------------------------------------------");
+            $this->info("GLOBAL VENDOR RENT ANALYSIS (Found " . count($allVendorRents) . " items in file)");
+            $this->info("--------------------------------------------------");
+            
+            $tableData = [];
+            foreach ($allVendorRents as $item) {
+                $tableData[] = [
+                    'Lot' => $item['lot_number'],
+                    'Rental ID' => $item['rental_id'] ?: 'N/A',
+                    'Location' => $item['location'],
+                    'Type' => $item['rental_type'] ?: 'N/A',
+                    'Active?' => $item['is_active_rental'] ? 'Yes' : 'No',
+                    'In Stock?' => $item['in_stock'] ? 'Yes' : 'No',
+                ];
+            }
+            $this->table(['Lot', 'Rental ID', 'Location', 'Type', 'Active?', 'In Stock?'], $tableData);
+            
+        } else {
+             $this->info("--------------------------------------------------");
+             $this->info("NO VENDOR RENT DETECTED IN ENTIRE FILE");
+             $this->info("--------------------------------------------------");
         }
 
         return 0;

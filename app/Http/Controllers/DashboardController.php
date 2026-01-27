@@ -3,84 +3,64 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Repositories\JsonItemRepository;
+use App\Models\Item;
+use App\Models\History;
+use App\Services\SummaryGenerator;
+use App\Services\InventoryService;
+use App\Constants\Location;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DashboardController extends Controller
 {
-    /**
-     * Convert Excel serial date to PHP DateTime
-     */
-    private function excelSerialToDate($serial)
+    public function index()
     {
-        if (empty($serial) || !is_numeric($serial)) {
-            return null;
-        }
-        // Excel serial date starts from 1899-12-30
-        $excelBaseDate = new \DateTime('1899-12-30');
-        $excelBaseDate->modify('+' . intval($serial) . ' days');
-        return $excelBaseDate;
-    }
-
-    /**
-     * Get today's date as Excel serial number
-     */
-    private function getTodayExcelSerial()
-    {
-        $excelBaseDate = new \DateTime('1899-12-30');
-        $today = new \DateTime('today');
-        return $excelBaseDate->diff($today)->days;
-    }
-
-    public function index(JsonItemRepository $repo)
-    {
-        $summary = $repo->getSummary();
+        // Get latest summary from History
+        $latest = History::orderBy('snapshot_date', 'desc')->first();
+        
+        $summary = $latest ? $latest->summary_json : null;
         if (!$summary) {
             // Empty state
-            return view('dashboard', ['summary' => null, 'metadata' => null, 'history' => [], 'reserveRentalData' => [], 'stockByRentalStatus' => []]);
+             return view('dashboard', ['summary' => null, 'metadata' => null, 'history' => [], 'reserveRentalData' => [], 'stockByRentalStatus' => []]);
         }
-
-        $metadata = $repo->getMetadata();
-        $history = $repo->getHistory();
         
-        // Calculate dynamic rental status based on today's date
-        $items = $repo->all();
-        $todaySerial = $this->getTodayExcelSerial();
+        // Metadata mock for compatibility (or fetch from DB updated_at)
+        $metadata = ['imported_at' => $latest->created_at->format('Y-m-d H:i:s')];
+        
+        // History for charts
+        $history = History::orderBy('snapshot_date', 'asc')->take(30)->get()->map(function($h) {
+            return [
+                'date' => $h->snapshot_date,
+                'sdp_stock' => $h->sdp_stock,
+                'in_stock' => $h->in_stock,
+                'rented' => $h->rented,
+                'in_service' => $h->in_service,
+            ];
+        })->toArray();
+        
+        // --- DYNAMIC CALCULATIONS (DB) ---
+        $today = now()->format('Y-m-d');
         
         // Reserve Rental: Has rental_id but start date > today
-        $reserveRentals = $items->filter(function($item) use ($todaySerial) {
-            if (!empty($item['rental_id']) && !empty($item['actual_start_rental'])) {
-                return $item['actual_start_rental'] > $todaySerial;
-            }
-            return false;
-        });
-        
         $reserveRentalData = [
-            'count' => $reserveRentals->count(),
-            'items' => $reserveRentals->values()->take(20)->toArray(),
+            'count' => Item::whereNotNull('rental_id')->where('actual_start_rental', '>', $today)->count(),
+            'items' => Item::whereNotNull('rental_id')->where('actual_start_rental', '>', $today)->take(20)->get()->toArray(),
         ];
         
-        // Stock breakdown by rental status (only for items in stock)
-        $stockItems = $items->filter(function($item) {
-            return ($item['in_stock'] ?? false) == true;
-        });
+        // Stock breakdown
+        // Pure Stock: InStock=1, RentalID=null
+        $pureStock = Item::where('in_stock', true)->whereNull('rental_id')->count();
         
-        $pureStock = $stockItems->filter(function($item) {
-            return empty($item['rental_id']);
-        })->count();
-        
-        $originalStock = $stockItems->filter(function($item) use ($todaySerial) {
-            if (!empty($item['rental_id']) && !empty($item['actual_start_rental'])) {
-                return $item['actual_start_rental'] <= $todaySerial;
-            }
-            return false;
-        })->count();
-        
-        $reserveStock = $stockItems->filter(function($item) use ($todaySerial) {
-            if (!empty($item['rental_id']) && !empty($item['actual_start_rental'])) {
-                return $item['actual_start_rental'] > $todaySerial;
-            }
-            return false;
-        })->count();
+        // Original Stock: InStock=1, RentalID!=null, Start <= Today (Active)
+        $originalStock = Item::where('in_stock', true)
+                             ->whereNotNull('rental_id')
+                             ->where('actual_start_rental', '<=', $today)
+                             ->count();
+                             
+        // Reserve Stock: InStock=1, RentalID!=null, Start > Today (Future)
+        $reserveStock = Item::where('in_stock', true)
+                            ->whereNotNull('rental_id')
+                            ->where('actual_start_rental', '>', $today)
+                            ->count();
         
         $stockByRentalStatus = [
             'pure_stock' => $pureStock,
@@ -90,448 +70,208 @@ class DashboardController extends Controller
 
         return view('dashboard', compact('summary', 'metadata', 'history', 'reserveRentalData', 'stockByRentalStatus'));
     }
-
-    public function print(JsonItemRepository $repo)
+    
+    public function upload(Request $request, SummaryGenerator $generator)
     {
-        $summary = $repo->getSummary();
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,csv',
+        ]);
+
+        // $file = $request->file('file')->getRealPath(); // This fails because no extension
+        $file = $request->file('file');
+        
+        // Generate summary and items array from Excel
+        $result = $generator->generate($file);
+        
+        // Save to Database
+        $generator->saveToDatabase($result['items'], $result['summary']);
+
+        return redirect()->back()->with('success', 'Data imported successfully.');
+    }
+
+    public function print()
+    {
+        $latest = History::orderBy('snapshot_date', 'desc')->first();
+        $summary = $latest ? $latest->summary_json : null;
+        
         if (!$summary) {
             return redirect()->route('dashboard');
         }
 
-        $metadata = $repo->getMetadata();
+        $metadata = ['imported_at' => $latest->created_at->format('Y-m-d H:i:s')];
 
         return view('print', compact('summary', 'metadata'));
     }
 
-    public function details(Request $request, JsonItemRepository $repo)
+    public function details(Request $request, InventoryService $inventory)
     {
         $category = $request->query('category');
         $sub = $request->query('sub');
         $searchQuery = $request->query('q');
         
-        $items = $repo->all();
+        $query = $this->buildFilterQuery($inventory, $category, $sub, $searchQuery);
+        $items = $query->limit(2000)->get();
         
-        $filtered = $items->filter(function($item) use ($category, $sub, $searchQuery) {
-            // Global Filter: Exclude Sold items (unless specialized view?)
-            if (!empty($item['is_sold'])) {
-                 return false; 
-            }
+        // Filter Options Data
+        $locations = Item::select('location')->distinct()->orderBy('location')->pluck('location');
+        $roles = ['Main', 'Replacement']; // Hardcoded enum-like values
+        $types = Item::whereNotNull('rental_type')->where('rental_type', '!=', '')->select('rental_type')->distinct()->pluck('rental_type');
 
-            // Search filter
-            if ($category == 'search' && $searchQuery) {
-                $q = strtolower($searchQuery);
-                $lotNo = strtolower($item['lot_number'] ?? '');
-                $product = strtolower($item['product'] ?? '');
-                $location = strtolower($item['location'] ?? '');
-                $internalRef = strtolower($item['internal_reference'] ?? '');
-                
-                return strpos($lotNo, $q) !== false 
-                    || strpos($product, $q) !== false 
-                    || strpos($location, $q) !== false
-                    || strpos($internalRef, $q) !== false;
-            }
-
-            // Replicate logic based on category
-           if ($category == 'vendor_rent') {
-               return $item['is_vendor_rent'] == true;
-           }
-           if ($category == 'reserve_rental') {
-               // Vehicles with rental_id but start date > today
-               $rentalId = $item['rental_id'] ?? '';
-               $startDate = $item['actual_start_rental'] ?? null;
-               $startDate = $item['actual_start_rental'] ?? null;
-               if (empty($startDate)) {
-                   return false;
-               }
-               // Calculate today's Excel serial
-               $excelBase = new \DateTime('1899-12-30');
-               $today = new \DateTime('today');
-               $todaySerial = $excelBase->diff($today)->days;
-               return $startDate > $todaySerial;
-           }
-           if ($category == 'stock_pure') {
-               // In stock with no rental_id
-               return ($item['in_stock'] ?? false) && empty($item['rental_id']);
-           }
-           if ($category == 'stock_original') {
-               // In stock with rental_id and start <= today (active rental returned)
-               if (!($item['in_stock'] ?? false)) return false;
-               $rentalId = $item['rental_id'] ?? '';
-               $startDate = $item['actual_start_rental'] ?? null;
-               if (empty($rentalId) || empty($startDate)) return false;
-               
-               // Sub-filter
-               if ($sub) {
-                   $count = $item['rental_id_count'] ?? 0;
-                   if ($sub == 'with_replace' && $count <= 1) return false;
-                   if ($sub == 'no_replace' && $count > 1) return false; 
-               }
-               
-               $excelBase = new \DateTime('1899-12-30');
-               $today = new \DateTime('today');
-               $todaySerial = $excelBase->diff($today)->days;
-               return $startDate <= $todaySerial;
-           }
-           if ($category == 'stock_reserve') {
-               // In stock with rental_id and start > today (reserved for future)
-               if (!($item['in_stock'] ?? false)) return false;
-               $rentalId = $item['rental_id'] ?? '';
-               $startDate = $item['actual_start_rental'] ?? null;
-               if (empty($rentalId) || empty($startDate)) return false;
-               $excelBase = new \DateTime('1899-12-30');
-               $today = new \DateTime('today');
-               $todaySerial = $excelBase->diff($today)->days;
-               return $startDate > $todaySerial;
-           }
-           if ($category == 'sdp_stock') {
-               return true;
-           }
-           if ($category == 'in_stock') {
-                if ($sub) {
-                    $loc = $item['location'];
-                    // Operation check
-                    if ($sub == 'Operation' && stripos($loc, 'OPERATION') !== false) return true;
-                    // Exact location match (since we use actual locations as keys now)
-                    if ($loc == $sub) return true;
-                    return false;
-                }
-                return $item['in_stock'] == true;
-           }
-           if ($category == 'rented') {
-                // First check: must be in rental location
-                if ($item['location'] != 'Partners/Customers/Rental') {
-                    return false;
-                }
-                
-                if ($sub) {
-                    $isVendor = $item['is_vendor_rent'] ?? false;
-                    $rentalId = $item['rental_id'] ?? '';
-                    $lotNo = $item['lot_number'] ?? '';
-                    $reservedLot = $item['reserved_lot'] ?? '';
-                    $rentalIdCount = $item['rental_id_count'] ?? 0;
-
-                    if ($sub == 'Vendor Rent') return $isVendor == true;
-                    if ($sub == 'Original in Customer') return ($lotNo == $reservedLot && !empty($reservedLot) && !$isVendor);
-                    if ($sub == 'Replacement') return (!empty($rentalId) && $lotNo != $reservedLot && !$isVendor);
-                    if ($sub == 'Replacement - Service') return (!empty($rentalId) && $lotNo != $reservedLot && !$isVendor && $rentalIdCount > 1);
-                    if ($sub == 'Replacement - RBO') return (!empty($rentalId) && $lotNo != $reservedLot && !$isVendor && $rentalIdCount == 1);
-                    if ($sub == 'Check Rent position') return (empty($rentalId) && !$isVendor);
-                    return false;
-                }
-                return true;
-           }
-           if ($category == 'external_service') {
-                // First check: must be in external service location
-                if (stripos($item['location'], 'Partners/Vendors/Service') !== 0) {
-                    return false;
-                }
-                
-                if ($sub) {
-                    $rentalId = $item['rental_id'] ?? '';
-                    $lotNo = $item['lot_number'] ?? '';
-                    $reservedLot = $item['reserved_lot'] ?? '';
-                    $rentalIdCount = $item['rental_id_count'] ?? 0;
-                   
-                    if ($sub == 'Original Rented with Replace') return (!empty($rentalId) && $lotNo == $reservedLot && $rentalIdCount > 1);
-                    if ($sub == 'Original Rented without Replace') return (!empty($rentalId) && $lotNo == $reservedLot && $rentalIdCount == 1);
-                    if ($sub == 'Rented Replacement') return (!empty($rentalId) && $lotNo != $reservedLot);
-                    if ($sub == 'Stock in Service') return empty($rentalId);
-                    return false;
-                }
-                return true;
-           }
-           if ($category == 'internal_service') {
-                // First check: must be in internal service location
-                if ($item['location'] != 'Physical Locations/Service') {
-                    return false;
-                }
-                
-                if ($sub) {
-                    $rentalId = $item['rental_id'] ?? '';
-                    $lotNo = $item['lot_number'] ?? '';
-                    $reservedLot = $item['reserved_lot'] ?? '';
-                    $rentalIdCount = $item['rental_id_count'] ?? 0;
-
-                    if ($sub == 'Original Rented with Replace') return (!empty($rentalId) && $lotNo == $reservedLot && $rentalIdCount > 1);
-                    if ($sub == 'Original Rented without Replace') return (!empty($rentalId) && $lotNo == $reservedLot && $rentalIdCount == 1);
-                    if ($sub == 'Rented Replacement') return (!empty($rentalId) && $lotNo != $reservedLot);
-                    if ($sub == 'Stock in Internal Service') return empty($rentalId);
-                    return false;
-                }
-                return true;
-           }
-           if ($category == 'insurance') {
-                // First check: must be in insurance location
-                if (stripos($item['location'], 'Partners/Vendors/Insurance') !== 0) {
-                    return false;
-                }
-                
-                if ($sub) {
-                    $rentalId = $item['rental_id'] ?? '';
-                    $lotNo = $item['lot_number'] ?? '';
-                    $reservedLot = $item['reserved_lot'] ?? '';
-                    $rentalIdCount = $item['rental_id_count'] ?? 0;
-                   
-                    if ($sub == 'Original Rented with Replace') return (!empty($rentalId) && $lotNo == $reservedLot && $rentalIdCount > 1);
-                    if ($sub == 'Original Rented without Replace') return (!empty($rentalId) && $lotNo == $reservedLot && $rentalIdCount == 1);
-                    if ($sub == 'Rented Replacement') return (!empty($rentalId) && $lotNo != $reservedLot);
-                    if ($sub == 'Stock in Insurance') return empty($rentalId);
-                    return false;
-                }
-                return true;
-           }
-           if ($category == 'rental_type') {
-                $rentalType = $item['rental_type'] ?? '';
-                if ($sub) {
-                    return $rentalType === $sub;
-                }
-                return !empty($rentalType);
-           }
-           if ($category == 'in_service') {
-                // Combined view for all service locations
-                $loc = $item['location'] ?? '';
-                $isExternal = stripos($loc, 'Partners/Vendors/Service') === 0;
-                $isInternal = $loc == 'Physical Locations/Service';
-                $isInsurance = stripos($loc, 'Partners/Vendors/Insurance') === 0;
-                return $isExternal || $isInternal || $isInsurance;
-           }
-           
-           return true;
-       });
-
-        // For DataTables, return all items (client-side pagination)
-        $items = $filtered->values();
-
-        return view('details', compact('items', 'category', 'sub'));
+        return view('details', compact('items', 'category', 'sub', 'locations', 'roles', 'types'));
     }
 
-    public function export(Request $request, JsonItemRepository $repo)
+    public function export(Request $request, InventoryService $inventory)
     {
         $category = $request->query('category');
         $sub = $request->query('sub');
+        $searchQuery = $request->query('q'); 
+        $format = $request->query('format', 'csv');
         
-        $items = $repo->all();
+        $query = $this->buildFilterQuery($inventory, $category, $sub, $searchQuery);
         
-        $filtered = $items->filter(function($item) use ($category, $sub) {
-            // Global Filter: Exclude Sold items
-            if (!empty($item['is_sold'])) {
-                 return false; 
-            }
-
-             // Replicate logic based on category
-            if ($category == 'vendor_rent') {
-                return $item['is_vendor_rent'] == true;
-            }
-            if ($category == 'sdp_stock') {
-                return true;
-            }
-            if ($category == 'in_stock') {
-                 if ($sub) {
-                     $loc = $item['location'];
-                     if ($sub == 'SDP/OPERATION' && stripos($loc, 'Operation') !== false) return true;
-                     // Logic for sub-locations
-                     if ($sub == 'Jakarta' && (stripos($loc, 'JKT') !== false || stripos($loc, 'Jakarta') !== false)) return true;
-                     if ($sub == 'Surabaya' && (stripos($loc, 'SBY') !== false || stripos($loc, 'SUB') !== false || stripos($loc, 'Surabaya') !== false)) return true;
-                     if ($sub == 'Semarang' && (stripos($loc, 'SMG') !== false || stripos($loc, 'Semarang') !== false)) return true;
-                     if ($sub == 'Bandung' && (stripos($loc, 'BDG') !== false || stripos($loc, 'Bandung') !== false)) return true;
-                     if ($sub == 'Cirebon' && (stripos($loc, 'CRB') !== false || stripos($loc, 'CBN') !== false || stripos($loc, 'Cirebon') !== false)) return true;
-                     if ($sub == 'Cilegon' && (stripos($loc, 'CLG') !== false || stripos($loc, 'Cilegon') !== false)) return true;
-                     if ($sub == 'in-Transit' && stripos($loc, 'Transit') !== false) return true; // Note: 'in-Transit' from URL
-                 }
-                 return $item['in_stock'] == true;
-            }
-            if ($category == 'rented') {
-                 if ($sub) {
-                     // Filter by sub description
-                     // "Vendor Rent", "Original in Customer", etc.
-                     // This is tricky because we only stored raw fields.
-                     // We need to re-apply the logic helper?
-                     // Or just generic location filter?
-                     // For "Rented", items are in 'Partners/Customers/Rental'.
-                     // Sub-logic:
-                     $isVendor = $item['is_vendor_rent'];
-                     $rentalId = $item['rental_id'];
-                     $lotNo = $item['lot_number'];
-                     $reservedLot = $item['reserved_lot'];
-
-                     if ($sub == 'Vendor Rent') return $isVendor;
-                     if ($sub == 'Original in Customer') return ($lotNo == $reservedLot && !empty($reservedLot));
-                     if ($sub == 'Replacement') return (!empty($rentalId) && $lotNo != $reservedLot && !$isVendor);
-                     if ($sub == 'Check Rent position') return empty($rentalId);
-                 }
-                 return $item['location'] == 'Partners/Customers/Rental';
-            }
-            if ($category == 'uncategorized') {
-                // Logic: NOT In Stock AND NOT Rented AND NOT External AND NOT Internal
-                // Simpler: Just rely on the buckets defined in SummaryGenerator? 
-                // But here we are filtering from raw items.
-                // We need to inverse the matching logic.
-                
-                $loc = $item['location'];
-                $isExt = stripos($loc, 'Partners/Vendors/Service') === 0;
-                $isInt = $loc == 'Physical Locations/Service';
-                $isIns = stripos($loc, 'Partners/Vendors/Insurance') === 0;
-                $isRented = $loc == 'Partners/Customers/Rental';
-                $isInStock = $item['in_stock']; // Or use logic if strictly location based? 
-                // SummaryGenerator uses: if ($inStock) ... elseif ...
-                // So if InStock is true, it's captured there.
-                
-                return !$isInStock && !$isRented && !$isExt && !$isInt && !$isIns;
-            }
-            if ($category == 'external_service') {
-                 if ($sub) {
-                    $rentalId = $item['rental_id'];
-                    $lotNo = $item['lot_number'];
-                    $reservedLot = $item['reserved_lot'];
-                    
-                    if ($sub == 'Original Rented') return (!empty($rentalId) && $lotNo == $reservedLot);
-                    if ($sub == 'Rented Replacement') return (!empty($rentalId) && $lotNo != $reservedLot);
-                    if ($sub == 'Stock in Service') return empty($rentalId);
-                 }
-                 return stripos($item['location'], 'Partners/Vendors/Service') === 0;
-            }
-            if ($category == 'internal_service') {
-                 if ($sub) {
-                    $rentalId = $item['rental_id'];
-                    $lotNo = $item['lot_number'];
-                    $reservedLot = $item['reserved_lot'];
-
-                    if ($sub == 'Original Rented') return (!empty($rentalId) && $lotNo == $reservedLot);
-                    if ($sub == 'Rented Replacement') return (!empty($rentalId) && $lotNo != $reservedLot);
-                    if ($sub == 'Stock in Internal Service') return empty($rentalId);
-                 }
-                 return $item['location'] == 'Physical Locations/Service';
-            }
-            if ($category == 'insurance') {
-                 if ($sub) {
-                    $rentalId = $item['rental_id'];
-                    $lotNo = $item['lot_number'];
-                    $reservedLot = $item['reserved_lot'];
-
-                    if ($sub == 'Original Rented') return (!empty($rentalId) && $lotNo == $reservedLot);
-                    if ($sub == 'Rented Replacement') return (!empty($rentalId) && $lotNo != $reservedLot);
-                    if ($sub == 'Stock in Insurance') return empty($rentalId);
-                 }
-                 return stripos($item['location'], 'Partners/Vendors/Insurance') === 0;
-            }
-            if ($category == 'rental_type') {
-                // Only show active rentals (within date range)
-                $isActive = $item['is_active_rental'] ?? true;
-                if (!$isActive) return false;
-                
-                $rentalType = $item['rental_type'] ?? '';
-                if ($sub) {
-                    return $rentalType === $sub;
-                }
-                return !empty($rentalType);
-            }
-            if ($category == 'reserved_subscription') {
-                // Future subscriptions (start > today)
-                $rentalType = $item['rental_type'] ?? '';
-                if ($rentalType !== 'Subscription') return false;
-                
-                $startDate = $item['actual_start_rental'] ?? null;
-                if (empty($startDate) || !is_numeric($startDate)) return false;
-                
-                $excelBase = new \DateTime('1899-12-30');
-                $today = new \DateTime('today');
-                $todaySerial = $excelBase->diff($today)->days;
-                
-                return $startDate > $todaySerial;
-            }
-            if ($category == 'inactive_subscription') {
-                // Expired subscriptions (end < today)
-                $rentalType = $item['rental_type'] ?? '';
-                if ($rentalType !== 'Subscription') return false;
-                
-                $endDate = $item['actual_end_rental'] ?? null;
-                if (empty($endDate) || !is_numeric($endDate)) return false;
-                
-                $excelBase = new \DateTime('1899-12-30');
-                $today = new \DateTime('today');
-                $todaySerial = $excelBase->diff($today)->days;
-                
-                return $endDate < $todaySerial;
-            }
-            
-            return true;
-        });
-
-        // Generate CSV
-        $headers = [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="export_'.date('Y-m-d_H-i-s').'.csv"',
-        ];
-
-        $callback = function() use ($filtered) {
-            $file = fopen('php://output', 'w');
-            fputcsv($file, ['Product', 'Lot Number', 'Internal Ref', 'Location', 'On Hand Qty', 'Vendor Rent', 'In Stock', 'Rental ID']);
-
-            foreach ($filtered as $item) {
-                fputcsv($file, [
-                    $item['product'],
-                    $item['lot_number'],
-                    $item['internal_reference'],
-                    $item['location'],
-                    $item['on_hand_quantity'],
-                    $item['is_vendor_rent'] ? 'Yes' : 'No',
-                    $item['in_stock'] ? 'Yes' : 'No',
-                    $item['rental_id']
-                ]);
-            }
-            fclose($file);
-        };
-
-        return response()->stream($callback, 200, $headers);
+        $timestamp = date('Y-m-d_H-i-s');
+        $filename = "sdp_export_{$category}_{$timestamp}.{$format}";
+        
+        // Use Maatwebsite Excel
+        $export = new \App\Exports\ItemsExport($query);
+        
+        if ($format === 'pdf') {
+             return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::DOMPDF);
+        } elseif ($format === 'xlsx') {
+             return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::XLSX);
+        } else {
+             return Excel::download($export, $filename, \Maatwebsite\Excel\Excel::CSV);
+        }
     }
+    
+    private function buildFilterQuery(InventoryService $inventory, $category, $sub, $searchQuery = null) {
+        $query = Item::query();
+        $today = now()->format('Y-m-d');
+        
+        if ($category !== 'search') {
+            $query->where('is_sold', false);
+        }
 
-    public function rentalPairs(JsonItemRepository $repo)
-    {
-        $items = $repo->all();
-        $summary = $repo->getSummary();
-        $metadata = $repo->getMetadata();
-        
-        // Filter out sold items
-        $items = $items->filter(function($item) {
-            return empty($item['is_sold']);
-        });
-        
-        // Group by rental_id
-        $rentalGroups = [];
-        foreach ($items as $item) {
-            $rentalId = $item['rental_id'] ?? '';
-            if (!empty($rentalId)) {
-                if (!isset($rentalGroups[$rentalId])) {
-                    $rentalGroups[$rentalId] = [];
-                }
-                $rentalGroups[$rentalId][] = $item;
-            }
+        if ($category == 'search' && $searchQuery) {
+            $query->where(function($q) use ($searchQuery) {
+                $q->where('lot_number', 'like', "%$searchQuery%")
+                  ->orWhere('product', 'like', "%$searchQuery%")
+                  ->orWhere('location', 'like', "%$searchQuery%")
+                  ->orWhere('internal_reference', 'like', "%$searchQuery%");
+            });
+        } elseif ($category == 'vendor_rent') {
+            $query->where('is_vendor_rent', true);
+        } elseif ($category == 'in_stock') {
+             if ($sub) {
+                 if ($sub == 'Operation') $query->where('location', 'like', '%Operation%'); // Keep loose match or use constant?
+                 elseif ($sub == 'in-Transit') $query->where('location', 'like', '%Transit%');
+                 elseif ($sub == 'Jakarta') $query->where(function($q) { $q->where('location', 'like', '%JKT%')->orWhere('location', 'like', '%Jakarta%'); });
+                 elseif ($sub == 'Surabaya') $query->where(function($q) { $q->where('location', 'like', '%SBY%')->orWhere('location', 'like', '%SUB%')->orWhere('location', 'like', '%Surabaya%'); });
+                 elseif ($sub == 'Semarang') $query->where(function($q) { $q->where('location', 'like', '%SMG%')->orWhere('location', 'like', '%Semarang%'); });
+                 elseif ($sub == 'Bandung') $query->where(function($q) { $q->where('location', 'like', '%BDG%')->orWhere('location', 'like', '%Bandung%'); });
+                 elseif ($sub == 'Cirebon') $query->where(function($q) { $q->where('location', 'like', '%CRB%')->orWhere('location', 'like', '%CBN%')->orWhere('location', 'like', '%Cirebon%'); });
+                 elseif ($sub == 'Cilegon') $query->where(function($q) { $q->where('location', 'like', '%CLG%')->orWhere('location', 'like', '%Cilegon%'); });
+                 else $query->where('location', $sub);
+             }
+             $inventory->scopeInStock($query);
+        } elseif ($category == 'stock_pure') {
+            $inventory->scopeInStock($query)->where(function($q) {
+                $q->whereNull('rental_id')->orWhere('rental_id', '');
+            });
+        } elseif ($category == 'stock_original') {
+            $inventory->scopeInStock($query)->whereNotNull('rental_id')->where('rental_id', '!=', '')->where('actual_start_rental', '<=', $today);
+            if ($sub == 'with_replace') $query->where('rental_id_count', '>', 1);
+            if ($sub == 'no_replace') $query->where('rental_id_count', '<=', 1);
+        } elseif ($category == 'stock_reserve') {
+             $inventory->scopeInStock($query)->whereNotNull('rental_id')->where('rental_id', '!=', '')->where('actual_start_rental', '>', $today);
+        } elseif ($category == 'rented') {
+             $inventory->scopeRented($query);
+             if ($sub == 'Vendor Rent') $query->where('is_vendor_rent', true);
+             elseif ($sub == 'Original in Customer') $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('reserved_lot')->where('reserved_lot', '!=', '')->where('is_vendor_rent', false);
+             elseif ($sub == 'Replacement') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot')->where('is_vendor_rent', false);
+             elseif ($sub == 'Replacement - Service') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot')->where('is_vendor_rent', false)->where('rental_id_count', '>', 1);
+             elseif ($sub == 'Replacement - RBO') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot')->where('is_vendor_rent', false)->where('rental_id_count', 1);
+             elseif ($sub == 'Check Rent position') $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); })->where('is_vendor_rent', false);
+        } elseif ($category == 'external_service') {
+             $inventory->scopeExternalService($query);
+              if ($sub) {
+                if (str_contains($sub, 'Original')) $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
+                if (str_contains($sub, 'with Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', '>', 1);
+                if (str_contains($sub, 'without Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', 1);
+                if ($sub == 'Rented Replacement') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot');
+                if ($sub == 'Stock in Service') $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); });
+             }
+        } elseif ($category == 'internal_service') {
+             $inventory->scopeInternalService($query);
+             if ($sub) {
+                if (str_contains($sub, 'Original')) $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
+                if (str_contains($sub, 'with Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', '>', 1);
+                if (str_contains($sub, 'without Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', 1);
+                if ($sub == 'Rented Replacement') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot');
+                if ($sub == 'Stock in Internal Service') $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); });
+             }
+        } elseif ($category == 'insurance') {
+             $inventory->scopeInsurance($query);
+             if ($sub) {
+                if (str_contains($sub, 'Original')) $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
+                if (str_contains($sub, 'with Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', '>', 1);
+                if (str_contains($sub, 'without Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', 1);
+                if ($sub == 'Rented Replacement') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot'); 
+                if ($sub == 'Stock in Insurance') $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); });
+             }
+        } elseif ($category == 'rental_type') {
+             $query->where('is_active_rental', true);
+             if ($sub) $query->where('rental_type', $sub);
+             else $query->whereNotNull('rental_type')->where('rental_type', '!=', '');
+        } elseif ($category == 'reserved_subscription') {
+             $query->where('rental_type', 'Subscription')->where('actual_start_rental', '>', $today);
+        } elseif ($category == 'inactive_subscription') {
+             $query->where('rental_type', 'Subscription')->where('actual_end_rental', '<', $today);
+        } elseif ($category == 'in_service') {
+             $inventory->scopeInService($query);
+        } elseif ($category == 'sdp_owned') {
+             $inventory->scopeSdpOwned($query);
+        } elseif ($category == 'uncategorized') {
+             $query->where('in_stock', false)
+                   ->where('location', '!=', Location::RENTAL_CUSTOMER)
+                   ->where('location', 'not like', Location::SERVICE_EXTERNAL . '%')
+                   ->where('location', '!=', Location::SERVICE_INTERNAL)
+                   ->where('location', 'not like', Location::INSURANCE . '%');
         }
         
-        // Filter to only pairs (count > 1)
+        return $query;
+    }
+
+    public function rentalPairs()
+    {
+        // Get all items not sold
+        $items = Item::where('is_sold', false)->whereNotNull('rental_id')->where('rental_id', '!=', '')->get();
+        // Group by rental_id
+        $grouped = $items->groupBy('rental_id');
+        
         $rentalPairs = [];
-        foreach ($rentalGroups as $rentalId => $group) {
-            if (count($group) > 1) {
-                // Sort so Main comes first
-                usort($group, function($a, $b) {
-                    $roleA = $a['vehicle_role'] ?? '';
-                    $roleB = $b['vehicle_role'] ?? '';
-                    if ($roleA === 'Main' && $roleB !== 'Main') return -1;
-                    if ($roleB === 'Main' && $roleA !== 'Main') return 1;
-                    return 0;
+        foreach ($grouped as $rid => $group) {
+            if ($group->count() > 1) {
+                // Sort Main first
+                $sorted = $group->sortBy(function($item) {
+                     return $item->vehicle_role === 'Main' ? 0 : 1;
                 });
                 
-                $rentalPairs[$rentalId] = [
-                    'rental_id' => $rentalId,
-                    'vehicles' => $group,
-                    'main_vehicle' => collect($group)->firstWhere('vehicle_role', 'Main'),
-                    'replacement_vehicles' => collect($group)->where('vehicle_role', 'Replacement')->values()->all(),
+                $rentalPairs[$rid] = [
+                    'rental_id' => $rid,
+                    'vehicles' => $sorted->values(),
+                    'main_vehicle' => $sorted->firstWhere('vehicle_role', 'Main'),
+                    'replacement_vehicles' => $sorted->where('vehicle_role', 'Replacement')->values(),
                 ];
             }
         }
         
         $pairsCount = count($rentalPairs);
         
+        // Metadata
+        $latest = History::orderBy('snapshot_date', 'desc')->first();
+        $metadata = ['imported_at' => $latest ? $latest->created_at->format('Y-m-d H:i:s') : null];
+
         return view('rental_pairs', compact('rentalPairs', 'pairsCount', 'metadata'));
     }
 }

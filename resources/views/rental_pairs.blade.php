@@ -1,287 +1,172 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rental Pairs - Main & Replacement Vehicles</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
-    <style>
-        .pair-card {
-            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            margin-bottom: 1rem;
-            transition: all 0.2s ease;
-        }
-        .pair-card:hover {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-        }
-        .vehicle-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1rem;
-            height: 100%;
-        }
-        .vehicle-main {
-            border-left: 4px solid #10b981;
-        }
-        .vehicle-replacement {
-            border-left: 4px solid #f97316;
-        }
-        .role-badge-main {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            font-size: 0.75rem;
-            padding: 0.25em 0.75em;
-            border-radius: 20px;
-        }
-        .role-badge-replacement {
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            color: white;
-            font-size: 0.75rem;
-            padding: 0.25em 0.75em;
-            border-radius: 20px;
-        }
-        .rental-id-badge {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            font-size: 0.85rem;
-            padding: 0.35em 0.85em;
-            border-radius: 6px;
-        }
-        .arrow-icon {
-            font-size: 1.5rem;
-            color: #94a3b8;
-        }
-        .plate-number {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #1e293b;
-        }
-        .vehicle-info {
-            font-size: 0.85rem;
-            color: #64748b;
-        }
-        .location-badge {
-            font-size: 0.7rem;
-            padding: 0.2em 0.5em;
-            border-radius: 4px;
-        }
-        .loc-customer { background: #fef3c7; color: #92400e; }
-        .loc-external { background: #fee2e2; color: #991b1b; }
-        .loc-internal { background: #e0f2fe; color: #0369a1; }
-        .loc-stock { background: #dcfce7; color: #166534; }
-        .loc-other { background: #f1f5f9; color: #475569; }
-        
-        .summary-stat {
-            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-            color: white;
-            border-radius: 12px;
-            padding: 1.5rem;
-        }
-        .stat-number {
-            font-size: 2.5rem;
-            font-weight: 700;
-        }
-    </style>
-</head>
-<body class="bg-light">
-    <nav class="navbar navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{{ route('dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>SDP DASHBOARD</a>
-            <a href="{{ route('dashboard') }}" class="btn btn-outline-light btn-sm"><i class="bi bi-arrow-left me-1"></i> Back to Dashboard</a>
-        </div>
-    </nav>
+@extends('layouts.app')
 
-    <div class="container pb-5">
-        <div class="row mb-4">
-            <div class="col-md-8">
-                <h3 class="mb-0"><i class="bi bi-arrow-left-right me-2"></i>Rental Pairs</h3>
-                <p class="text-muted mb-0">Vehicles with Main & Replacement relationship</p>
-            </div>
-            <div class="col-md-4">
-                <div class="summary-stat text-center">
-                    <div class="stat-number">{{ $pairsCount }}</div>
-                    <div>Active Rental Pairs</div>
-                </div>
-            </div>
-        </div>
+@section('title', 'Rental Pairs - SDP Stock')
 
-        @if($pairsCount > 0)
-        <!-- Search Box -->
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row align-items-center">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-search"></i></span>
-                            <input type="text" id="searchPairs" class="form-control" placeholder="Search by Rental ID, Plate Number, or Product...">
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <select id="filterRole" class="form-select">
-                            <option value="">All Pairs</option>
-                            <option value="customer">Replacement with Customer</option>
-                            <option value="service">Main in Service</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 text-end">
-                        <span class="badge bg-secondary" id="pairCount">{{ $pairsCount }} pairs</span>
-                    </div>
-                </div>
-            </div>
+@section('content')
+<div x-data="rentalPairs()" x-init="init()" class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-600 to-orange-600">
+                Rental Pairs Analysis
+            </h1>
+            <p class="text-slate-500 text-sm mt-1">Contracts with multiple vehicles (Main + Replacements)</p>
         </div>
+        <div class="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+             <!-- Search -->
+            <div class="relative w-full md:w-64">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <input x-model="search" type="text" class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 text-slate-700 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all" placeholder="Search Pairs...">
+            </div>
 
-        <!-- Pairs List -->
-        <div id="pairsList">
-            @foreach($rentalPairs as $pair)
-            @php
-                $main = $pair['main_vehicle'];
-                $replacements = $pair['replacement_vehicles'];
-            @endphp
-            <div class="pair-card p-3" data-rental-id="{{ strtolower($pair['rental_id']) }}" 
-                 data-search="{{ strtolower($pair['rental_id'] . ' ' . ($main['lot_number'] ?? '') . ' ' . ($main['product'] ?? '') . ' ' . implode(' ', array_column($replacements, 'lot_number')) . ' ' . implode(' ', array_column($replacements, 'product'))) }}">
-                <div class="d-flex align-items-center mb-2">
-                    <span class="rental-id-badge me-3">{{ $pair['rental_id'] }}</span>
-                    <small class="text-muted">{{ count($pair['vehicles']) }} vehicles linked</small>
-                </div>
-                
-                <div class="row g-3 align-items-stretch">
-                    <!-- Main Vehicle -->
-                    <div class="col-md-5">
-                        @if($main)
-                        <div class="vehicle-card vehicle-main">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="role-badge-main"><i class="bi bi-star-fill me-1"></i>Main</span>
-                                @php
-                                    $loc = $main['location'] ?? '';
-                                    $locClass = 'loc-other';
-                                    if (stripos($loc, 'Partners/Customers') !== false) $locClass = 'loc-customer';
-                                    elseif (stripos($loc, 'Partners/Vendors/Service') !== false) $locClass = 'loc-external';
-                                    elseif (stripos($loc, 'Physical Locations/Service') !== false) $locClass = 'loc-internal';
-                                    elseif (stripos($loc, 'STOCK') !== false) $locClass = 'loc-stock';
-                                    
-                                    $locShort = $loc;
-                                    if ($loc === 'Partners/Customers/Rental') $locShort = 'Customer';
-                                    elseif (stripos($loc, 'Partners/Vendors/Service') === 0) $locShort = 'Ext. Service';
-                                    elseif ($loc === 'Physical Locations/Service') $locShort = 'Int. Service';
-                                    elseif (preg_match('/^SD([A-Z]{2,3})\\//', $loc, $m)) $locShort = $m[1] . ' Stock';
-                                @endphp
-                                <span class="location-badge {{ $locClass }}">{{ $locShort }}</span>
-                            </div>
-                            <div class="plate-number mb-1">{{ $main['lot_number'] }}</div>
-                            <div class="vehicle-info text-truncate" title="{{ $main['product'] }}">{{ $main['product'] }}</div>
-                        </div>
-                        @else
-                        <div class="vehicle-card text-center text-muted py-4">
-                            <i class="bi bi-question-circle fs-3"></i>
-                            <div>Main vehicle not identified</div>
-                        </div>
-                        @endif
-                    </div>
-                    
-                    <!-- Arrow -->
-                    <div class="col-md-2 d-flex align-items-center justify-content-center">
-                        <span class="arrow-icon"><i class="bi bi-arrow-left-right"></i></span>
-                    </div>
-                    
-                    <!-- Replacement Vehicle(s) -->
-                    <div class="col-md-5">
-                        @foreach($replacements as $replacement)
-                        <div class="vehicle-card vehicle-replacement @if(!$loop->last) mb-2 @endif">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="role-badge-replacement"><i class="bi bi-arrow-repeat me-1"></i>Replacement</span>
-                                @php
-                                    $loc = $replacement['location'] ?? '';
-                                    $locClass = 'loc-other';
-                                    if (stripos($loc, 'Partners/Customers') !== false) $locClass = 'loc-customer';
-                                    elseif (stripos($loc, 'Partners/Vendors/Service') !== false) $locClass = 'loc-external';
-                                    elseif (stripos($loc, 'Physical Locations/Service') !== false) $locClass = 'loc-internal';
-                                    elseif (stripos($loc, 'STOCK') !== false) $locClass = 'loc-stock';
-                                    
-                                    $locShort = $loc;
-                                    if ($loc === 'Partners/Customers/Rental') $locShort = 'Customer';
-                                    elseif (stripos($loc, 'Partners/Vendors/Service') === 0) $locShort = 'Ext. Service';
-                                    elseif ($loc === 'Physical Locations/Service') $locShort = 'Int. Service';
-                                    elseif (preg_match('/^SD([A-Z]{2,3})\\//', $loc, $m)) $locShort = $m[1] . ' Stock';
-                                @endphp
-                                <span class="location-badge {{ $locClass }}">{{ $locShort }}</span>
-                            </div>
-                            <div class="plate-number mb-1">{{ $replacement['lot_number'] }}</div>
-                            <div class="vehicle-info text-truncate" title="{{ $replacement['product'] }}">{{ $replacement['product'] }}</div>
-                        </div>
-                        @endforeach
-                        @if(count($replacements) == 0)
-                        <div class="vehicle-card text-center text-muted py-4">
-                            <i class="bi bi-question-circle fs-3"></i>
-                            <div>Replacement not identified</div>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-            </div>
-            @endforeach
+            <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap">
+                <span x-text="filteredPairs.length"></span> Active Pairs
+            </span>
+            <a href="{{ route('dashboard') }}" class="px-4 py-2 bg-white border border-slate-200 rounded-lg text-slate-600 font-medium hover:bg-slate-50 transition-colors shadow-sm whitespace-nowrap">
+                Back
+            </a>
         </div>
-        @else
-        <div class="card">
-            <div class="card-body text-center py-5">
-                <i class="bi bi-inbox fs-1 text-muted"></i>
-                <h5 class="mt-3">No Rental Pairs Found</h5>
-                <p class="text-muted">There are no main/replacement vehicle pairs in the current data.</p>
-                <a href="{{ route('dashboard') }}" class="btn btn-primary">Back to Dashboard</a>
-            </div>
-        </div>
-        @endif
     </div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        $(document).ready(function() {
-            // Search functionality
-            $('#searchPairs').on('keyup', function() {
-                var searchText = $(this).val().toLowerCase();
-                filterPairs();
-            });
+    <!-- Main List -->
+    <div class="space-y-4">
+        <template x-for="(pair, index) in filteredPairs" :key="pair.rental_id">
+            <div x-data="{ open: false }" class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden transition-all duration-300" :class="open ? 'ring-2 ring-amber-100' : ''">
+                <!-- Header Row -->
+                <div @click="open = !open" class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 transition-colors">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-600 font-bold text-xs shadow-sm" x-text="index + 1"></div>
+                        <div>
+                            <h3 class="font-bold text-slate-800" x-text="pair.rental_id"></h3>
+                            <div class="flex items-center gap-2 text-xs text-slate-500">
+                                <span><span x-text="pair.vehicles.length"></span> Vehicles</span>
+                                <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                <span x-text="pair.main_vehicle ? (pair.main_vehicle.rental_type || 'Unknown Type') : 'No Main Vehicle'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <!-- Status Indicators -->
+                        <div class="flex -space-x-2">
+                             <template x-for="v in pair.vehicles" :key="v.lot_number">
+                             <div :title="v.vehicle_role" class="w-8 h-8 rounded-full border-2 border-white flex items-center justify-center text-xs font-bold text-white shadow-sm"
+                                  :style="'background-color: ' + (v.vehicle_role == 'Main' ? '#10b981' : '#f59e0b')">
+                                 <span x-text="v.vehicle_role.substring(0, 1)"></span>
+                             </div>
+                             </template>
+                        </div>
+                        
+                        <button class="p-2 rounded-lg text-slate-400 hover:text-indigo-600 transition-colors">
+                            <svg class="w-5 h-5 transition-transform duration-300" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Expanded Details -->
+                <div x-show="open" x-collapse class="border-t border-slate-100 bg-slate-50/50 p-4">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        <!-- Main Vehicle -->
+                        <div class="bg-white p-4 rounded-xl border border-emerald-100 shadow-sm relative overflow-hidden">
+                            <div class="absolute top-0 right-0 px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-bl-xl">MAIN</div>
+                            <template x-if="pair.main_vehicle">
+                                <div>
+                                    <div class="mb-2">
+                                        <div class="text-xs text-slate-400 uppercase tracking-wider">Product</div>
+                                        <div class="font-bold text-slate-800" x-text="pair.main_vehicle.product"></div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2 text-sm">
+                                        <div>
+                                            <span class="text-slate-400 block text-xs">Lot Number</span>
+                                            <span class="font-mono text-emerald-600 font-medium" x-text="pair.main_vehicle.lot_number"></span>
+                                        </div>
+                                        <div>
+                                            <span class="text-slate-400 block text-xs">Internal Ref</span>
+                                            <span class="text-slate-600" x-text="pair.main_vehicle.internal_reference"></span>
+                                        </div>
+                                        <div class="col-span-2">
+                                            <span class="text-slate-400 block text-xs">Location</span>
+                                            <span class="text-slate-600" x-text="pair.main_vehicle.location"></span>
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 pt-3 border-t border-slate-50 flex justify-between items-center">
+                                        <span class="text-xs text-slate-400">Qty: <span x-text="pair.main_vehicle.on_hand_quantity"></span></span>
+                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="pair.main_vehicle.in_stock ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-500'"
+                                              x-text="pair.main_vehicle.in_stock ? 'IN STOCK' : 'OUT'">
+                                        </span>
+                                    </div>
+                                </div>
+                            </template>
+                            <template x-if="!pair.main_vehicle">
+                                <div class="text-red-500 text-sm font-medium">Missing Main Vehicle Record</div>
+                            </template>
+                        </div>
+
+                        <!-- Replacement Vehicles -->
+                        <div class="space-y-3">
+                            <template x-for="repl in pair.replacement_vehicles" :key="repl.lot_number">
+                            <div class="bg-white p-4 rounded-xl border border-amber-100 shadow-sm relative overflow-hidden">
+                                <div class="absolute top-0 right-0 px-3 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-bl-xl">REPLACEMENT</div>
+                                 <div class="mb-2">
+                                    <div class="text-xs text-slate-400 uppercase tracking-wider">Product</div>
+                                    <div class="font-bold text-slate-800" x-text="repl.product"></div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <span class="text-slate-400 block text-xs">Lot Number</span>
+                                        <span class="font-mono text-amber-600 font-medium" x-text="repl.lot_number"></span>
+                                    </div>
+                                    <div>
+                                        <span class="text-slate-400 block text-xs">Internal Ref</span>
+                                        <span class="text-slate-600" x-text="repl.internal_reference"></span>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <span class="text-slate-400 block text-xs">Location</span>
+                                        <span class="text-slate-600" x-text="repl.location"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        
+        <div x-show="filteredPairs.length === 0" class="text-center py-12 bg-white rounded-3xl border border-slate-100 border-dashed">
+            <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 mx-auto mb-4">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800">No Rental Pairs Found</h3>
+            <p class="text-slate-500">There are no active contracts matching your search.</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    function rentalPairs() {
+        return {
+            pairs: Object.values(@json($rentalPairs)),
+            search: '',
             
-            $('#filterRole').on('change', function() {
-                filterPairs();
-            });
-            
-            function filterPairs() {
-                var searchText = $('#searchPairs').val().toLowerCase();
-                var roleFilter = $('#filterRole').val();
-                var visibleCount = 0;
+            get filteredPairs() {
+                if (!this.search) return this.pairs;
+                const term = this.search.toLowerCase();
                 
-                $('#pairsList .pair-card').each(function() {
-                    var searchData = $(this).data('search');
-                    var matchesSearch = searchText === '' || searchData.indexOf(searchText) > -1;
-                    var matchesRole = true;
+                return this.pairs.filter(pair => {
+                    // Match Rental ID
+                    if (pair.rental_id && pair.rental_id.toLowerCase().includes(term)) return true;
                     
-                    if (roleFilter === 'customer') {
-                        // Replacement is with customer
-                        matchesRole = $(this).find('.vehicle-replacement .loc-customer').length > 0;
-                    } else if (roleFilter === 'service') {
-                        // Main is in service
-                        matchesRole = $(this).find('.vehicle-main .loc-external, .vehicle-main .loc-internal').length > 0;
-                    }
-                    
-                    if (matchesSearch && matchesRole) {
-                        $(this).show();
-                        visibleCount++;
-                    } else {
-                        $(this).hide();
-                    }
+                    // Match any vehicle lot/product
+                    return pair.vehicles.some(v => 
+                        (v.lot_number && v.lot_number.toLowerCase().includes(term)) ||
+                        (v.product && v.product.toLowerCase().includes(term))
+                    );
                 });
-                
-                $('#pairCount').text(visibleCount + ' pairs');
             }
-        });
-    </script>
-</body>
-</html>
+        }
+    }
+</script>
+@endsection

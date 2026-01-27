@@ -2,17 +2,26 @@
 
 namespace App\Services;
 
+use App\Constants\Location;
+use App\Services\InventoryService;
 use Maatwebsite\Excel\Facades\Excel;
 
 class SummaryGenerator
 {
-    public function generate($filePath)
+    protected $inventoryService;
+
+    public function __construct(InventoryService $inventoryService)
+    {
+        $this->inventoryService = $inventoryService;
+    }
+
+    public function generate($file)
     {
         // specific reader setup might be needed if date formatting is an issue, 
         // but default import usually works.
         // We'll calculate everything in memory.
         
-        $sheets = Excel::toArray([], $filePath);
+        $sheets = Excel::toArray([], $file);
         $data = null;
         
         foreach ($sheets as $sheetData) {
@@ -56,8 +65,8 @@ class SummaryGenerator
                     'reserve' => 0, // Maps to active future rentals or specific status
                 ],
                 'details' => [
-                    'SDP/OPERATION' => ['count' => 0, 'qty' => 0],
-                    'SDP/STOCK SOLD' => [
+                    Location::OPERATION => ['count' => 0, 'qty' => 0],
+                    Location::SOLD_STOCK => [
                         'Stock for Sold' => 0,
                         'Jakarta' => 0,
                         'Surabaya' => 0,
@@ -113,31 +122,52 @@ class SummaryGenerator
             ],
         ];
 
-        // Column Mapping (based on analyze_excel output)
-        // 0: Product, 1: Lot/Serial Number, 2: Internal Ref, 3: Tahun, 4: Location, 
-        // 5: On Hand Qty, 6: Is Vendor Rent, 7: Is On Hand, 8: In Stock?
-        // 11: Rental ID, 20: Reserved Lot (Rental ID/Order Lines/Reserved Lot)
+        // Initialize Summary Structure
+        // ... (lines 45-123 same, but skipping to logic) ...
+
+        // Column Mapping
+        // Define Required Headers
+        $requiredHeaders = [
+            'Product', 
+            'Lot/Serial Number', 
+            'Location', 
+            'On Hand Quantity'
+        ];
         
-        // Skip header row
         $header = array_shift($data);
+        if (!$header) {
+             throw new \InvalidArgumentException("The file is empty or missing headers.");
+        }
         
-        // Helper to find index by name
-        // Filter out nulls/empties and cast to string to avoid array_flip warnings
-        // $header = array_map(function($h) { return (string)$h; }, $header);
-        $header = array_map(function($h) { return (string)$h; }, $header);
-        $colMap = array_flip($header); 
+        // Cast to string and trim
+        $header = array_map(function($h) { return trim((string)$h); }, $header);
+        $colMap = array_flip($header);
+        
+        // Validate Required Headers
+        $missingHeaders = [];
+        foreach ($requiredHeaders as $req) {
+            if (!isset($colMap[$req])) {
+                $missingHeaders[] = $req;
+            }
+        }
+        
+        if (!empty($missingHeaders)) {
+            throw new \InvalidArgumentException("Missing required columns: " . implode(', ', $missingHeaders));
+        }
 
         $idxParams = [
-            'on_hand_qty' => $colMap['On Hand Quantity'] ?? 5,
-            'is_vendor_rent' => $colMap['Is Vendor Rent'] ?? 6,
-            'in_stock' => $colMap['In Stock?'] ?? 8,
-            'location' => $colMap['Location'] ?? 4,
-            'lot_no' => $colMap['Lot/Serial Number'] ?? 1,
-            'reserved_lot' => $colMap['Rental ID/Order Lines/Reserved Lot'] ?? 20,
-            'rental_id' => $colMap['Rental ID'] ?? 11,
-            'rental_type' => $colMap['Rental ID/Tipe Rental'] ?? 23,
-            'actual_start_rental' => $colMap['Rental ID/Actual Start Rental'] ?? 15,
-            'actual_end_rental' => $colMap['Rental ID/Actual End Rental'] ?? 16,
+            'on_hand_qty' => $colMap['On Hand Quantity'],
+            'is_vendor_rent' => $colMap['Is Vendor Rent'] ?? -1,
+            'in_stock' => $colMap['In Stock?'] ?? -1,
+            'location' => $colMap['Location'],
+            'lot_no' => $colMap['Lot/Serial Number'],
+            'reserved_lot' => $colMap['Rental ID/Order Lines/Reserved Lot'] ?? -1,
+            'rental_id' => $colMap['Rental ID'] ?? -1,
+            'rental_type' => $colMap['Rental ID/Tipe Rental'] ?? -1,
+            'actual_start_rental' => $colMap['Rental ID/Actual Start Rental'] ?? -1,
+            'actual_end_rental' => $colMap['Rental ID/Actual End Rental'] ?? -1,
+            'km_last' => $colMap['Last Odometer (KM)'] ?? -1,
+            'is_on_hand' => $colMap['Is On Hand?'] ?? -1,
         ];
         
         // Pre-compute rental_id occurrence counts
@@ -163,17 +193,34 @@ class SummaryGenerator
 
         $items = [];
         foreach ($data as $i => $row) {
-             // if ($i < 2) echo "Row $i: " . print_r($row, true) . "\n";
-            $qty = (float)($row[$idxParams['on_hand_qty']] ?? 0);
-            $isVendorRent = !empty($row[$idxParams['is_vendor_rent']]) && $row[$idxParams['is_vendor_rent']] !== false && $row[$idxParams['is_vendor_rent']] !== 'False';
-            $inStock = !empty($row[$idxParams['in_stock']]) && $row[$idxParams['in_stock']] !== false && $row[$idxParams['in_stock']] !== 'False';
-            $location = trim($row[$idxParams['location']] ?? '');
-            $lotNo = trim($row[$idxParams['lot_no']] ?? '');
-            $reservedLot = trim($row[$idxParams['reserved_lot']] ?? '');
-            $rentalType = trim($row[$idxParams['rental_type']] ?? '');
-            $actualStartRental = $row[$idxParams['actual_start_rental']] ?? null;
-            $actualEndRental = $row[$idxParams['actual_end_rental']] ?? null;
-            $rentalId = trim($row[$idxParams['rental_id']] ?? '');
+             // Skip row if Lot Number is missing
+             $lotNo = trim($row[$idxParams['lot_no']] ?? '');
+             if (empty($lotNo)) continue;
+
+             // Helper to safely get value or default
+             $getValue = function($key) use ($row, $idxParams) {
+                 $idx = $idxParams[$key];
+                 return ($idx !== -1) ? ($row[$idx] ?? null) : null;
+             };
+
+            $qty = (float)($getValue('on_hand_qty') ?? 0);
+            
+            // Boolean Checks
+            $isVendorRentVal = $getValue('is_vendor_rent');
+            $isVendorRent = !empty($isVendorRentVal) && $isVendorRentVal !== false && $isVendorRentVal !== 'False';
+            
+            $inStockVal = $getValue('in_stock');
+            // If explicit "In Stock?" column exists, use it. Otherwise assume TRUE if qty > 0 (fallback logic if needed, but stick to column for now)
+            $inStock = !empty($inStockVal) && $inStockVal !== false && $inStockVal !== 'False';
+            
+            $location = trim($getValue('location') ?? '');
+            
+            $reservedLot = trim($getValue('reserved_lot') ?? '');
+            $rentalType = trim($getValue('rental_type') ?? '');
+            
+            $actualStartRental = $getValue('actual_start_rental');
+            $actualEndRental = $getValue('actual_end_rental');
+            $rentalId = trim($getValue('rental_id') ?? '');
 
             // Rental Status Check - Active if today is between start and end dates
             $isActiveRental = true;
@@ -196,7 +243,7 @@ class SummaryGenerator
             // User clarified: "SDP/STOCK SOLD" (26 items) is valid stock.
             // "SDP/SOLD" (1 item) is the only one to exclude.
             // Be precise with the check.
-            $isSold = ($location === 'SDP/SOLD');
+            $isSold = ($location === Location::SOLD);
 
             if ($isSold) {
                 // Skip adding to active summary counts
@@ -293,7 +340,7 @@ class SummaryGenerator
                 
                 // Categorize Location
                 if (stripos($location, 'Operation') !== false) {
-                     $summary['in_stock']['details']['SDP/OPERATION']['count'] += $qty; 
+                     $summary['in_stock']['details'][Location::OPERATION]['count'] += $qty; 
                 } else {
                      $loc = $location; 
                      if (!isset($summary['in_stock']['details']['locations'])) {
@@ -307,16 +354,16 @@ class SummaryGenerator
             }
             
             // Rented in Customer
-            elseif (!$isSold && $location == 'Partners/Customers/Rental') {
+            elseif (!$isSold && $location == Location::RENTAL_CUSTOMER) {
                 $summary['rented_in_customer']['total'] += $qty;
                 $rentalIdCount = $rentalIdCounts[$rentalId] ?? 0;
                 
                 // Sub-logic
                 if ($isVendorRent) {
                      $summary['rented_in_customer']['details']['Vendor Rent'] += $qty;
-                } elseif ($lotNo == $reservedLot && !empty($reservedLot)) {
+                } elseif ($this->inventoryService->isOriginal($lotNo, $reservedLot)) {
                      $summary['rented_in_customer']['details']['Original in Customer'] += $qty;
-                } elseif (!empty($rentalId) && $lotNo != $reservedLot && !$isVendorRent) {
+                } elseif ($this->inventoryService->isReplacement($lotNo, $reservedLot, $rentalId, $isVendorRent)) {
                      // Replacement - split into Service vs RBO
                      if ($rentalIdCount > 1) {
                          // Service: rental_id appears more than once (main vehicle exists, likely in service)
@@ -333,7 +380,7 @@ class SummaryGenerator
             }
             
             // External Service
-            elseif (!$isSold && stripos($location, 'Partners/Vendors/Service') === 0) {
+            elseif (!$isSold && stripos($location, Location::SERVICE_EXTERNAL) === 0) {
                 $summary['stock_external_service']['total'] += $qty;
                 $rentalIdCount = $rentalIdCounts[$rentalId] ?? 0;
                 
@@ -352,7 +399,7 @@ class SummaryGenerator
                 }
             }
             // Internal Service
-            elseif (!$isSold && $location == 'Physical Locations/Service') {
+            elseif (!$isSold && $location == Location::SERVICE_INTERNAL) {
                 $summary['stock_internal_service']['total'] += $qty;
                 $rentalIdCount = $rentalIdCounts[$rentalId] ?? 0;
                 
@@ -369,7 +416,7 @@ class SummaryGenerator
                 }
             }
             // Insurance (Partners/Vendors/Insurance)
-            elseif (!$isSold && stripos($location, 'Partners/Vendors/Insurance') === 0) {
+            elseif (!$isSold && stripos($location, Location::INSURANCE) === 0) {
                 $summary['stock_insurance']['total'] += $qty;
                 $rentalIdCount = $rentalIdCounts[$rentalId] ?? 0;
                 
@@ -416,7 +463,7 @@ class SummaryGenerator
                 'actual_start_rental' => $actualStartRental,
                 'actual_end_rental' => $actualEndRental,
                 'is_active_rental' => $isActiveRental, // NEW
-                'category_flag' => $this->determineCategory($summary, $location, $isVendorRent, $lotNo, $reservedLot, $rentalId, $qty),
+                'category_flags' => $this->determineCategory($summary, $location, $isVendorRent, $lotNo, $reservedLot, $rentalId, $qty),
                 'vehicle_role' => $vehicleRole,
                 'linked_vehicle' => null, // Will be populated in second pass
                 'rental_id_count' => $rentalIdCounts[$rentalId] ?? 0,
@@ -468,17 +515,81 @@ class SummaryGenerator
         return ['summary' => $summary, 'items' => $items];
     }
     
-    // Helper to tag items for drilldown
+    // Helper to tag items for drilldown (simplified for DB)
     private function determineCategory($summary, $location, $isVendorRent, $lotNo, $reservedLot, $rentalId, $qty) {
         $tags = [];
         if ($isVendorRent) $tags[] = 'vendor_rent';
-        
-        // In Stock Logic
-        $inStock = false; // Need to access inStock var? passed in args? 
-        // Re-deriving slightly inefficient but safer if I don't pass everything. 
-        // Let's just return raw items and let Repository/Controller filter?
-        // Filtering purely by JSON query might be slow if complex logic.
-        // I will just add properties used in logic.
         return $tags;
+    }
+
+    public function saveToDatabase($items, $summary)
+    {
+        // 1. Save Items
+        \App\Models\Item::truncate();
+        
+        $chunkedItems = array_chunk($items, 500);
+        foreach ($chunkedItems as $chunk) {
+            $insertData = [];
+            foreach ($chunk as $item) {
+                // Convert Dates
+                $start = $this->excelDateToCarbon($item['actual_start_rental']);
+                $end = $this->excelDateToCarbon($item['actual_end_rental']);
+                
+                $insertData[] = [
+                    'product' => $item['product'],
+                    'lot_number' => $item['lot_number'],
+                    'internal_reference' => $item['internal_reference'],
+                    'year' => $item['year'],
+                    'location' => $item['location'],
+                    'on_hand_quantity' => $item['on_hand_quantity'],
+                    'is_vendor_rent' => $item['is_vendor_rent'],
+                    'is_on_hand' => $item['is_on_hand'],
+                    'in_stock' => $item['in_stock'], 
+                    // 'is_stock' => $item['in_stock'], // Mapping if renamed
+                    'is_sold' => $item['is_sold'],
+                    'is_active_rental' => $item['is_active_rental'],
+                    'rental_id' => $item['rental_id'],
+                    'reserved_lot' => $item['reserved_lot'],
+                    'rental_type' => $item['rental_type'],
+                    'actual_start_rental' => $start,
+                    'actual_end_rental' => $end,
+                    'km_last' => $item['km_last'],
+                    'vehicle_role' => $item['vehicle_role'],
+                    'rental_id_count' => $item['rental_id_count'],
+                    'linked_vehicle' => $item['linked_vehicle'],
+                    'category_flags' => json_encode($item['category_flags']),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            \App\Models\Item::insert($insertData);
+        }
+
+        // 2. Save History Snapshot
+        \App\Models\History::updateOrCreate(
+            ['snapshot_date' => now()->toDateString()],
+            [
+                'sdp_stock' => $summary['sdp_stock'],
+                'in_stock' => $summary['in_stock']['total'],
+                'rented' => $summary['rented_in_customer']['total'],
+                'in_service' => $summary['stock_external_service']['total'] + $summary['stock_internal_service']['total'] + ($summary['stock_insurance']['total'] ?? 0),
+                'summary_json' => $summary,
+            ]
+        );
+        
+        // 3. Update Metadata (optional now as History handles date, but for compat)
+        // We can retire the JSON metadata file usage in Controller.
+    }
+
+    private function excelDateToCarbon($serial)
+    {
+        if (empty($serial) || !is_numeric($serial)) return null;
+        try {
+            // Excel base date: 1899-12-30
+            $date = \Carbon\Carbon::create(1899, 12, 30)->addDays((int)$serial);
+            return $date->format('Y-m-d');
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 }

@@ -12,5 +12,5 @@ Route::get('/details', [DashboardController::class, 'details'])->name('details')
 Route::get('/export', [DashboardController::class, 'export'])->name('export');
 Route::get('/print', [DashboardController::class, 'print'])->name('print');
 Route::get('/rental-pairs', [DashboardController::class, 'rentalPairs'])->name('rental.pairs');
-Route::post('/generate', [SummaryController::class, 'generate'])->name('summary.generate');
+Route::post('/generate', [DashboardController::class, 'upload'])->name('summary.generate');
 

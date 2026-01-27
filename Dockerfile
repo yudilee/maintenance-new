@@ -15,6 +15,10 @@ RUN apt-get update && apt-get install -y \
     && a2enmod rewrite \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
+# Install Node.js (for building assets)
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs
+
 # Set working directory
 WORKDIR /var/www/html
 
@@ -29,6 +33,9 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction --no-script
 
 # Copy rest of application
 COPY . .
+
+# Build Frontend Assets
+RUN npm install && npm run build && rm -rf node_modules
 
 # Run composer scripts after copying all files
 RUN composer dump-autoload --optimize
