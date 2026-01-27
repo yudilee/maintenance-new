@@ -219,6 +219,74 @@
                 </div>
             </div>
 
+            <!-- Rented Breakdown -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
+                    <div class="p-2 bg-amber-100 text-amber-600 rounded-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-800">Rented In Customer Breakdown</h3>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                     <!-- Left Side: Main Categories -->
+                     <div class="space-y-3">
+                         @if(isset($summary['rented_in_customer']['details']['Original in Customer']) && $summary['rented_in_customer']['details']['Original in Customer'] > 0)
+                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Original in Customer']) }}" class="flex justify-between items-center p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors group">
+                             <div class="flex items-center gap-3">
+                                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                                 <span class="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">Original in Customer</span>
+                             </div>
+                             <span class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Original in Customer'] }}</span>
+                         </a>
+                         @endif
+                         
+                         @if(isset($summary['rented_in_customer']['details']['Vendor Rent']) && $summary['rented_in_customer']['details']['Vendor Rent'] > 0)
+                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Vendor Rent']) }}" class="flex justify-between items-center p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors group">
+                             <div class="flex items-center gap-3">
+                                 <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                                 <span class="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">Vendor Rent</span>
+                             </div>
+                             <span class="bg-amber-100 text-amber-700 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Vendor Rent'] }}</span>
+                         </a>
+                         @endif
+                     </div>
+
+                     <!-- Right Side: Replacements & Issues -->
+                     <div class="space-y-3">
+                         @if(isset($summary['rented_in_customer']['details']['Replacement - Service']) && $summary['rented_in_customer']['details']['Replacement - Service'] > 0)
+                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Replacement - Service']) }}" class="flex justify-between items-center p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors group">
+                             <div class="flex items-center gap-3">
+                                 <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                                 <span class="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">Replacement (Service)</span>
+                             </div>
+                             <span class="bg-blue-100 text-blue-700 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Replacement - Service'] }}</span>
+                         </a>
+                         @endif
+
+                         @if(isset($summary['rented_in_customer']['details']['Replacement - RBO']) && $summary['rented_in_customer']['details']['Replacement - RBO'] > 0)
+                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Replacement - RBO']) }}" class="flex justify-between items-center p-3 rounded-xl border border-slate-100 hover:bg-slate-50 transition-colors group">
+                             <div class="flex items-center gap-3">
+                                 <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                                 <span class="text-slate-600 font-medium group-hover:text-indigo-600 transition-colors">Replacement (RBO)</span>
+                             </div>
+                             <span class="bg-purple-100 text-purple-700 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Replacement - RBO'] }}</span>
+                         </a>
+                         @endif
+                         
+                         @if(isset($summary['rented_in_customer']['details']['Check Rent position']) && $summary['rented_in_customer']['details']['Check Rent position'] > 0)
+                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Check Rent position']) }}" class="flex justify-between items-center p-3 rounded-xl border border-red-100 bg-red-50/50 hover:bg-red-50 transition-colors group">
+                             <div class="flex items-center gap-3">
+                                 <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                 <span class="text-red-700 font-medium group-hover:text-red-800 transition-colors">Check Rent Position</span>
+                             </div>
+                             <span class="bg-red-100 text-red-700 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Check Rent position'] }}</span>
+                         </a>
+                         @endif
+                     </div>
+                </div>
+            </div>
+
             <!-- In Service Breakdown -->
              <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
                 <div class="flex items-center gap-2 mb-6 pb-4 border-b border-slate-100">
