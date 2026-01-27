@@ -182,20 +182,33 @@
             
             <!-- Root Group Wrapper -->
             <!-- We manually reproduce the template inner HTML here since x-template recursion is limited -->
-            <div class="ml-2 pl-4 border-l-2 border-slate-200 relative mb-2">
-                <div class="absolute -left-3 top-0">
-                    <button @click="query.operator = query.operator === 'AND' ? 'OR' : 'AND'" 
-                            class="text-xs font-bold px-1.5 py-0.5 rounded border shadow-sm transition-colors w-10"
-                            :class="query.operator === 'AND' ? 'bg-indigo-100 text-indigo-700 border-indigo-200' : 'bg-amber-100 text-amber-700 border-amber-200'"
-                            x-text="query.operator">
-                    </button>
-                </div>
-                <div class="space-y-3 pt-6">
-                    <template x-for="(rule, index) in query.rules" :key="index">
-                        <div class="relative bg-white p-3 rounded-lg border border-slate-200 shadow-sm group">
-                            <button @click="removeRule(query, index)" class="absolute -right-2 -top-2 bg-white rounded-full text-red-400 hover:text-red-600 shadow-sm border border-slate-200 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <div class="p-2 space-y-2 bg-slate-50/50 rounded-xl border border-slate-200/60">
+                <template x-for="(rule, index) in query.rules" :key="index">
+                    <div class="flex items-start gap-3 group/row">
+                        <!-- Logic Operator Column -->
+                        <div class="w-16 flex flex-col items-center pt-3 shrink-0">
+                             <div x-show="index === 0" class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Where</div>
+                             <div x-show="index > 0" class="relative w-full">
+                                 <select x-model="rule.logic" class="w-full text-[10px] font-black text-slate-600 bg-white border border-slate-200 rounded shadow-sm py-1.5 text-center uppercase cursor-pointer focus:ring-1 focus:ring-indigo-500 hover:border-indigo-300 appearance-none">
+                                    <option value="AND">AND</option>
+                                    <option value="OR">OR</option>
+                                 </select>
+                                 <!-- Tiny Arrow -->
+                                 <div class="pointer-events-none absolute inset-y-0 right-1 flex items-center px-1 text-slate-400">
+                                   <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                 </div>
+                             </div>
+                             <!-- Connector Line -->
+                             <div x-show="index < query.rules.length - 1" class="h-full w-px bg-slate-200 my-1"></div>
+                        </div>
+
+                        <!-- Rule Card -->
+                        <div class="flex-1 relative bg-white p-3 rounded-lg border border-slate-200 shadow-sm hover:border-indigo-200 transition-colors">
+                             <!-- Delete Button -->
+                            <button @click="removeRule(query, index)" class="absolute -right-2 -top-2 bg-white text-red-500 hover:text-red-700 rounded-full border border-slate-200 shadow-sm p-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity z-10">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
+
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                                 <select x-model="rule.field" class="w-full text-sm border-slate-200 rounded-md focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
                                     <optgroup label="General">
@@ -275,11 +288,13 @@
                                 </div>
                             </div>
                         </div>
-                    </template>
-                </div>
-                <div class="mt-3 flex gap-2">
-                    <button @click="addRule(query)" class="text-xs flex items-center gap-1 bg-white border border-slate-300 px-3 py-1.5 rounded hover:bg-slate-50 font-medium text-slate-600">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Condition
+                    </div>
+                </template>
+                
+                <div class="mt-2 pl-16">
+                     <button @click="addRule(query)" class="text-xs flex items-center gap-1 bg-white border border-slate-300 text-slate-600 px-3 py-1.5 rounded-lg hover:bg-slate-50 font-medium transition-colors shadow-sm">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> 
+                        Add Condition
                     </button>
                 </div>
             </div>
