@@ -566,7 +566,7 @@ class SummaryGenerator
         }
 
         // 2. Save History Snapshot
-        \App\Models\History::updateOrCreate(
+        $history = \App\Models\History::updateOrCreate(
             ['snapshot_date' => now()->toDateString()],
             [
                 'sdp_stock' => $summary['sdp_stock'],
@@ -576,6 +576,11 @@ class SummaryGenerator
                 'summary_json' => $summary,
             ]
         );
+        
+        // Force update timestamp even if data is identical (for "Updated X mins ago" display)
+        if ($history->wasRecentlyCreated === false) {
+             $history->touch();
+        }
         
         // 3. Update Metadata (optional now as History handles date, but for compat)
         // We can retire the JSON metadata file usage in Controller.

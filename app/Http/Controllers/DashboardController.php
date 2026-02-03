@@ -24,7 +24,7 @@ class DashboardController extends Controller
         }
         
         // Metadata mock for compatibility (or fetch from DB updated_at)
-        $metadata = ['imported_at' => $latest->created_at->format('Y-m-d H:i:s')];
+        $metadata = ['imported_at' => $latest->updated_at->format('Y-m-d H:i:s')];
         
         // History for charts
         $history = History::orderBy('snapshot_date', 'asc')->take(30)->get()->map(function($h) {
@@ -103,7 +103,7 @@ class DashboardController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $metadata = ['imported_at' => $latest->created_at->format('Y-m-d H:i:s')];
+        $metadata = ['imported_at' => $latest->updated_at->format('Y-m-d H:i:s')];
 
         return view('print', compact('summary', 'metadata'));
     }
@@ -275,7 +275,7 @@ class DashboardController extends Controller
         
         // Metadata
         $latest = History::orderBy('snapshot_date', 'desc')->first();
-        $metadata = ['imported_at' => $latest ? $latest->created_at->format('Y-m-d H:i:s') : null];
+        $metadata = ['imported_at' => $latest ? $latest->updated_at->format('Y-m-d H:i:s') : null];
 
         return view('rental_pairs', compact('rentalPairs', 'pairsCount', 'metadata'));
     }
