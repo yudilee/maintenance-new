@@ -120,6 +120,14 @@
                         Type
                          <div @mousedown="startResize($event, 'type')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 dark:group-hover:bg-slate-700 transition-colors"></div>
                     </th>
+                    <th x-show="columns.current_customer.visible" :style="'width: ' + columns.current_customer.width + 'px'" class="relative p-4 border-b border-slate-100 dark:border-slate-800 text-left select-none group">
+                        Customer
+                         <div @mousedown="startResize($event, 'current_customer')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 dark:group-hover:bg-slate-700 transition-colors"></div>
+                    </th>
+                    <th x-show="columns.warehouse.visible" :style="'width: ' + columns.warehouse.width + 'px'" class="relative p-4 border-b border-slate-100 dark:border-slate-800 text-left select-none group">
+                        Warehouse
+                         <div @mousedown="startResize($event, 'warehouse')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 dark:group-hover:bg-slate-700 transition-colors"></div>
+                    </th>
                     <th x-show="columns.status.visible" :style="'width: ' + columns.status.width + 'px'" class="relative p-4 border-b border-slate-100 dark:border-slate-800 text-center select-none group">
                         Rental Status
                          <div @mousedown="startResize($event, 'status')" class="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-indigo-400 group-hover:bg-slate-300 dark:group-hover:bg-slate-700 transition-colors"></div>
@@ -163,6 +171,8 @@
                             <span x-show="item.is_vendor_rent" class="px-2 py-1 rounded text-[10px] font-bold bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400">Vendor</span>
                             <span x-show="!item.is_vendor_rent" class="px-2 py-1 rounded text-[10px] font-bold bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400">Owned</span>
                         </td>
+                        <td x-show="columns.current_customer.visible" class="p-4 break-words text-xs text-slate-600 dark:text-slate-400" x-text="item.current_customer || '-'"></td>
+                        <td x-show="columns.warehouse.visible" class="p-4 break-words text-xs text-slate-600 dark:text-slate-400" x-text="item.warehouse || '-'"></td>
                         <td x-show="columns.status.visible" class="p-4 text-center">
                             <template x-if="item.rental_id">
                                 <div class="flex flex-col items-center">
@@ -230,6 +240,8 @@
                 location: { label: 'Location', visible: true, width: 140 },
                 qty: { label: 'Qty', visible: true, width: 60 },
                 type: { label: 'Type', visible: true, width: 80 },
+                current_customer: { label: 'Customer', visible: true, width: 150 }, // New
+                warehouse: { label: 'Warehouse', visible: true, width: 120 }, // New
                 status: { label: 'Rental Status', visible: true, width: 140 },
                 start_date: { label: 'Start', visible: false, width: 100 },
                 end_date: { label: 'End', visible: false, width: 100 },
