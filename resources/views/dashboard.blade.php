@@ -45,49 +45,44 @@
         </form>
     </div>
 
-    <!-- Hero Card - Total Active Stock -->
-    <a href="{{ route('total.stock') }}" class="block relative overflow-hidden bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-700 rounded-3xl p-8 lg:p-10 mb-8 text-white shadow-2xl shadow-indigo-300/30 hover:shadow-indigo-400/40 transition-all duration-500 cursor-pointer group">
-        <!-- Decorative Elements -->
-        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 rounded-full bg-white opacity-5 blur-3xl group-hover:opacity-10 transition-opacity duration-700"></div>
-        <div class="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 rounded-full bg-cyan-400 opacity-10 blur-3xl group-hover:opacity-20 transition-opacity duration-700"></div>
-        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full bg-gradient-to-r from-white/5 to-transparent blur-2xl"></div>
+    <!-- Hero Card - Total Active Stock (Compact Layout) -->
+    <a href="{{ route('total.stock') }}" class="block relative overflow-hidden bg-gradient-to-r from-indigo-600 via-violet-600 to-purple-700 rounded-2xl p-6 mb-8 text-white shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer group">
+        <!-- Subtle Decorative Elements -->
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-48 h-48 rounded-full bg-white opacity-5 blur-2xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-cyan-400 opacity-10 blur-2xl"></div>
         
         <div class="relative">
-            <!-- Header Row -->
-            <div class="flex items-center gap-3 mb-6">
-                <div class="p-3 bg-white/20 backdrop-blur-sm rounded-xl">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
+            <!-- Header Row with Badge -->
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-2 bg-white/20 backdrop-blur-sm rounded-lg">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
                 </div>
-                <h2 class="text-xl lg:text-2xl font-bold text-white tracking-wide">Total Active Stock</h2>
+                <h2 class="text-lg font-bold text-white">Total Active Stock</h2>
                 @if(isset($metadata['imported_at']))
-                <div class="ml-auto inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm text-sm border border-white/20 text-white/90">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                <div class="ml-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs border border-white/20 text-white/90">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <span>Updated {{ \Carbon\Carbon::parse($metadata['imported_at'])->diffForHumans() }}</span>
                 </div>
                 @endif
             </div>
             
-            <!-- Main Stats Row -->
-            <div class="flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-16">
-                <!-- Total Count - Main Focus -->
-                <div class="flex-shrink-0">
-                    <p class="text-5xl lg:text-7xl xl:text-8xl font-black tracking-tight text-white drop-shadow-lg">{{ number_format($summary['sdp_stock']) }}</p>
-                    <p class="text-indigo-200 text-base lg:text-lg font-medium mt-2">Active Inventory Units</p>
+            <!-- Stats Row - All inline -->
+            <div class="flex items-end gap-6 flex-wrap">
+                <!-- Total Count -->
+                <div>
+                    <p class="text-5xl font-black tracking-tight text-white">{{ number_format($summary['sdp_stock']) }}</p>
+                    <p class="text-indigo-200 text-sm font-medium mt-1">Active Inventory Units</p>
                 </div>
 
-                <!-- Ownership Stats - Secondary -->
-                <div class="flex items-center gap-6 lg:gap-12 lg:ml-auto">
-                    <div onclick="window.location='{{ route('details', ['category' => 'sdp_owned']) }}'; event.stopPropagation();" class="group/stat cursor-pointer text-center lg:text-right hover:scale-105 transition-transform">
-                        <p class="text-4xl lg:text-5xl xl:text-6xl font-bold text-white/95 group-hover/stat:text-white transition-colors">{{ number_format($summary['sdp_stock'] - $summary['vendor_rent']) }}</p>
-                        <p class="text-indigo-200 text-sm lg:text-base font-semibold uppercase tracking-wider mt-1 group-hover/stat:text-white transition-colors">SDP Owned</p>
-                    </div>
-                    
-                    <div class="w-px h-20 bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
-                    
-                    <div onclick="window.location='{{ route('details', ['category' => 'vendor_rent']) }}'; event.stopPropagation();" class="group/stat cursor-pointer text-center lg:text-right hover:scale-105 transition-transform">
-                        <p class="text-4xl lg:text-5xl xl:text-6xl font-bold text-cyan-300 group-hover/stat:text-cyan-200 transition-colors">{{ number_format($summary['vendor_rent']) }}</p>
-                        <p class="text-indigo-200 text-sm lg:text-base font-semibold uppercase tracking-wider mt-1 group-hover/stat:text-white transition-colors">Vendor Rent</p>
-                    </div>
+                <!-- Ownership Stats - Inline -->
+                <div onclick="window.location='{{ route('details', ['category' => 'sdp_owned']) }}'; event.stopPropagation();" class="cursor-pointer hover:opacity-80 transition-opacity">
+                    <p class="text-2xl font-bold text-white/90">{{ number_format($summary['sdp_stock'] - $summary['vendor_rent']) }}</p>
+                    <p class="text-indigo-200 text-xs font-semibold uppercase tracking-wider">SDP Owned</p>
+                </div>
+                
+                <div onclick="window.location='{{ route('details', ['category' => 'vendor_rent']) }}'; event.stopPropagation();" class="cursor-pointer hover:opacity-80 transition-opacity">
+                    <p class="text-2xl font-bold text-cyan-300">{{ number_format($summary['vendor_rent']) }}</p>
+                    <p class="text-indigo-200 text-xs font-semibold uppercase tracking-wider">Vendor Rent</p>
                 </div>
             </div>
         </div>
