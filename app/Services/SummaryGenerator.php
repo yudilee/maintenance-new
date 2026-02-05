@@ -168,6 +168,9 @@ class SummaryGenerator
             'actual_end_rental' => $colMap['Rental ID/Actual End Rental'] ?? -1,
             'km_last' => $colMap['Last Odometer (KM)'] ?? -1,
             'is_on_hand' => $colMap['Is On Hand?'] ?? -1,
+            'last_customer' => $colMap['Partner/Cust.'] ?? -1, // NEW
+            'current_customer' => $colMap['Rental ID/Customer'] ?? -1, // NEW
+            'warehouse' => $colMap['Rental ID/Warehouse'] ?? -1, // NEW
         ];
         
         // Pre-compute rental_id occurrence counts
@@ -467,6 +470,9 @@ class SummaryGenerator
                 'vehicle_role' => $vehicleRole,
                 'linked_vehicle' => null, // Will be populated in second pass
                 'rental_id_count' => $rentalIdCounts[$rentalId] ?? 0,
+                'last_customer' => $row[$idxParams['last_customer']] ?? null,
+                'current_customer' => $row[$idxParams['current_customer']] ?? null,
+                'warehouse' => $row[$idxParams['warehouse']] ?? null,
             ];
         }
         
@@ -558,6 +564,9 @@ class SummaryGenerator
                     'rental_id_count' => $item['rental_id_count'],
                     'linked_vehicle' => $item['linked_vehicle'],
                     'category_flags' => json_encode($item['category_flags']),
+                    'last_customer' => $item['last_customer'],
+                    'current_customer' => $item['current_customer'],
+                    'warehouse' => $item['warehouse'],
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

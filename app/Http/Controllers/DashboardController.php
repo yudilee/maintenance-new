@@ -314,30 +314,36 @@ class DashboardController extends Controller
              elseif ($sub == 'Replacement - Service') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot')->where('is_vendor_rent', false)->where('rental_id_count', '>', 1);
              elseif ($sub == 'Replacement - RBO') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot')->where('is_vendor_rent', false)->where('rental_id_count', 1);
              elseif ($sub == 'Check Rent position') $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); })->where('is_vendor_rent', false);
-        } elseif ($category == 'external_service') {
+        } elseif ($category == 'external_service' || $category == 'service_external') {
              $inventory->scopeExternalService($query);
               if ($sub) {
-                if (str_contains($sub, 'Original')) $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
-                if (str_contains($sub, 'with Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', '>', 1);
-                if (str_contains($sub, 'without Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', 1);
+                if (str_contains($sub, 'Original') || $sub == 'original_no_replace') {
+                     $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
+                     if (str_contains($sub, 'with Replace')) $query->where('rental_id_count', '>', 1);
+                     if (str_contains($sub, 'without Replace') || $sub == 'original_no_replace') $query->where('rental_id_count', 1);
+                }
                 if ($sub == 'Rented Replacement') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot');
                 if ($sub == 'Stock in Service') $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); });
-             }
-        } elseif ($category == 'internal_service') {
+              }
+        } elseif ($category == 'internal_service' || $category == 'service_internal') {
              $inventory->scopeInternalService($query);
              if ($sub) {
-                if (str_contains($sub, 'Original')) $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
-                if (str_contains($sub, 'with Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', '>', 1);
-                if (str_contains($sub, 'without Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', 1);
+                if (str_contains($sub, 'Original') || $sub == 'Original Rented without Replace') {
+                    $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
+                    if (str_contains($sub, 'with Replace')) $query->where('rental_id_count', '>', 1);
+                    if (str_contains($sub, 'without Replace') || $sub == 'Original Rented without Replace') $query->where('rental_id_count', 1);
+                }
                 if ($sub == 'Rented Replacement') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot');
                 if ($sub == 'Stock in Internal Service') $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); });
              }
-        } elseif ($category == 'insurance') {
+        } elseif ($category == 'insurance' || $category == 'service_insurance') {
              $inventory->scopeInsurance($query);
              if ($sub) {
-                if (str_contains($sub, 'Original')) $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
-                if (str_contains($sub, 'with Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', '>', 1);
-                if (str_contains($sub, 'without Replace') && str_contains($sub, 'Original')) $query->where('rental_id_count', 1);
+                if (str_contains($sub, 'Original') || $sub == 'original_no_replace') {
+                    $query->whereColumn('lot_number', 'reserved_lot')->whereNotNull('rental_id')->where('rental_id', '!=', '');
+                    if (str_contains($sub, 'with Replace')) $query->where('rental_id_count', '>', 1);
+                    if (str_contains($sub, 'without Replace') || $sub == 'original_no_replace') $query->where('rental_id_count', 1);
+                }
                 if ($sub == 'Rented Replacement') $query->whereNotNull('rental_id')->where('rental_id', '!=', '')->whereColumn('lot_number', '!=', 'reserved_lot'); 
                 if ($sub == 'Stock in Insurance') $query->where(function($q) { $q->whereNull('rental_id')->orWhere('rental_id', ''); });
              }

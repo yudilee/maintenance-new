@@ -329,19 +329,17 @@
 
                               <!-- External Service -->
                               @if(($activeRentalData['service']['external'] ?? 0) > 0)
-                              <a href="{{ route('details', ['category' => 'service_external', 'sub' => 'original_no_replace']) }}" class="flex flex-col items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 transition-colors text-center group">
+                              <a href="{{ route('details', ['category' => 'external_service', 'sub' => 'Original Rented without Replace']) }}" class="flex flex-col items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 transition-colors text-center group">
                                   <span class="text-2xl font-bold text-red-700 dark:text-red-400">{{ $activeRentalData['service']['external'] }}</span>
                                   <span class="text-[10px] font-bold uppercase text-red-600 dark:text-red-500 mt-1">Ext. Service</span>
                               </a>
                               @endif
 
-                              <!-- Internal Service -->
-                              @if(($activeRentalData['service']['internal'] ?? 0) > 0)
-                              <a href="{{ route('details', ['category' => 'service_internal', 'sub' => 'original_no_replace']) }}" class="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors text-center group">
-                                  <span class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ $activeRentalData['service']['internal'] }}</span>
+                              <!-- Internal Service - Always Displayed -->
+                              <a href="{{ route('details', ['category' => 'internal_service', 'sub' => 'Original Rented without Replace']) }}" class="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors text-center group">
+                                  <span class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ $activeRentalData['service']['internal'] ?? 0 }}</span>
                                   <span class="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-500 mt-1">Int. Service</span>
                               </a>
-                              @endif
 
                               <!-- Insurance -->
                               @if(($activeRentalData['service']['insurance'] ?? 0) > 0)
