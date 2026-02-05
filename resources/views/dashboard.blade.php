@@ -253,41 +253,40 @@
                      <!-- Left Side: Rented In Customer -->
                      <div>
                          <h4 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">In Customer ({{ number_format($activeRentalData['customer'] ?? 0) }})</h4>
-                         <div class="space-y-3">
-                             @if(isset($summary['rented_in_customer']['details']['Original in Customer']) && $summary['rented_in_customer']['details']['Original in Customer'] > 0)
-                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Original in Customer']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                                 <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">Original in Customer</span>
-                                 <span class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Original in Customer'] }}</span>
+                         
+                         <div class="grid grid-cols-2 gap-3 mb-4">
+                             <!-- Original -->
+                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Original in Customer']) }}" class="flex flex-col items-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors text-center group">
+                                 <span class="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{{ $summary['rented_in_customer']['details']['Original in Customer'] ?? 0 }}</span>
+                                 <span class="text-xs font-bold uppercase text-emerald-600 dark:text-emerald-500 mt-1">Original</span>
                              </a>
-                             @endif
-                             
-                             @if(isset($summary['rented_in_customer']['details']['Vendor Rent']) && $summary['rented_in_customer']['details']['Vendor Rent'] > 0)
-                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Vendor Rent']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                                 <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">Vendor Rent</span>
-                                 <span class="bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Vendor Rent'] }}</span>
-                             </a>
-                             @endif
 
-                             @if(isset($summary['rented_in_customer']['details']['Replacement - Service']) && $summary['rented_in_customer']['details']['Replacement - Service'] > 0)
-                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Replacement - Service']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                                 <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">Replacement (Service/Stock)</span>
-                                 <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Replacement - Service'] }}</span>
+                             <!-- Vendor Rent -->
+                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Vendor Rent']) }}" class="flex flex-col items-center p-3 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-100 dark:border-amber-800 hover:border-amber-300 dark:hover:border-amber-700 transition-colors text-center group">
+                                 <span class="text-2xl font-bold text-amber-700 dark:text-amber-400">{{ $summary['rented_in_customer']['details']['Vendor Rent'] ?? 0 }}</span>
+                                 <span class="text-xs font-bold uppercase text-amber-600 dark:text-amber-500 mt-1">Vendor Rent</span>
                              </a>
-                             @endif
 
-                             @if(isset($summary['rented_in_customer']['details']['Replacement - RBO']) && $summary['rented_in_customer']['details']['Replacement - RBO'] > 0)
-                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Replacement - RBO']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                                 <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">Replacement (RBO)</span>
-                                 <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Replacement - RBO'] }}</span>
+                             <!-- Replacement (Service) -->
+                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Replacement - Service']) }}" class="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors text-center group">
+                                 <span class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ $summary['rented_in_customer']['details']['Replacement - Service'] ?? 0 }}</span>
+                                 <span class="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-500 mt-1">Repl. (Service)</span>
                              </a>
-                             @endif
-                             
-                             @if(isset($summary['rented_in_customer']['details']['Check Rent position']) && $summary['rented_in_customer']['details']['Check Rent position'] > 0)
-                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Check Rent position']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors group">
-                                 <span class="text-red-600 dark:text-red-400 text-sm font-medium">Check Rent Position</span>
-                                 <span class="bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 text-xs font-bold px-2 py-1 rounded-md">{{ $summary['rented_in_customer']['details']['Check Rent position'] }}</span>
+
+                             <!-- Replacement (RBO) -->
+                             <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Replacement - RBO']) }}" class="flex flex-col items-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 transition-colors text-center group">
+                                 <span class="text-2xl font-bold text-purple-700 dark:text-purple-400">{{ $summary['rented_in_customer']['details']['Replacement - RBO'] ?? 0 }}</span>
+                                 <span class="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-500 mt-1">Repl. (RBO)</span>
                              </a>
-                             @endif
+                         </div>
+
+                         <!-- Check Rent Position (If > 0) -->
+                         @if(isset($summary['rented_in_customer']['details']['Check Rent position']) && $summary['rented_in_customer']['details']['Check Rent position'] > 0)
+                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Check Rent position']) }}" class="flex justify-between items-center p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors group mb-3">
+                             <span class="text-red-700 dark:text-red-400 text-sm font-bold">Check Rent Position</span>
+                             <span class="text-xl font-bold text-red-700 dark:text-red-400">{{ $summary['rented_in_customer']['details']['Check Rent position'] }}</span>
+                         </a>
+                         @endif
 
                              {{-- Overdue Rentals Alert --}}
                              @if(($activeRentalData['overdue'] ?? 0) > 0)
@@ -307,48 +306,44 @@
                          </div>
                      </div>
 
-                     <!-- Right Side: Other Active Status -->
-                     <div>
-                         <!-- Active In Stock -->
-                         @if(($activeRentalData['stock'] ?? 0) > 0)
-                         <div class="mb-4">
-                             <h4 class="text-xs font-bold text-emerald-500 uppercase tracking-wider mb-2">Active In Stock ({{ $activeRentalData['stock'] }})</h4>
-                             <a href="{{ route('details', ['category' => 'stock_original', 'sub' => 'no_replace']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-emerald-50 dark:hover:bg-emerald-900/30 transition-colors group">
-                                 <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">Original (No Replace)</span>
-                                 <span class="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-bold px-2 py-1 rounded-md">{{ $activeRentalData['stock'] }}</span>
-                             </a>
-                         </div>
-                         @endif
+                      <!-- Right Side: Other Active Status -->
+                      <div>
+                          <h4 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Other Active Locations</h4>
+                          
+                          <div class="grid grid-cols-2 gap-3">
+                              <!-- Active In Stock -->
+                              @if(($activeRentalData['stock'] ?? 0) > 0)
+                              <a href="{{ route('details', ['category' => 'stock_original', 'sub' => 'no_replace']) }}" class="flex flex-col items-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors text-center group">
+                                  <span class="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{{ $activeRentalData['stock'] }}</span>
+                                  <span class="text-[10px] font-bold uppercase text-emerald-600 dark:text-emerald-500 mt-1">Active Stock</span>
+                              </a>
+                              @endif
 
-                         <!-- Active In Service -->
-                         @if(($activeRentalData['service']['total'] ?? 0) > 0)
-                         <div>
-                             <h4 class="text-xs font-bold text-red-500 uppercase tracking-wider mb-2">Active In Service ({{ $activeRentalData['service']['total'] }})</h4>
-                             <div class="space-y-2">
-                                 @if($activeRentalData['service']['external'] > 0)
-                                 <a href="{{ route('details', ['category' => 'service_external', 'sub' => 'original_no_replace']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                                     <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">External</span>
-                                     <span class="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 text-xs font-bold px-2 py-1 rounded-md">{{ $activeRentalData['service']['external'] }}</span>
-                                 </a>
-                                 @endif
-                                 
-                                 @if($activeRentalData['service']['internal'] > 0)
-                                 <a href="{{ route('details', ['category' => 'service_internal', 'sub' => 'original_no_replace']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                                     <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">Internal</span>
-                                     <span class="bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-xs font-bold px-2 py-1 rounded-md">{{ $activeRentalData['service']['internal'] }}</span>
-                                 </a>
-                                 @endif
+                              <!-- External Service -->
+                              @if(($activeRentalData['service']['external'] ?? 0) > 0)
+                              <a href="{{ route('details', ['category' => 'service_external', 'sub' => 'original_no_replace']) }}" class="flex flex-col items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 transition-colors text-center group">
+                                  <span class="text-2xl font-bold text-red-700 dark:text-red-400">{{ $activeRentalData['service']['external'] }}</span>
+                                  <span class="text-[10px] font-bold uppercase text-red-600 dark:text-red-500 mt-1">Ext. Service</span>
+                              </a>
+                              @endif
 
-                                 @if($activeRentalData['service']['insurance'] > 0)
-                                 <a href="{{ route('details', ['category' => 'service_insurance', 'sub' => 'original_no_replace']) }}" class="flex justify-between items-center p-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group">
-                                     <span class="text-slate-600 dark:text-slate-300 text-sm font-medium">Insurance</span>
-                                     <span class="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs font-bold px-2 py-1 rounded-md">{{ $activeRentalData['service']['insurance'] }}</span>
-                                 </a>
-                                 @endif
-                             </div>
-                         </div>
-                         @endif
-                     </div>
+                              <!-- Internal Service -->
+                              @if(($activeRentalData['service']['internal'] ?? 0) > 0)
+                              <a href="{{ route('details', ['category' => 'service_internal', 'sub' => 'original_no_replace']) }}" class="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors text-center group">
+                                  <span class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ $activeRentalData['service']['internal'] }}</span>
+                                  <span class="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-500 mt-1">Int. Service</span>
+                              </a>
+                              @endif
+
+                              <!-- Insurance -->
+                              @if(($activeRentalData['service']['insurance'] ?? 0) > 0)
+                              <a href="{{ route('details', ['category' => 'service_insurance', 'sub' => 'original_no_replace']) }}" class="flex flex-col items-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 transition-colors text-center group">
+                                  <span class="text-2xl font-bold text-purple-700 dark:text-purple-400">{{ $activeRentalData['service']['insurance'] }}</span>
+                                  <span class="text-[10px] font-bold uppercase text-purple-600 dark:text-purple-500 mt-1">Insurance</span>
+                              </a>
+                              @endif
+                          </div>
+                      </div>
                 </div>
             </div>
 
@@ -363,8 +358,9 @@
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-6">
                     <div>
-                         <a href="{{ route('details', ['category' => 'external_service']) }}" class="block mb-3 group/link">
-                             <h4 class="text-xs font-bold text-red-500 uppercase tracking-wider group-hover/link:underline group-hover/link:text-red-600 transition-all">External ({{ $summary['stock_external_service']['total'] }})</h4>
+                         <a href="{{ route('details', ['category' => 'external_service']) }}" class="flex flex-col items-center p-3 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-100 dark:border-red-800 hover:border-red-300 dark:hover:border-red-700 transition-colors text-center group mb-4">
+                             <span class="text-2xl font-bold text-red-700 dark:text-red-400">{{ $summary['stock_external_service']['total'] ?? 0 }}</span>
+                             <span class="text-xs font-bold uppercase text-red-600 dark:text-red-500 mt-1">External</span>
                          </a>
                          <div class="space-y-2">
                             @foreach($summary['stock_external_service']['details'] as $desc => $val)
@@ -376,8 +372,9 @@
                          </div>
                     </div>
                     <div>
-                         <a href="{{ route('details', ['category' => 'internal_service']) }}" class="block mb-3 group/link">
-                             <h4 class="text-xs font-bold text-blue-500 uppercase tracking-wider group-hover/link:underline group-hover/link:text-blue-600 transition-all">Internal ({{ $summary['stock_internal_service']['total'] }})</h4>
+                         <a href="{{ route('details', ['category' => 'internal_service']) }}" class="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800 hover:border-blue-300 dark:hover:border-blue-700 transition-colors text-center group mb-4">
+                             <span class="text-2xl font-bold text-blue-700 dark:text-blue-400">{{ $summary['stock_internal_service']['total'] ?? 0 }}</span>
+                             <span class="text-xs font-bold uppercase text-blue-600 dark:text-blue-500 mt-1">Internal</span>
                          </a>
                          <div class="space-y-2">
                             @foreach($summary['stock_internal_service']['details'] as $desc => $val)
@@ -389,8 +386,9 @@
                          </div>
                     </div>
                     <div>
-                         <a href="{{ route('details', ['category' => 'insurance']) }}" class="block mb-3 group/link">
-                             <h4 class="text-xs font-bold text-purple-500 uppercase tracking-wider group-hover/link:underline group-hover/link:text-purple-600 transition-all">Insurance ({{ $summary['stock_insurance']['total'] ?? 0 }})</h4>
+                         <a href="{{ route('details', ['category' => 'insurance']) }}" class="flex flex-col items-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-xl border border-purple-100 dark:border-purple-800 hover:border-purple-300 dark:hover:border-purple-700 transition-colors text-center group mb-4">
+                             <span class="text-2xl font-bold text-purple-700 dark:text-purple-400">{{ $summary['stock_insurance']['total'] ?? 0 }}</span>
+                             <span class="text-xs font-bold uppercase text-purple-600 dark:text-purple-500 mt-1">Insurance</span>
                          </a>
                          <div class="space-y-2">
                             @foreach(($summary['stock_insurance']['details'] ?? []) as $desc => $val)
