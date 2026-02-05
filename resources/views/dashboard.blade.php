@@ -265,7 +265,7 @@
                         <a href="{{ route('details', ['category' => 'active_rentals']) }}" class="group/title">
                              <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100 group-hover/title:text-indigo-600 transition-colors">Active Rental Detail</h3>
                         </a>
-                        <p class="text-xs text-slate-500">Total Active: {{ number_format($activeRentalData['total'] ?? 0) }}</p>
+                        <p class="text-sm font-bold text-slate-600 dark:text-slate-400 mt-1">Total Active: {{ number_format($activeRentalData['total'] ?? 0) }}</p>
                     </div>
                 </div>
                 
