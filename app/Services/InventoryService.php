@@ -183,12 +183,12 @@ class InventoryService
             elseif ($value === 'rented') $this->scopeRented($query);
             elseif ($value === 'active_rentals') $this->scopeActiveRentals($query); // New scope
             elseif ($value === 'overdue_rentals') {
-                // Vehicles still at customer location but past their rental end date
+                // Vehicles still at customer location with rental end date today or past
                 $today = now()->format('Y-m-d');
                 $query->where('location', Location::RENTAL_CUSTOMER)
                       ->where('is_sold', false)
                       ->whereNotNull('actual_end_rental')
-                      ->whereDate('actual_end_rental', '<', $today);
+                      ->whereDate('actual_end_rental', '<=', $today);
             }
             elseif ($value === 'in_service') $this->scopeInService($query);
             elseif ($value === 'vendor_rent') $query->where('is_vendor_rent', true);

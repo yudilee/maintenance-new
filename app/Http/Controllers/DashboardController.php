@@ -106,11 +106,11 @@ class DashboardController extends Controller
         $inServiceActiveInt = Item::where('location', Location::SERVICE_INTERNAL)->tap($serviceActiveQuery)->count();
         $inServiceActiveIns = Item::where('location', 'like', Location::INSURANCE . '%')->tap($serviceActiveQuery)->count();
         
-        // 4. Overdue Rentals - Still at customer but actual_end_rental is in the past
+        // 4. Overdue Rentals - Still at customer but actual_end_rental is today or past (includes today's end)
         $overdueRentals = Item::where('location', Location::RENTAL_CUSTOMER)
                               ->where('is_sold', false)
                               ->whereNotNull('actual_end_rental')
-                              ->whereDate('actual_end_rental', '<', $today)
+                              ->whereDate('actual_end_rental', '<=', $today)
                               ->count();
         
         $activeRentalData = [
@@ -223,10 +223,10 @@ class DashboardController extends Controller
                   ->orWhere('internal_reference', 'like', "%$searchQuery%");
             });
         } elseif ($category == 'overdue_rentals') {
-            // Vehicles still at customer location but past their rental end date
+            // Vehicles still at customer location with rental end date today or past
             $query->where('location', Location::RENTAL_CUSTOMER)
                   ->whereNotNull('actual_end_rental')
-                  ->whereDate('actual_end_rental', '<', $today);
+                  ->whereDate('actual_end_rental', '<=', $today);
         } elseif ($category == 'vendor_rent') {
             $query->where('is_vendor_rent', true);
         } elseif ($category == 'in_stock') {
