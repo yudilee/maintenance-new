@@ -173,7 +173,8 @@ class DashboardController extends Controller
         $searchQuery = $request->query('q');
         
         $query = $this->buildFilterQuery($inventory, $category, $sub, $searchQuery);
-        $items = $query->limit(2000)->get();
+        $query = $this->buildFilterQuery($inventory, $category, $sub, $searchQuery);
+        $items = $query->limit(5000)->get();
         
         // Filter Options Data
         $locations = Item::select('location')->distinct()->orderBy('location')->pluck('location');
@@ -222,6 +223,53 @@ class DashboardController extends Controller
                   ->orWhere('location', 'like', "%$searchQuery%")
                   ->orWhere('internal_reference', 'like', "%$searchQuery%");
             });
+        } elseif ($category == 'active_rentals') {
+            // Complex logic to match Dashboard "Active Rental Detail" count (Total Active)
+            // 1. Rented in Customer (Active & Expired, but dashboard count excludes future reserve?)
+            // Actually, index() logic:
+            // - Customer: location=RENTAL_CUSTOMER, is_sold=false, start <= today (or null)
+            // - Stock: in_stock=true, reserved_lot=lot_no, rental_id!=null, count=1, start <= today
+            // - Service: Service locs, reserved_lot=lot_no, rental_id!=null, count=1, start <= today
+            
+            $query->where(function($q) use ($today) {
+                // 1. Customer Location (exclude future start)
+                $q->where(function($sub) use ($today) {
+                    $sub->where('location', Location::RENTAL_CUSTOMER)
+                        ->where(function($d) use ($today) {
+                             $d->whereNull('actual_start_rental')
+                               ->orWhere('actual_start_rental', '<=', $today);
+                        });
+                });
+                
+                // 2. In Stock Active (Original, Count 1, Started)
+                $q->orWhere(function($sub) use ($today) {
+                    $sub->where('in_stock', true)
+                        ->whereColumn('lot_number', 'reserved_lot')
+                        ->whereNotNull('rental_id')
+                        ->where('rental_id_count', 1)
+                        ->where(function($d) use ($today) {
+                             $d->whereNull('actual_start_rental')
+                               ->orWhere('actual_start_rental', '<=', $today);
+                        });
+                });
+                
+                // 3. Service/Insurance Active (Original, Count 1, Started)
+                $q->orWhere(function($sub) use ($today) {
+                    $sub->where(function($l) {
+                            $l->where('location', 'like', Location::SERVICE_EXTERNAL . '%')
+                              ->orWhere('location', Location::SERVICE_INTERNAL)
+                              ->orWhere('location', 'like', Location::INSURANCE . '%');
+                        })
+                        ->whereColumn('lot_number', 'reserved_lot')
+                        ->whereNotNull('rental_id')
+                        ->where('rental_id_count', 1)
+                        ->where(function($d) use ($today) {
+                             $d->whereNull('actual_start_rental')
+                               ->orWhere('actual_start_rental', '<=', $today);
+                        });
+                });
+            });
+            
         } elseif ($category == 'overdue_rentals') {
             // Vehicles still at customer location with rental end date today or past
             $query->where('location', Location::RENTAL_CUSTOMER)
