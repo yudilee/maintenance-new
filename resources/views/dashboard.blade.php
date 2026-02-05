@@ -269,12 +269,12 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                     <!-- Left Side: Rented In Customer -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                     <!-- Left Side: In Customer -->
                      <div>
                          <h4 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">In Customer ({{ number_format($activeRentalData['customer'] ?? 0) }})</h4>
                          
-                         <div class="grid grid-cols-2 gap-3 mb-4">
+                         <div class="grid grid-cols-2 gap-3 mb-3">
                              <!-- Original -->
                              <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Original in Customer']) }}" class="flex flex-col items-center p-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-xl border border-emerald-100 dark:border-emerald-800 hover:border-emerald-300 dark:hover:border-emerald-700 transition-colors text-center group">
                                  <span class="text-2xl font-bold text-emerald-700 dark:text-emerald-400">{{ $summary['rented_in_customer']['details']['Original in Customer'] ?? 0 }}</span>
@@ -302,31 +302,14 @@
 
                          <!-- Check Rent Position (If > 0) -->
                          @if(isset($summary['rented_in_customer']['details']['Check Rent position']) && $summary['rented_in_customer']['details']['Check Rent position'] > 0)
-                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Check Rent position']) }}" class="flex justify-between items-center p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors group mb-3">
+                         <a href="{{ route('details', ['category' => 'rented', 'sub' => 'Check Rent position']) }}" class="flex justify-between items-center p-3 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors group">
                              <span class="text-red-700 dark:text-red-400 text-sm font-bold">Check Rent Position</span>
                              <span class="text-xl font-bold text-red-700 dark:text-red-400">{{ $summary['rented_in_customer']['details']['Check Rent position'] }}</span>
                          </a>
                          @endif
-
-                             {{-- Overdue Rentals Alert --}}
-                             @if(($activeRentalData['overdue'] ?? 0) > 0)
-                             <div class="mt-4 p-3 rounded-xl bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-800">
-                                 <a href="{{ route('details', ['category' => 'overdue_rentals']) }}" class="flex items-center gap-3 group">
-                                     <div class="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg">
-                                         <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                     </div>
-                                     <div class="flex-1">
-                                         <p class="text-sm font-bold text-orange-700 dark:text-orange-300 group-hover:text-orange-800 transition-colors">Overdue Rentals (Include Today's End)</p>
-                                         <p class="text-xs text-orange-600 dark:text-orange-400">Vehicles with rental end ≤ today</p>
-                                     </div>
-                                     <span class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ $activeRentalData['overdue'] }}</span>
-                                 </a>
-                             </div>
-                             @endif
-                         </div>
                      </div>
 
-                      <!-- Right Side: Other Active Status -->
+                      <!-- Right Side: Other Active Locations -->
                       <div>
                           <h4 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Other Active Locations</h4>
                           
@@ -365,6 +348,22 @@
                           </div>
                       </div>
                 </div>
+
+                {{-- Overdue Rentals Alert (Full Width Footer) --}}
+                @if(($activeRentalData['overdue'] ?? 0) > 0)
+                <div class="mt-4 p-3 rounded-xl bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900/20 dark:to-red-900/20 border border-orange-200 dark:border-orange-800">
+                    <a href="{{ route('details', ['category' => 'overdue_rentals']) }}" class="flex items-center gap-3 group">
+                        <div class="p-2 bg-orange-100 dark:bg-orange-900/50 rounded-lg">
+                            <svg class="w-5 h-5 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-sm font-bold text-orange-700 dark:text-orange-300 group-hover:text-orange-800 transition-colors">Overdue Rentals (Include Today's End)</p>
+                            <p class="text-xs text-orange-600 dark:text-orange-400">Vehicles with rental end ≤ today</p>
+                        </div>
+                        <span class="text-2xl font-bold text-orange-600 dark:text-orange-400">{{ $activeRentalData['overdue'] }}</span>
+                    </a>
+                </div>
+                @endif
             </div>
 
             <!-- In Service Breakdown -->
