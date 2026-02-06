@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Models\Setting;
 use App\Services\OdooService;
 use App\Services\SummaryGenerator;
@@ -106,5 +107,38 @@ class ImportController extends Controller
                 'message' => 'Sync failed: ' . $e->getMessage()
             ]);
         }
+    }
+
+    /**
+     * Get schedule configuration
+     */
+    public function getSchedule(): JsonResponse
+    {
+        return response()->json([
+            'enabled' => Setting::getValue('odoo_schedule_enabled', 'false') === 'true',
+            'interval' => Setting::getValue('odoo_schedule_interval', 'daily'),
+            'last_sync' => Setting::getValue('odoo_last_sync', null),
+        ]);
+    }
+
+    /**
+     * Save schedule configuration
+     */
+    public function saveSchedule(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'enabled' => 'required|boolean',
+            'interval' => 'required|in:hourly,every_2_hours,every_4_hours,every_6_hours,every_12_hours,daily',
+        ]);
+
+        Setting::setValue('odoo_schedule_enabled', $validated['enabled'] ? 'true' : 'false');
+        Setting::setValue('odoo_schedule_interval', $validated['interval']);
+
+        return response()->json([
+            'success' => true,
+            'message' => $validated['enabled'] 
+                ? "Auto-sync enabled ({$validated['interval']})" 
+                : 'Auto-sync disabled',
+        ]);
     }
 }

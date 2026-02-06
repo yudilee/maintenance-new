@@ -14,6 +14,8 @@ Route::post('/import/excel', [ImportController::class, 'uploadExcel'])->name('im
 Route::post('/import/odoo/config', [ImportController::class, 'saveOdooConfig'])->name('import.odoo.config');
 Route::post('/import/odoo/test', [ImportController::class, 'testOdooConnection'])->name('import.odoo.test');
 Route::post('/import/odoo/sync', [ImportController::class, 'syncOdoo'])->name('import.odoo.sync');
+Route::get('/import/odoo/schedule', [ImportController::class, 'getSchedule'])->name('import.odoo.schedule.get');
+Route::post('/import/odoo/schedule', [ImportController::class, 'saveSchedule'])->name('import.odoo.schedule.save');
 Route::get('/details', [DashboardController::class, 'details'])->name('details');
 Route::get('/export', [DashboardController::class, 'export'])->name('export');
 Route::get('/print', [DashboardController::class, 'print'])->name('print');

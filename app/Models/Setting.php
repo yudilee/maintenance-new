@@ -37,4 +37,20 @@ class Setting extends Model
             'password' => static::get('odoo_password', ''),
         ];
     }
+
+    /**
+     * Alias for get() - for compatibility
+     */
+    public static function getValue(string $key, $default = null): ?string
+    {
+        return static::get($key, $default);
+    }
+
+    /**
+     * Alias for set() - for compatibility
+     */
+    public static function setValue(string $key, $value): void
+    {
+        static::set($key, $value);
+    }
 }

@@ -11,6 +11,7 @@ services:
       - "8085:80"
     volumes:
       - sdp_storage:/var/www/html/storage/app
+      - sdp_database:/var/www/html/database
     environment:
       - APP_NAME=SDP_Dashboard
       - APP_ENV=production
@@ -19,5 +20,33 @@ services:
       - SESSION_DRIVER=file
       - CACHE_STORE=file
 
+  # Scheduler for automatic Odoo sync
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sdp_scheduler
+    restart: unless-stopped
+    entrypoint: []
+    command: >
+      sh -c "while true; do 
+        echo '[Scheduler] Running at '$(date);
+        php artisan schedule:run --verbose --no-interaction;
+        sleep 60;
+      done"
+    volumes:
+      - sdp_storage:/var/www/html/storage/app
+      - sdp_database:/var/www/html/database
+    environment:
+      - APP_NAME=SDP_Dashboard
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_URL=https://sdp-dashboard.hartonomotor-group.com
+      - SESSION_DRIVER=file
+      - CACHE_STORE=file
+    depends_on:
+      - app
+
 volumes:
   sdp_storage:
+  sdp_database:

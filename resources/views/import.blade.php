@@ -91,11 +91,79 @@
                 }
             });
             this.syncResult = await response.json();
+            // Refresh schedule info after sync
+            await this.loadSchedule();
         } catch (e) {
             this.syncResult = { success: false, message: 'Error: ' + e.message };
         } finally {
             this.isSyncing = false;
         }
+    },
+
+    // Schedule configuration
+    schedule: {
+        enabled: false,
+        interval: 'daily',
+        lastSync: null
+    },
+    isSavingSchedule: false,
+    scheduleResult: null,
+
+    async init() {
+        await this.loadSchedule();
+    },
+
+    async loadSchedule() {
+        try {
+            const response = await fetch('{{ route('import.odoo.schedule.get') }}');
+            const data = await response.json();
+            this.schedule.enabled = data.enabled;
+            this.schedule.interval = data.interval;
+            this.schedule.lastSync = data.last_sync;
+        } catch (e) {
+            console.error('Failed to load schedule:', e);
+        }
+    },
+
+    async saveSchedule() {
+        this.isSavingSchedule = true;
+        this.scheduleResult = null;
+        try {
+            const response = await fetch('{{ route('import.odoo.schedule.save') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                },
+                body: JSON.stringify({
+                    enabled: this.schedule.enabled,
+                    interval: this.schedule.interval
+                })
+            });
+            this.scheduleResult = await response.json();
+        } catch (e) {
+            this.scheduleResult = { success: false, message: 'Error: ' + e.message };
+        } finally {
+            this.isSavingSchedule = false;
+        }
+    },
+
+    formatInterval(interval) {
+        const map = {
+            'hourly': 'Every hour',
+            'every_2_hours': 'Every 2 hours',
+            'every_4_hours': 'Every 4 hours',
+            'every_6_hours': 'Every 6 hours',
+            'every_12_hours': 'Every 12 hours',
+            'daily': 'Once daily'
+        };
+        return map[interval] || interval;
+    },
+
+    formatDate(dateStr) {
+        if (!dateStr) return 'Never';
+        const date = new Date(dateStr);
+        return date.toLocaleString();
     }
 }">
     <!-- Password Modal -->
@@ -294,6 +362,71 @@
                             <svg x-show="syncResult?.success" class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             <svg x-show="!syncResult?.success" class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                             <span x-text="syncResult?.message"></span>
+                        </div>
+                    </div>
+
+                    <!-- Schedule Configuration -->
+                    <div class="mt-8 border-t border-slate-200 dark:border-slate-700 pt-8">
+                        <h3 class="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Auto-Sync Schedule
+                        </h3>
+                        
+                        <div class="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-5 space-y-4">
+                            <!-- Enable Toggle -->
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <label class="text-sm font-medium text-slate-700 dark:text-slate-300">Enable Auto-Sync</label>
+                                    <p class="text-xs text-slate-500 dark:text-slate-400">Automatically sync data from Odoo</p>
+                                </div>
+                                <button @click="schedule.enabled = !schedule.enabled"
+                                        :class="schedule.enabled ? 'bg-indigo-600' : 'bg-slate-300 dark:bg-slate-600'"
+                                        class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors">
+                                    <span :class="schedule.enabled ? 'translate-x-6' : 'translate-x-1'"
+                                          class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform shadow"></span>
+                                </button>
+                            </div>
+
+                            <!-- Interval Dropdown -->
+                            <div x-show="schedule.enabled" x-transition>
+                                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Sync Interval</label>
+                                <select x-model="schedule.interval"
+                                        class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all">
+                                    <option value="hourly">Every hour</option>
+                                    <option value="every_2_hours">Every 2 hours</option>
+                                    <option value="every_4_hours">Every 4 hours</option>
+                                    <option value="every_6_hours">Every 6 hours</option>
+                                    <option value="every_12_hours">Every 12 hours</option>
+                                    <option value="daily">Once daily (midnight)</option>
+                                </select>
+                            </div>
+
+                            <!-- Last Sync Info -->
+                            <div class="flex items-center justify-between text-sm pt-2 border-t border-slate-200 dark:border-slate-700">
+                                <span class="text-slate-500 dark:text-slate-400">Last Sync:</span>
+                                <span class="text-slate-700 dark:text-slate-300 font-medium" x-text="formatDate(schedule.lastSync)"></span>
+                            </div>
+
+                            <!-- Save Button -->
+                            <button @click="saveSchedule()"
+                                    :disabled="isSavingSchedule"
+                                    class="w-full mt-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                                <svg x-show="isSavingSchedule" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                </svg>
+                                <span x-text="isSavingSchedule ? 'Saving...' : 'Save Schedule'"></span>
+                            </button>
+
+                            <!-- Schedule Result -->
+                            <div x-show="scheduleResult" x-transition class="mt-2">
+                                <div :class="scheduleResult?.success ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'"
+                                     class="p-3 rounded-lg border text-sm">
+                                    <span x-text="scheduleResult?.message"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
