@@ -28,7 +28,7 @@ class SyncOdooScheduled extends Command
 
         try {
             $odooService = app(OdooService::class);
-            $generator = new SummaryGenerator();
+            $generator = app(SummaryGenerator::class);
 
             $this->info('Fetching data from Odoo...');
             $result = $odooService->fetchViaExport();
