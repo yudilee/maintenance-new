@@ -21,24 +21,31 @@ class SummaryGenerator
         // but default import usually works.
         // We'll calculate everything in memory.
         
-        $sheets = Excel::toArray([], $file);
-        $data = null;
-        
-        foreach ($sheets as $sheetData) {
-            if (empty($sheetData)) continue;
-            // Check if specific column exists in first row
-            $firstRow = $sheetData[0] ?? [];
-            // Cast to string for search
-            $firstRowStr = array_map('strval', $firstRow);
-            if (in_array('Product', $firstRowStr)) {
-                $data = $sheetData;
-                break;
+        // Support both file paths (string) and pre-parsed arrays (from Odoo API)
+        if (is_array($file)) {
+            // Already parsed data (from Odoo export_data)
+            $data = $file;
+        } else {
+            // File path - parse via Excel
+            $sheets = Excel::toArray([], $file);
+            $data = null;
+            
+            foreach ($sheets as $sheetData) {
+                if (empty($sheetData)) continue;
+                // Check if specific column exists in first row
+                $firstRow = $sheetData[0] ?? [];
+                // Cast to string for search
+                $firstRowStr = array_map('strval', $firstRow);
+                if (in_array('Product', $firstRowStr)) {
+                    $data = $sheetData;
+                    break;
+                }
             }
-        }
-        
-        if (!$data) {
-             // Fallback or error
-             $data = $sheets[0] ?? []; 
+            
+            if (!$data) {
+                 // Fallback or error
+                 $data = $sheets[0] ?? []; 
+            }
         }
 
         // Initialize Summary Structure
@@ -227,15 +234,17 @@ class SummaryGenerator
 
             // Rental Status Check - Active if today is between start and end dates
             $isActiveRental = true;
+            $startComparison = $this->compareDateToToday($actualStartRental);
+            $endComparison = $this->compareDateToToday($actualEndRental);
             
             // Check if rental has started
-            if (is_numeric($actualStartRental) && $actualStartRental > $todaySerial) {
+            if ($startComparison === 1) {
                 // If start date is in the future, it is PENDING
                 $isActiveRental = false;
             }
             
             // Check if rental has ended
-            if (is_numeric($actualEndRental) && $actualEndRental < $todaySerial) {
+            if ($endComparison !== null && $endComparison === -1) {
                 // If end date is in the past, it is EXPIRED
                 $isActiveRental = false;
             }
@@ -256,7 +265,7 @@ class SummaryGenerator
                 $summary['sdp_stock'] += $qty;
                 
                 // Reserved Rental Logic (Future Start Date Only)
-                if (is_numeric($actualStartRental) && $actualStartRental > $todaySerial) {
+                if ($startComparison === 1) {
                     $summary['pending_rental'] += $qty;
                 }
                 
@@ -292,10 +301,10 @@ class SummaryGenerator
                 } else {
                     // Track INACTIVE (Expired) and RESERVED (Future) Subscriptions
                     if ($rentalType === 'Subscription') {
-                        if (is_numeric($actualEndRental) && $actualEndRental < $todaySerial) {
+                        if ($endComparison !== null && $endComparison === -1) {
                             // Expired: end date is in the past
                             $summary['inactive_subscription'] += $qty;
-                        } elseif (is_numeric($actualStartRental) && $actualStartRental > $todaySerial) {
+                        } elseif ($startComparison === 1) {
                             // Reserved: start date is in the future
                             $summary['reserved_subscription'] += $qty;
                         }
@@ -316,8 +325,8 @@ class SummaryGenerator
                 $sRentalCount = $rentalIdCounts[$sRentalId] ?? 0;
                 
                 // Check Reserve (Future Start)
-                // We use is_numeric check same as above
-                $isFuture = (is_numeric($actualStartRental) && $actualStartRental > $todaySerial);
+                // Use compareDateToToday for both Excel serial and Odoo ISO formats
+                $isFuture = ($startComparison === 1);
                 
                 if ($isFuture) {
                     $summary['in_stock']['rental_status']['reserve'] += $qty;
@@ -597,11 +606,55 @@ class SummaryGenerator
 
     private function excelDateToCarbon($serial)
     {
-        if (empty($serial) || !is_numeric($serial)) return null;
+        if (empty($serial)) return null;
+        
         try {
-            // Excel base date: 1899-12-30
-            $date = \Carbon\Carbon::create(1899, 12, 30)->addDays((int)$serial);
-            return $date->format('Y-m-d');
+            // Handle Excel serial date (numeric)
+            if (is_numeric($serial)) {
+                // Excel base date: 1899-12-30
+                $date = \Carbon\Carbon::create(1899, 12, 30)->addDays((int)$serial);
+                return $date->format('Y-m-d');
+            }
+            
+            // Handle ISO date string from Odoo (e.g., '2026-02-06' or '2026-02-06 00:00:00')
+            if (is_string($serial)) {
+                $date = \Carbon\Carbon::parse($serial);
+                return $date->format('Y-m-d');
+            }
+            
+            return null;
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Compare a date (Excel serial or ISO string) to today
+     * Returns: -1 if date < today, 0 if same day, 1 if date > today, null if invalid
+     */
+    private function compareDateToToday($dateValue): ?int
+    {
+        if (empty($dateValue)) return null;
+        
+        try {
+            $today = \Carbon\Carbon::now()->startOfDay();
+            
+            // Handle Excel serial date (numeric)
+            if (is_numeric($dateValue)) {
+                $baseDate = \Carbon\Carbon::create(1899, 12, 30);
+                $date = $baseDate->copy()->addDays((int)$dateValue)->startOfDay();
+            }
+            // Handle ISO date string from Odoo
+            elseif (is_string($dateValue)) {
+                $date = \Carbon\Carbon::parse($dateValue)->startOfDay();
+            }
+            else {
+                return null;
+            }
+            
+            if ($date->lt($today)) return -1;
+            if ($date->gt($today)) return 1;
+            return 0;
         } catch (\Exception $e) {
             return null;
         }

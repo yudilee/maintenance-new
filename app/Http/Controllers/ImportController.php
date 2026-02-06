@@ -71,19 +71,35 @@ class ImportController extends Controller
     }
 
     /**
-     * Sync data from Odoo
+     * Sync data from Odoo using Option A (export_data API)
      */
     public function syncOdoo(SummaryGenerator $generator)
     {
         try {
             $odoo = new OdooService();
             
-            // Use stock.quant as default model (can be made configurable)
-            $model = \App\Models\Setting::get('odoo_model', 'stock.quant');
+            // Use export_data API (Option A) for Excel parity
+            $result = $odoo->fetchViaExport();
             
-            $result = $odoo->syncAndSave($model);
+            if (!$result['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Odoo fetch failed: ' . ($result['message'] ?? 'Unknown error')
+                ]);
+            }
             
-            return response()->json($result);
+            // Pass Excel-like data directly to SummaryGenerator
+            // This reuses the same parsing logic as Excel import
+            $processedData = $generator->generate($result['data']);
+            
+            // Save to database (same as Excel import)
+            $generator->saveToDatabase($processedData['items'], $processedData['summary']);
+            
+            return response()->json([
+                'success' => true,
+                'message' => "Synced {$result['count']} items from Odoo",
+                'summary' => $processedData['summary']
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

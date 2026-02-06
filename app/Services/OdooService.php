@@ -63,6 +63,179 @@ class OdooService
     }
 
     /**
+     * Test if we can use export_data method (Option A)
+     */
+    public function testExportData(): array
+    {
+        try {
+            // Define fields similar to Excel export
+            $exportFields = [
+                'name',
+                'product_id/display_name',
+                'ref',
+                'location_id/display_name',
+                'product_qty',
+                'is_vendor_rent',
+                'rental_id/display_name',
+            ];
+
+            // Get a few sample IDs
+            $ids = $this->execute('stock.lot', 'search', [
+                [['product_qty', '>', 0], ['location_id', '!=', 5]]
+            ], ['limit' => 3]);
+
+            if (empty($ids)) {
+                return ['success' => false, 'message' => 'No records found to test'];
+            }
+
+            // Try export_data
+            $result = $this->execute('stock.lot', 'export_data', [$ids, $exportFields]);
+
+            if (isset($result['datas']) && !empty($result['datas'])) {
+                return [
+                    'success' => true,
+                    'message' => 'export_data works! You have the required permissions.',
+                    'sample' => $result['datas'][0] ?? [],
+                    'fields' => $exportFields
+                ];
+            }
+
+            return ['success' => false, 'message' => 'Unexpected response: ' . json_encode($result)];
+
+        } catch (\Exception $e) {
+            $msg = $e->getMessage();
+            $hint = '';
+            
+            if (str_contains($msg, 'Access') || str_contains($msg, 'denied')) {
+                $hint = ' (You may need "Access to export feature" permission)';
+            }
+            
+            return ['success' => false, 'message' => $msg . $hint];
+        }
+    }
+
+    /**
+     * Fetch data using export_data (Option A - Excel parity)
+     * Returns data in the same format as SummaryGenerator expects from Excel
+     */
+    public function fetchViaExport(): array
+    {
+        // Field paths matching Excel columns (discovered via odoo:discover-fields)
+        // NOTE: Removed x_tipe_rental as it doesn't exist on rental records
+        // Rental type will be derived from warehouse_id
+        $exportFields = [
+            'product_id/display_name',                    // 0: Product
+            'name',                                        // 1: Lot/Serial Number
+            'location_id/display_name',                    // 2: Location
+            'product_qty',                                 // 3: On Hand Quantity
+            'is_vendor_rent',                              // 4: Is Vendor Rent
+            'rental_id/display_name',                      // 5: Rental ID
+            'rental_id/warehouse_id/display_name',         // 6: Warehouse (for rental type)
+            'rental_id/actual_start_rental',               // 7: Actual Start Rental
+            'rental_id/actual_end_rental',                 // 8: Actual End Rental
+            'x_studio_partnercust',                        // 9: Partner/Cust.
+            'rental_id/partner_id/display_name',           // 10: Rental ID/Customer
+            'rental_id/order_line/reserved_lot_ids/name',  // 11: Reserved Lot (actual lot number!)
+            'vehicle_year',                                // 12: Year
+        ];
+
+        // Header row matching Excel format for SummaryGenerator
+        $headerRow = [
+            'Product',
+            'Lot/Serial Number',
+            'Location',
+            'On Hand Quantity',
+            'Is Vendor Rent',
+            'In Stock?',  // ADDED: Derived from location containing 'STOCK'
+            'Rental ID',
+            'Rental ID/Warehouse',
+            'Rental ID/Actual Start Rental',
+            'Rental ID/Actual End Rental',
+            'Partner/Cust.',
+            'Rental ID/Customer',
+            'Rental ID/Order Lines/Reserved Lot', // Derived from original_reserved
+            'Year',
+        ];
+
+        // Get all IDs matching domain (same as Excel export filter)
+        $domain = [
+            ['product_qty', '>', 0],
+            ['location_id', '!=', 5],
+            ['product_id', '!=', 10170]
+        ];
+
+        $ids = $this->execute('stock.lot', 'search', [$domain]);
+
+        if (empty($ids)) {
+            return ['success' => false, 'message' => 'No records found', 'data' => []];
+        }
+
+        // Export data
+        $result = $this->execute('stock.lot', 'export_data', [$ids, $exportFields]);
+
+        if (!isset($result['datas'])) {
+            return ['success' => false, 'message' => 'Unexpected response format', 'data' => []];
+        }
+
+        // Build Excel-like 2D array with headers
+        $data = [$headerRow];
+        foreach ($result['datas'] as $row) {
+            // Export fields order:
+            // 0: product_id/display_name -> Product
+            // 1: name -> Lot/Serial Number
+            // 2: location_id/display_name -> Location
+            // 3: product_qty -> On Hand Quantity
+            // 4: is_vendor_rent -> Is Vendor Rent
+            // 5: rental_id/display_name -> Rental ID
+            // 6: rental_id/warehouse_id/display_name -> Rental ID/Warehouse
+            // 7: rental_id/actual_start_rental -> Start Date
+            // 8: rental_id/actual_end_rental -> End Date
+            // 9: x_studio_partnercust -> Partner/Cust.
+            // 10: rental_id/partner_id/display_name -> Rental ID/Customer
+            // 11: reserved_lot_ids/name -> Reserved Lot (actual lot number)
+            // 12: vehicle_year -> Year
+
+            $lotNumber = $row[1] ?? '';
+            $location = $row[2] ?? '';
+            $reservedLot = trim($row[11] ?? '');  // Now directly from Odoo field!
+            
+            // Derive in_stock: if location contains 'STOCK', 'TRANSIT', or 'OPERATION'
+            // Matches Excel import logic where these are all counted as In Stock
+            $inStock = (
+                stripos($location, 'STOCK') !== false ||
+                stripos($location, 'TRANSIT') !== false ||
+                stripos($location, 'OPERATION') !== false
+            ) ? '1' : '';
+
+            $processedRow = [
+                $row[0] ?? '',       // Product
+                $lotNumber,          // Lot/Serial Number
+                $location,           // Location
+                $row[3] ?? 1,        // On Hand Quantity
+                ($row[4] ?? false) ? 'Ya' : '', // Is Vendor Rent
+                $inStock,            // In Stock? (DERIVED from location)
+                $row[5] ?? '',       // Rental ID
+                $row[6] ?? '',       // Rental ID/Warehouse
+                $row[7] ?? '',       // Actual Start Rental
+                $row[8] ?? '',       // Actual End Rental
+                $row[9] ?? '',       // Partner/Cust.
+                $row[10] ?? '',      // Rental ID/Customer
+                $reservedLot,        // Reserved Lot (directly from Odoo field)
+                $row[12] ?? '',      // Year
+            ];
+            
+            $data[] = $processedRow;
+        }
+
+        return [
+            'success' => true,
+            'data' => $data,
+            'count' => count($data) - 1, // Exclude header
+            'headers' => $headerRow
+        ];
+    }
+
+    /**
      * Authenticate with Odoo and return user ID
      */
     protected function authenticate(): ?int

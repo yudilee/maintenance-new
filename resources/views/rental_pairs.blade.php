@@ -33,7 +33,7 @@
     <!-- Main List -->
     <div class="space-y-4">
         <template x-for="(pair, index) in filteredPairs" :key="pair.rental_id">
-            <div x-data="{ open: false }" class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-300" :class="open ? 'ring-2 ring-amber-100 dark:ring-amber-900/50' : ''">
+            <div x-data="{ open: true }" class="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-300" :class="open ? 'ring-2 ring-amber-100 dark:ring-amber-900/50' : ''">
                 <!-- Header Row -->
                 <div @click="open = !open" class="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <div class="flex items-center gap-4">
