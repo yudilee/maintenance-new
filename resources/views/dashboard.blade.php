@@ -596,6 +596,7 @@
                 <div class="relative">
                     <select id="trendFilter" onchange="updateTrendChart(this.value)" class="appearance-none bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 py-2 pl-4 pr-10 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 cursor-pointer">
                         <option value="overview">Overview</option>
+                        <option value="stacked_overview">Overview (Stacked)</option>
                         <option value="percentage_stacked">% of Total (Stacked)</option>
                         <option value="rental_types">Rental Types</option>
                         <option value="locations">Key Locations</option>
@@ -747,7 +748,7 @@
         let newColors = [];
         let yAxisConfig = [{ show: true, title: { text: 'Count' } }];
 
-        if (filter === 'overview') {
+        if (filter === 'overview' || filter === 'stacked_overview') {
             newSeries = [
                 { name: 'In Stock', type: 'bar', data: historyData.map(h => h.in_stock) },
                 { name: 'Rented', type: 'bar', data: historyData.map(h => h.rented) },
@@ -755,7 +756,13 @@
             ];
             newColors = ['#10b981', '#f59e0b', '#ef4444'];
             
-            // Add target line if enabled
+            // Add target line if enabled (only for non-stacked view to avoid confusion, or keep it?)
+            // Usually target lines on stacked charts are tricky unless it's a total target. 
+            // The user wants to see "addition", so maybe the target is for the TOTAL fleet?
+            // Existing target logic adds "Rented Target". 
+            // Let's keep it for now but maybe disable if stacked? 
+            // Actually, if stacked, the bars add up to Total. A target line for "Rented" would appear low down.
+            // Let's keep it consistent with Overview for now.
             if (showTarget) {
                 newSeries.push({
                     name: 'Rented Target',
@@ -780,6 +787,37 @@
                 );
                 newColors.push('#c084fc', '#60a5fa');
             }
+        }
+        else if (filter === 'percentage_stacked') {
+            // Calculate percentages 
+            newSeries = [
+                { 
+                    name: 'In Stock', 
+                    type: 'bar', 
+                    data: historyData.map(h => {
+                        const total = h.in_stock + h.rented + h.in_service;
+                        return total > 0 ? parseFloat(((h.in_stock / total) * 100).toFixed(1)) : 0;
+                    })
+                },
+                { 
+                    name: 'Rented', 
+                    type: 'bar', 
+                    data: historyData.map(h => {
+                        const total = h.in_stock + h.rented + h.in_service;
+                        return total > 0 ? parseFloat(((h.rented / total) * 100).toFixed(1)) : 0;
+                    })
+                },
+                { 
+                    name: 'In Service', 
+                    type: 'bar', 
+                    data: historyData.map(h => {
+                        const total = h.in_stock + h.rented + h.in_service;
+                        return total > 0 ? parseFloat(((h.in_service / total) * 100).toFixed(1)) : 0;
+                    })
+                }
+            ];
+            newColors = ['#10b981', '#f59e0b', '#ef4444'];
+            yAxisConfig = [{ show: true, title: { text: 'Percentage (%)' }, max: 100 }];
         }
         else if (filter === 'locations') {
             // Key Cities
@@ -817,16 +855,27 @@
             newColors = ['#10b981', '#06b6d4', '#f97316']; // Green, Cyan, Orange
         }
 
+        const isStacked = filter === 'stacked_overview' || filter === 'percentage_stacked';
+
         trendChart.updateOptions({
             series: newSeries,
             colors: newColors,
+            yaxis: yAxisConfig,
             chart: {
-                type: showTarget && (filter === 'overview' || filter === 'rental_types') ? 'line' : 'bar'
+                type: showTarget && !isStacked ? 'line' : 'bar', // If stacked, force bar even if target shown? Or mixed? Mixed stacked is hard in ApexCharts without exact config
+                stacked: isStacked,
+                stackType: filter === 'percentage_stacked' ? '100%' : 'normal'
             },
             stroke: {
-                width: newSeries.map(s => s.type === 'line' ? 3 : 0),
-                curve: 'smooth',
-                dashArray: newSeries.map(s => s.type === 'line' ? 5 : 0)
+                width: 0, // No border for cleaner look in stacked, or standard
+                curve: 'smooth'
+            },
+            plotOptions: {
+                bar: {
+                    columnWidth: '70%',
+                    borderRadius: isStacked ? 0 : 4, // Remove radius for stacked internal bars
+                    dataLabels: { position: 'top' }
+                }
             }
         });
     };
