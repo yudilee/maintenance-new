@@ -3,7 +3,43 @@
 @section('title', 'Rental Pairs - SDP Stock')
 
 @section('content')
-<div x-data="rentalPairs()" x-init="init()" class="space-y-6">
+<script>
+    window.initialRentalPairs = @json($rentalPairs);
+    window.rentalPairsData = function(data) {
+        return {
+            pairs: Object.values(data),
+            search: '',
+            filter: 'all', // all, service, stock, customer, other
+            
+            get filteredPairs() {
+                // First filter by category
+                let result = this.pairs;
+                if (this.filter !== 'all') {
+                    result = result.filter(pair => pair.category === this.filter);
+                }
+
+                // Then filter by search term
+                if (this.search) {
+                    const term = this.search.toLowerCase();
+                    result = result.filter(pair => {
+                        // Match Rental ID
+                        if (pair.rental_id && pair.rental_id.toLowerCase().includes(term)) return true;
+                        
+                        // Match any vehicle lot/product
+                        return pair.vehicles.some(v => 
+                            (v.lot_number && v.lot_number.toLowerCase().includes(term)) ||
+                            (v.product && v.product.toLowerCase().includes(term))
+                        );
+                    });
+                }
+                
+                return result;
+            }
+        }
+    }
+</script>
+
+<div x-data="rentalPairsData(window.initialRentalPairs)" class="space-y-6">
     <!-- Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -12,6 +48,7 @@
             </h1>
             <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Contracts with multiple vehicles (Main + Replacements)</p>
         </div>
+        
         <div class="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
              <!-- Search -->
             <div class="relative w-full md:w-64">
@@ -20,14 +57,35 @@
                 </div>
                 <input x-model="search" type="text" class="w-full pl-10 pr-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all" placeholder="Search Pairs...">
             </div>
-
-            <span class="px-3 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded-full text-[10px] font-bold uppercase tracking-wider whitespace-nowrap">
-                <span x-text="filteredPairs.length"></span> Active Pairs
-            </span>
-            <a href="{{ route('dashboard') }}" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm whitespace-nowrap">
+            
+             <a href="{{ route('dashboard') }}" class="px-4 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-600 dark:text-slate-300 font-medium hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm whitespace-nowrap">
                 Back
             </a>
         </div>
+    </div>
+
+    <!-- Filter Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <button @click="filter = 'all'" :class="filter === 'all' ? 'ring-2 ring-slate-600 bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'" class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 transition-all shadow-sm flex flex-col items-center justify-center gap-2">
+            <span class="text-xs uppercase tracking-wider font-bold opacity-70">Total Pairs</span>
+            <span class="text-2xl font-black">{{ $stats['total'] }}</span>
+        </button>
+        <button @click="filter = 'service'" :class="filter === 'service' ? 'ring-2 ring-red-500 bg-red-50 dark:bg-red-900/40 text-red-700 dark:text-red-300' : 'bg-white dark:bg-slate-900 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'" class="p-4 rounded-xl border border-red-100 dark:border-red-900/30 transition-all shadow-sm flex flex-col items-center justify-center gap-2">
+            <span class="text-xs uppercase tracking-wider font-bold opacity-70">Service</span>
+            <span class="text-2xl font-black">{{ $stats['service'] }}</span>
+        </button>
+        <button @click="filter = 'stock'" :class="filter === 'stock' ? 'ring-2 ring-emerald-500 bg-emerald-50 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300' : 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'" class="p-4 rounded-xl border border-emerald-100 dark:border-emerald-900/30 transition-all shadow-sm flex flex-col items-center justify-center gap-2">
+            <span class="text-xs uppercase tracking-wider font-bold opacity-70">Stock</span>
+            <span class="text-2xl font-black">{{ $stats['stock'] }}</span>
+        </button>
+        <button @click="filter = 'customer'" :class="filter === 'customer' ? 'ring-2 ring-amber-500 bg-amber-50 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300' : 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20'" class="p-4 rounded-xl border border-amber-100 dark:border-amber-900/30 transition-all shadow-sm flex flex-col items-center justify-center gap-2">
+            <span class="text-xs uppercase tracking-wider font-bold opacity-70">Customer</span>
+            <span class="text-2xl font-black">{{ $stats['customer'] }}</span>
+        </button>
+         <button @click="filter = 'other'" :class="filter === 'other' ? 'ring-2 ring-slate-500 bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'" class="p-4 rounded-xl border border-slate-200 dark:border-slate-700 transition-all shadow-sm flex flex-col items-center justify-center gap-2">
+            <span class="text-xs uppercase tracking-wider font-bold opacity-70">Other</span>
+            <span class="text-2xl font-black">{{ $stats['other'] }}</span>
+        </button>
     </div>
 
     <!-- Main List -->
@@ -39,7 +97,18 @@
                     <div class="flex items-center gap-4">
                         <div class="w-10 h-10 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs shadow-sm" x-text="index + 1"></div>
                         <div>
-                            <h3 class="font-bold text-slate-800 dark:text-slate-100" x-text="pair.rental_id"></h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-slate-800 dark:text-slate-100" x-text="pair.rental_id"></h3>
+                                <span class="px-1.5 py-0.5 rounded text-[10px] font-bold uppercase" 
+                                      :class="{
+                                          'bg-red-100 text-red-700': pair.category === 'service',
+                                          'bg-emerald-100 text-emerald-700': pair.category === 'stock',
+                                          'bg-amber-100 text-amber-700': pair.category === 'customer',
+                                          'bg-slate-100 text-slate-600': pair.category === 'other'
+                                      }"
+                                      x-text="pair.category">
+                                </span>
+                            </div>
                             <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                                 <span><span x-text="pair.vehicles.length"></span> Vehicles</span>
                                 <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
@@ -144,29 +213,4 @@
         </div>
     </div>
 </div>
-
-<script>
-    function rentalPairs() {
-        return {
-            pairs: Object.values(@json($rentalPairs)),
-            search: '',
-            
-            get filteredPairs() {
-                if (!this.search) return this.pairs;
-                const term = this.search.toLowerCase();
-                
-                return this.pairs.filter(pair => {
-                    // Match Rental ID
-                    if (pair.rental_id && pair.rental_id.toLowerCase().includes(term)) return true;
-                    
-                    // Match any vehicle lot/product
-                    return pair.vehicles.some(v => 
-                        (v.lot_number && v.lot_number.toLowerCase().includes(term)) ||
-                        (v.product && v.product.toLowerCase().includes(term))
-                    );
-                });
-            }
-        }
-    }
-</script>
 @endsection
