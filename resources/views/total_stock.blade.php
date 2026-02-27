@@ -60,11 +60,11 @@
 
 /* Hover state for sticky cells */
 .frozen-table tbody tr:hover td.sticky-col {
-    background: rgb(248 250 252 / 0.5);
+    background: rgb(248 250 252);
 }
 
 .dark .frozen-table tbody tr:hover td.sticky-col {
-    background: rgb(30 41 59 / 0.5);
+    background: rgb(30 41 59);
 }
 
 /* Shadow effect for frozen column when scrolled */
