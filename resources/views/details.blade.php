@@ -186,8 +186,8 @@
     </div>
 
     <!-- Table -->
-    <div class="frozen-table-container custom-scrollbar">
-        <table class="frozen-table w-full text-left" style="table-layout: fixed; min-width: 1200px;">
+    <div class="frozen-table-container custom-scrollbar pb-2">
+        <table class="frozen-table w-full text-left" :style="'table-layout: fixed; min-width: ' + Math.max(1200, tableWidth) + 'px;'">
             <thead class="bg-slate-50 dark:bg-slate-950 sticky top-0 z-10 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">
                 <tr>
                     <th x-show="columns.lot_number.visible" :style="'width: ' + columns.lot_number.width + 'px'" class="sticky-col relative p-4 border-b border-slate-100 dark:border-slate-800 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors select-none group">
@@ -504,6 +504,10 @@
                 loading: false,
                 error: null,
                 data: []
+            },
+            
+            get tableWidth() {
+                return Object.values(this.columns).reduce((sum, col) => col.visible ? sum + (col.width || 100) : sum, 0);
             },
             
             resizingCol: null,
