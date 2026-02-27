@@ -85,7 +85,7 @@
     background: linear-gradient(to right, rgba(0,0,0,0.2), transparent);
 }
 </style>
-<div x-data="queryBuilder()" x-init="init()" class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden h-[calc(100vh-140px)] flex flex-col theme-transition">
+<div x-data="queryBuilder()" x-init="init()" class="h-[calc(100vh-140px)] flex flex-col max-w-[1600px] mx-auto w-full gap-4 relative">
     
     <!-- Save View Modal -->
     <template x-teleport="body">
@@ -463,7 +463,7 @@
         </div>
 
         <!-- Results Table -->
-        <div class="flex-1 bg-white dark:bg-slate-900 overflow-auto flex flex-col min-h-0 container-transition rounded-xl w-full">
+        <div class="flex-1 bg-white dark:bg-slate-900 overflow-hidden flex flex-col min-h-0 container-transition rounded-xl border border-slate-200 dark:border-slate-800">
             
             <!-- Desktop Table View -->
             <div class="flex-1 overflow-auto hidden md:block frozen-table-container custom-scrollbar pb-2">
