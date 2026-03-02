@@ -7,8 +7,16 @@
     <link rel="icon" href="{{ asset('images/logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- jQuery (Required for Select2, DateRangePicker, DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- DataTables -->
+    <link href="https://cdn.datatables.net/v/dt/dt-2.0.2/b-3.0.1/b-colvis-3.0.1/b-html5-3.0.1/r-3.0.0/datatables.min.css" rel="stylesheet">
+    <script src="https://cdn.datatables.net/v/dt/dt-2.0.2/b-3.0.1/b-colvis-3.0.1/b-html5-3.0.1/r-3.0.0/datatables.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: 'Outfit', sans-serif; }
         [x-cloak] { display: none !important; }
@@ -106,57 +114,26 @@
 
             <!-- Scrollable Nav -->
             <nav class="p-4 space-y-1 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
-                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4 px-2 whitespace-nowrap overflow-hidden transition-all duration-300"
+
+
+                <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-6 px-2 whitespace-nowrap overflow-hidden transition-all duration-300"
                      :class="sidebarCollapsed ? 'text-center' : 'px-4'">
-                     <span x-show="!sidebarCollapsed">Overview</span>
-                     <span x-show="sidebarCollapsed" class="block w-full border-b border-slate-200"></span>
+                     <span x-show="!sidebarCollapsed">Operations</span>
+                     <span x-show="sidebarCollapsed" class="block w-full border-b border-slate-200 dark:border-slate-800"></span>
                 </div>
-                
-                <a href="{{ route('dashboard') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group {{ request()->routeIs('dashboard') ? 'active' : '' }}"
-                   title="Dashboard">
-                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+
+                <a href="{{ route('maintenance.dashboard') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group {{ request()->routeIs('maintenance.dashboard') || request()->routeIs('maintenance.vehicle.transactions') ? 'active' : '' }}"
+                   title="Maintenance Cost">
+                   <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
                     <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Dashboard</span>
-                </a>
-                
-                <a href="{{ route('rental.pairs') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group {{ request()->routeIs('rental.pairs') ? 'active' : '' }}"
-                   title="Rental Pairs">
-                   <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-                    <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Rental Pairs</span>
-                </a>
-                <a href="{{ route('total.stock') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group {{ request()->routeIs('total.stock') ? 'active' : '' }}"
-                   title="Total Stock">
-                   <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                    <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Total Stock</span>
+                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Maintenance Cost</span>
                 </a>
 
-                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-6 px-2 whitespace-nowrap overflow-hidden transition-all duration-300"
-                     :class="sidebarCollapsed ? 'text-center' : 'px-4'">
-                     <span x-show="!sidebarCollapsed">Inventory</span>
-                     <span x-show="sidebarCollapsed" class="block w-full border-b border-slate-200"></span>
-                </div>
-                
-                <a href="{{ route('details', ['category' => 'in_stock']) }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group {{ request()->input('category') == 'in_stock' ? 'active' : '' }}"
-                   title="In Stock">
-                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path></svg>
-                    <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">In Stock</span>
-                </a>
-                
-                <a href="{{ route('details', ['category' => 'active_rentals']) }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-indigo-600 transition-all group {{ request()->input('category') == 'active_rentals' ? 'active' : '' }}"
-                   title="Active Rental">
-                   <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                    <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Active Rental</span>
-                </a>
-
-                <a href="{{ route('details', ['category' => 'in_service']) }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group {{ request()->input('category') == 'in_service' ? 'active' : '' }}"
-                   title="In Service">
+                <a href="{{ route('maintenance.repair.jobs') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group {{ request()->routeIs('maintenance.repair.jobs') ? 'active' : '' }}"
+                   title="Repair Jobs">
                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">In Service</span>
+                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Repair Jobs</span>
                 </a>
 
                 <div class="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 mt-6 px-2 whitespace-nowrap overflow-hidden transition-all duration-300"
@@ -165,26 +142,16 @@
                      <span x-show="sidebarCollapsed" class="block w-full border-b border-slate-200 dark:border-slate-800"></span>
                 </div>
 
-                <a href="{{ route('import') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group {{ request()->routeIs('import') ? 'active' : '' }}"
-                   title="Import Data">
-                   <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+
+
+                <a href="{{ route('maintenance.odoo.settings') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group {{ request()->routeIs('maintenance.odoo.settings') ? 'active' : '' }}"
+                   title="Maintenance Config">
+                   <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                     <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Import Data</span>
+                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Maintenance Config</span>
                 </a>
 
-                <a href="{{ route('help') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group {{ request()->routeIs('help') ? 'active' : '' }}"
-                   title="Help & Guide">
-                   <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Help & Guide</span>
-                </a>
 
-                <a href="{{ route('settings') }}" class="sidebar-link flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-all group {{ request()->routeIs('settings') ? 'active' : '' }}"
-                   title="Settings">
-                   <svg class="w-5 h-5 group-hover:scale-110 transition-transform flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                    <span class="font-medium whitespace-nowrap overflow-hidden transition-all duration-300" 
-                          :class="sidebarCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100'">Settings</span>
-                </a>
 
             </nav>
 
@@ -325,5 +292,19 @@
     </div>
 
     @yield('scripts')
+    
+    <script>
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer)
+                toast.addEventListener('mouseleave', Swal.resumeTimer)
+            }
+        });
+    </script>
 </body>
 </html>

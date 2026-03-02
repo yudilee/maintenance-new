@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ImportController;
 use App\Http\Controllers\SettingsController;
+use App\Http\Controllers\MainController;
+use App\Http\Controllers\OdooSettingController as MaintenanceOdooSettingController;
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -38,3 +40,22 @@ Route::get('/api/settings/targets', [SettingsController::class, 'getTargets'])->
 
 // Repair History API
 Route::get('/api/repair-history/{lotNumber}', [DashboardController::class, 'repairHistory'])->name('api.repair.history');
+
+// Maintenance (Operational Costs) Module Routes
+Route::prefix('maintenance')->name('maintenance.')->group(function () {
+    Route::get('/', [MainController::class, 'index'])->name('dashboard');
+    Route::get('/nomor-polisi-search', [MainController::class, 'searchNomorPolisi'])->name('nomor_polisi.search');
+    Route::get('/nama-customer-search', [MainController::class, 'searchCustomer'])->name('nama_customer.search');
+    Route::get('/vehicle-transactions', [MainController::class, 'vehicleTransactions'])->name('vehicle.transactions');
+    Route::get('/vehicle-transactions-data', [MainController::class, 'vehicleTransactionsData'])->name('vehicle.transactions.data');
+    Route::get('/vehicle-transactions-export', [MainController::class, 'vehicleTransactionsExport'])->name('vehicle.transactions.export');
+    Route::get('/repair-jobs', [MainController::class, 'repairJobs'])->name('repair.jobs');
+    Route::get('/repair-jobs-data', [MainController::class, 'repairJobsData'])->name('repair.jobs.data');
+    
+    // Odoo settings for Maintenance
+    Route::get('/odoo/settings', [MaintenanceOdooSettingController::class, 'index'])->name('odoo.settings');
+    Route::post('/odoo/settings', [MaintenanceOdooSettingController::class, 'store'])->name('odoo.settings.store');
+    Route::post('/odoo/test-connection', [MaintenanceOdooSettingController::class, 'testConnection'])->name('odoo.test_connection');
+    Route::post('/odoo/sync-now', [MaintenanceOdooSettingController::class, 'syncNow'])->name('odoo.sync_now');
+    Route::get('/odoo/sync-status', [MaintenanceOdooSettingController::class, 'syncStatus'])->name('odoo.sync_status');
+});
