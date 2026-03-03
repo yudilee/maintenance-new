@@ -95,7 +95,7 @@
                                         'nomor_polisi' => $v->nomor_polisi,
                                         'start_date_transaksi' => request('start_date_transaksi'),
                                         'end_date_transaksi' => request('end_date_transaksi')
-                                    ]) }}" class="inline-flex items-center px-4 py-2 bg-cyan-500 text-white text-xs font-medium rounded-lg hover:bg-cyan-600 transition-colors shadow-sm">
+                                    ]) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
                                         Lihat Transaksi
                                     </a>
                                 </td>
