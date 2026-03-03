@@ -253,7 +253,7 @@ window.showJobDetails = function(nomorJob) {
         allowOutsideClick: false,
         didOpen: () => {
             Swal.showLoading();
-            $.get("{{ url('/maintenance/repair-job-details') }}/" + encodeURIComponent(nomorJob), function(htmlTemplate) {
+            $.get("{{ url('/maintenance/repair-job-details') }}/" + nomorJob, function(htmlTemplate) {
                 Swal.fire({
                     html: htmlTemplate,
                     showCloseButton: true,

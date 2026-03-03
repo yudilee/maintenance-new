@@ -565,13 +565,20 @@ class MainController extends Controller
         // DataTables search
         $search = $request->input('search.value', '');
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            // Pre-fetch matching chassis for vehicles to massively speed up search
+            $mobilChassisList = \App\Models\mobil::where('nomor_polisi', 'like', "%{$search}%")
+                ->pluck('nomor_chassis')
+                ->filter()
+                ->toArray();
+
+            $query->where(function ($q) use ($search, $mobilChassisList) {
                 $q->where('nomor_job', 'like', "%{$search}%")
                   ->orWhere('nomor_chassis', 'like', "%{$search}%")
-                  ->orWhere('keterangan', 'like', "%{$search}%")
-                  ->orWhereHas('mobil', function ($mq) use ($search) {
-                      $mq->where('nomor_polisi', 'like', "%{$search}%");
-                  });
+                  ->orWhere('keterangan', 'like', "%{$search}%");
+                  
+                if (!empty($mobilChassisList)) {
+                    $q->orWhereIn('nomor_chassis', $mobilChassisList);
+                }
             });
         }
 
