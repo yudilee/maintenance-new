@@ -10,9 +10,40 @@ use App\Models\dtransaksi;
 
 class MainController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('main');
+        $vehicleResults = collect();
+        $mobilDetail = null;
+
+        // If a specific vehicle is selected, skip the directory and go straight to its transactions
+        if ($request->filled('nomor_polisi')) {
+            return redirect()->route('maintenance.vehicle.transactions', $request->all());
+        }
+
+        // If only nama_customer is selected, show the directory of vehicles on the main page
+        if ($request->filled('nama_customer') && !$request->filled('nomor_polisi')) {
+            $customer = customer::where('kode_customer', $request->nama_customer)->first();
+            if ($customer) {
+                // Get all htransaksi for this customer and date range
+                $htransaksiQuery = htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
+
+                if ($request->start_date_transaksi && $request->end_date_transaksi) {
+                    $htransaksiQuery->whereBetween('tanggal_job', [$request->start_date_transaksi, $request->end_date_transaksi]);
+                } elseif ($request->start_date_transaksi) {
+                    $htransaksiQuery->where('tanggal_job', '>=', $request->start_date_transaksi);
+                } elseif ($request->end_date_transaksi) {
+                    $htransaksiQuery->where('tanggal_job', '<=', $request->end_date_transaksi);
+                }
+
+                // Extract distinct vehicle IDs first using SQL instead of loading all htransaksi rows into RAM
+                $vehicleIds = $htransaksiQuery->select('id_kendaraan')->distinct()->pluck('id_kendaraan');
+                
+                // Fetch the vehicles matching those IDs
+                $vehicleResults = mobil::whereIn('id', $vehicleIds)->get()->unique('nomor_chassis')->values();
+            }
+        }
+
+        return view('main', compact('vehicleResults', 'mobilDetail'));
     }
 
     public function search(Request $request)

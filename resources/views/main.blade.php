@@ -8,7 +8,7 @@
     </div>
 
     <div class="p-6">
-        <form action="{{ route('maintenance.vehicle.transactions') }}" method="GET" class="max-w-4xl">
+        <form action="{{ route('maintenance.dashboard') }}" method="GET" class="max-w-4xl">
             <!-- Plate Number -->
             <div class="mb-6">
                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nomor Polisi</label>
