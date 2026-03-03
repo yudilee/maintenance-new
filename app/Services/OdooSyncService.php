@@ -90,8 +90,8 @@ class OdooSyncService
                 $offset += $limit;
             }
  
-            // 3. Fetch Linked Invoices & Bills (where repair_id is set)
-            $billDomain = [['repair_id', '!=', false], ['state', '!=', 'cancel']];
+            // 3. Fetch Linked Vendor Bills (Costs only, where repair_id is set)
+            $billDomain = [['repair_id', '!=', false], ['state', '!=', 'cancel'], ['name', 'like', 'BILLS/']];
             if ($lastSyncUTC) {
                 $billDomain[] = ['write_date', '>=', $lastSyncUTC];
             } else {
