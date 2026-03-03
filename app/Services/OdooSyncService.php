@@ -227,6 +227,16 @@ class OdooSyncService
                     ]);
                 }
 
+                // Sync Vendor/Supplier from Repair Order (Step A fallback)
+                $supplierId = '0';
+                if (!empty($ro['partner_id']) && is_array($ro['partner_id'])) {
+                    $supplierId = 'O-' . $ro['partner_id'][0];
+                    \App\Models\supplier::updateOrCreate(
+                        ['kode_supplier' => $supplierId],
+                        ['nama_supplier' => substr($ro['partner_id'][1], 0, 100)]
+                    );
+                }
+
                 // Sync Head
                 $headerData = [
                     'nomor_job' => $jobNo,
@@ -242,7 +252,7 @@ class OdooSyncService
                     'id_customer' => 0,
                     'sup_invoice' => 0,
                     'pajak' => '0',
-                    'kode_sup' => '0',
+                    'kode_sup' => $supplierId,
                     'kode_servis' => 0,
                     'nomor_req' => '',
                     'harga_part' => 0,

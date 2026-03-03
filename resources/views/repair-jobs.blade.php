@@ -206,7 +206,7 @@ function repairJobsPage() {
                     info: 'Showing _START_ to _END_ of _TOTAL_ jobs',
                     lengthMenu: 'Show _MENU_ jobs',
                 },
-                dom: '<"flex items-center justify-between flex-wrap gap-4 p-4"lf>rt<"flex items-center justify-between flex-wrap gap-4 p-4 border-t border-slate-100 dark:border-slate-800"ip>',
+                dom: '<"flex items-center justify-between flex-wrap gap-4 p-4"Blf>rt<"flex items-center justify-between flex-wrap gap-4 p-4 border-t border-slate-100 dark:border-slate-800"ip>',
                 buttons: [
                     {
                         extend: 'colvis',
