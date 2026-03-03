@@ -4,111 +4,110 @@
 
 @section('content')
 <div x-data="repairJobsPage()" x-init="initTable()">
+<div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden theme-transition mb-6">
     {{-- Page Header --}}
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-slate-800 dark:text-slate-100">Repair Jobs</h1>
-        <p class="text-slate-500 dark:text-slate-400 mt-2">Monitor open and closed repair orders from Odoo</p>
+    <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">Repair Jobs</h1>
+            <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Monitor open and closed repair orders from Odoo</p>
+        </div>
     </div>
 
-    {{-- KPI Cards --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-8">
-        {{-- Total Jobs --}}
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-5 shadow-sm">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-slate-600 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                </div>
-                <span class="text-sm font-medium text-slate-500 dark:text-slate-400">Total Jobs</span>
-            </div>
-            <p class="text-3xl font-bold text-slate-800 dark:text-slate-100">{{ number_format($totalJobs) }}</p>
-        </div>
-
-        {{-- Open Jobs --}}
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-amber-200 dark:border-amber-800/50 p-5 shadow-sm">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <span class="text-sm font-medium text-amber-600 dark:text-amber-400">Open</span>
-            </div>
-            <p class="text-3xl font-bold text-amber-700 dark:text-amber-300">{{ number_format($openJobs) }}</p>
-        </div>
-
-        {{-- Closed Jobs --}}
-        <div class="bg-white dark:bg-slate-900 rounded-2xl border border-green-200 dark:border-green-800/50 p-5 shadow-sm">
-            <div class="flex items-center gap-3 mb-3">
-                <div class="w-10 h-10 rounded-xl bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
-                <span class="text-sm font-medium text-green-600 dark:text-green-400">Closed</span>
-            </div>
-            <p class="text-3xl font-bold text-green-700 dark:text-green-300">{{ number_format($closedJobs) }}</p>
-        </div>
-
-    </div>
-
-    {{-- Filter Bar --}}
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm mb-6">
-        <div class="p-5">
-            <div class="flex flex-wrap items-end gap-4">
-                {{-- Status Filter Tabs --}}
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">Status</label>
-                    <div class="inline-flex rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
+    <div class="p-6">
+        {{-- Filter Config UI --}}
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 mb-6">
+            <div class="flex flex-col md:flex-row gap-4 items-end">
+                <div class="w-full md:w-auto">
+                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Status</label>
+                    <div class="inline-flex rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 p-1">
                         <button @click="statusFilter = 'all'; reloadTable()"
-                                :class="statusFilter === 'all' ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'"
-                                class="px-4 py-2 text-sm font-medium transition-colors">All</button>
+                                :class="statusFilter === 'all' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                                class="px-4 py-2 text-sm font-medium rounded-lg transition-all">All</button>
                         <button @click="statusFilter = 'open'; reloadTable()"
-                                :class="statusFilter === 'open' ? 'bg-amber-500 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'"
-                                class="px-4 py-2 text-sm font-medium transition-colors border-l border-slate-200 dark:border-slate-700">Open</button>
+                                :class="statusFilter === 'open' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                                class="px-4 py-2 text-sm font-medium rounded-lg transition-all">Open</button>
                         <button @click="statusFilter = 'closed'; reloadTable()"
-                                :class="statusFilter === 'closed' ? 'bg-green-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700'"
-                                class="px-4 py-2 text-sm font-medium transition-colors border-l border-slate-200 dark:border-slate-700">Closed</button>
+                                :class="statusFilter === 'closed' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+                                class="px-4 py-2 text-sm font-medium rounded-lg transition-all">Closed</button>
                     </div>
                 </div>
 
-                {{-- Date Range --}}
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">From</label>
-                    <input type="date" x-model="startDate" @change="reloadTable()"
-                           class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium text-slate-500 dark:text-slate-400 mb-1.5 uppercase tracking-wider">To</label>
-                    <input type="date" x-model="endDate" @change="reloadTable()"
-                           class="px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                <div class="flex-grow flex flex-col md:flex-row gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">From Date</label>
+                        <input type="date" x-model="startDate" @change="reloadTable()"
+                               class="w-full text-sm border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm px-3">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">To Date</label>
+                        <input type="date" x-model="endDate" @change="reloadTable()"
+                               class="w-full text-sm border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm px-3">
+                    </div>
                 </div>
 
-                {{-- Reset --}}
-                <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; reloadTable()"
-                        class="px-4 py-2 text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg transition-colors">
-                    Reset
-                </button>
+                <div class="w-full md:w-auto mt-4 md:mt-0">
+                    <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; reloadTable()" 
+                            class="w-full md:w-auto px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Reset
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    {{-- Buttons --}}
-    <div id="dt-buttons-container" class="mb-4"></div>
+        {{-- KPI Cards --}}
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-indigo-300 transition-colors">
+                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
+                    <div class="w-6 h-6 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    </div>
+                    Total Jobs
+                </div>
+                <div class="text-2xl font-black text-slate-800 dark:text-slate-100">{{ number_format($totalJobs) }}</div>
+            </div>
 
-    {{-- DataTable --}}
-    <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-            <table id="repairJobsTable" class="w-full text-sm">
-                <thead class="bg-slate-50 dark:bg-slate-800">
+            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-amber-300 transition-colors">
+                 <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
+                    <div class="w-6 h-6 rounded bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    Open Jobs
+                </div>
+                <div class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ number_format($openJobs) }}</div>
+            </div>
+
+            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-green-300 transition-colors">
+                 <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
+                    <div class="w-6 h-6 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    Closed Jobs
+                </div>
+                <div class="text-2xl font-black text-green-600 dark:text-green-400">{{ number_format($closedJobs) }}</div>
+            </div>
+        </div>
+
+        <div id="dt-controls-top" class="mb-3"></div>
+
+        <div class="frozen-table-container">
+            <table id="repairJobsTable" class="frozen-table" style="min-width: 1000px;">
+                <thead>
                     <tr>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Job Number</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Date</th>
-                        <th class="px-4 py-3 text-center text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Vehicle</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Supplier</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">Close Date</th>
+                        <th class="sticky-col" style="min-width:200px;">Job Number</th>
+                        <th style="min-width:100px;">Date</th>
+                        <th class="text-center" style="min-width:140px;">Status</th>
+                        <th style="min-width:200px;">Vehicle</th>
+                        <th style="min-width:200px;">Supplier</th>
+                        <th class="text-right" style="min-width:140px;">Total</th>
+                        <th style="min-width:100px;">Close Date</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100 dark:divide-slate-800"></tbody>
+                <tbody></tbody>
             </table>
         </div>
+        
+        <div id="dt-controls-bottom" class="mt-3"></div>
     </div>
 </div>
 @endsection
@@ -206,7 +205,7 @@ function repairJobsPage() {
                     info: 'Showing _START_ to _END_ of _TOTAL_ jobs',
                     lengthMenu: 'Show _MENU_ jobs',
                 },
-                dom: '<"flex items-center justify-between flex-wrap gap-4 p-4"Blf>rt<"flex items-center justify-between flex-wrap gap-4 p-4 border-t border-slate-100 dark:border-slate-800"ip>',
+                dom: '<"flex flex-col md:flex-row items-center justify-between gap-4"Bf>rt<"flex flex-col md:flex-row items-center justify-between gap-4 mt-2"ip>',
                 buttons: [
                     {
                         extend: 'colvis',
@@ -214,14 +213,16 @@ function repairJobsPage() {
                     }
                 ],
                 drawCallback: function() {
-                    // Style the search and length controls
-                    $('#repairJobsTable_filter input').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500');
-                    $('#repairJobsTable_length select').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm');
+                    $('#repairJobsTable_filter input').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500 ml-2');
+                    $('#repairJobsTable_length select').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm mx-2');
                 }
             });
 
-            // Append buttons
-            this.table.buttons().container().appendTo('#dt-buttons-container');
+            // Move DOM to outside logic
+            setTimeout(() => {
+                $('#repairJobsTable_wrapper > .flex').first().appendTo('#dt-controls-top');
+                $('#repairJobsTable_wrapper > .flex').last().appendTo('#dt-controls-bottom');
+            }, 50);
         },
 
         reloadTable() {
@@ -233,6 +234,127 @@ function repairJobsPage() {
 }
 </script>
 <style>
+            /* Frozen Table - matching total_stock pattern */
+            .frozen-table-container {
+                max-height: calc(100vh - 460px);
+                min-height: 300px;
+                overflow: auto;
+                position: relative;
+                border: 1px solid rgb(226 232 240);
+                border-radius: 0.75rem;
+            }
+            .dark .frozen-table-container {
+                border-color: rgb(30 41 59);
+            }
+            .frozen-table {
+                border-collapse: separate;
+                border-spacing: 0;
+                width: 100%;
+            }
+            .frozen-table thead {
+                position: sticky;
+                top: 0;
+                z-index: 20;
+            }
+            .frozen-table thead th {
+                background: rgb(248 250 252);
+                color: rgb(100 116 139);
+                font-size: 0.7rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                padding: 0.75rem 1rem;
+                border-bottom: 1px solid rgb(226 232 240);
+                white-space: nowrap;
+            }
+            .dark .frozen-table thead th {
+                background: rgb(2 6 23);
+                color: rgb(148 163 184);
+                border-bottom-color: rgb(30 41 59);
+            }
+            .frozen-table th.sticky-col,
+            .frozen-table td.sticky-col {
+                position: sticky;
+                left: 0;
+                z-index: 10;
+            }
+            .frozen-table thead th.sticky-col {
+                z-index: 30;
+                background: rgb(248 250 252);
+            }
+            .dark .frozen-table thead th.sticky-col {
+                background: rgb(2 6 23);
+            }
+            .frozen-table tbody td.sticky-col {
+                background: rgb(255 255 255);
+            }
+            .dark .frozen-table tbody td.sticky-col {
+                background: rgb(15 23 42);
+            }
+            .frozen-table tbody tr:hover td.sticky-col {
+                background: rgb(248 250 252 / 0.8);
+            }
+            .dark .frozen-table tbody tr:hover td.sticky-col {
+                background: rgb(30 41 59 / 0.8);
+            }
+            .frozen-table th.sticky-col::after,
+            .frozen-table td.sticky-col::after {
+                content: '';
+                position: absolute;
+                top: 0; right: -8px; bottom: 0;
+                width: 8px;
+                background: linear-gradient(to right, rgba(0,0,0,0.06), transparent);
+                pointer-events: none;
+            }
+            .dark .frozen-table th.sticky-col::after,
+            .dark .frozen-table td.sticky-col::after {
+                background: linear-gradient(to right, rgba(0,0,0,0.25), transparent);
+            }
+            .frozen-table tbody td {
+                padding: 0.625rem 1rem;
+                font-size: 0.8125rem;
+                color: rgb(51 65 85);
+                border-bottom: 1px solid rgb(241 245 249);
+                vertical-align: middle;
+            }
+            .dark .frozen-table tbody td {
+                color: rgb(203 213 225);
+                border-bottom-color: rgb(30 41 59);
+            }
+            .frozen-table tbody tr:hover td {
+                background: rgb(248 250 252 / 0.5);
+            }
+            .dark .frozen-table tbody tr:hover td {
+                background: rgb(30 41 59 / 0.5);
+            }
+            
+            #repairJobsTable_wrapper { margin-top: 0; }
+            .dataTables_wrapper .dataTables_paginate .paginate_button {
+                padding: 0.25rem 0.625rem;
+                border: 1px solid rgb(226 232 240);
+                margin: 0 2px;
+                border-radius: 0.5rem;
+                font-size: 0.8125rem;
+                background: white;
+                color: rgb(71 85 105) !important;
+                cursor: pointer;
+                transition: all 0.15s;
+            }
+            .dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+                background: rgb(30 41 59);
+                border-color: rgb(51 65 85);
+                color: rgb(148 163 184) !important;
+            }
+            .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+                background: rgb(79 70 229) !important;
+                color: white !important;
+                border-color: rgb(79 70 229) !important;
+            }
+            .dataTables_wrapper .dataTables_info {
+                font-size: 0.75rem;
+                color: rgb(100 116 139);
+            }
+            
     /* DataTables overrides layout for Buttons */
     .dt-buttons .dt-button {
         background-color: #ffffff;
