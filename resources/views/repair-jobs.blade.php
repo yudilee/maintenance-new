@@ -138,8 +138,10 @@ function repairJobsPage() {
                     {
                         data: 'nomor_job',
                         render: function(data, type, row) {
-                            return '<div class="font-medium text-slate-800 dark:text-slate-200">' + data + '</div>' +
-                                   '<div class="text-xs text-slate-400">' + (row.service_type || '') + '</div>';
+                            return '<a href="javascript:void(0)" onclick="window.showJobDetails(\'' + data + '\')" class="inline-block flex-col group">' +
+                                   '<div class="font-medium text-indigo-600 dark:text-indigo-400 group-hover:underline">' + data + '</div>' +
+                                   '<div class="text-xs text-slate-400 group-hover:text-slate-500">' + (row.service_type || '') + '</div>' +
+                                   '</a>';
                         }
                     },
                     {
@@ -232,6 +234,38 @@ function repairJobsPage() {
         }
     };
 }
+
+window.showJobDetails = function(nomorJob) {
+    Swal.fire({
+        title: 'Loading details...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+            $.get("{{ url('/maintenance/repair-job-details') }}/" + encodeURIComponent(nomorJob), function(htmlTemplate) {
+                Swal.fire({
+                    html: htmlTemplate,
+                    showCloseButton: true,
+                    showConfirmButton: true,
+                    confirmButtonText: 'Close',
+                    customClass: {
+                        popup: 'rounded-2xl dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl',
+                        confirmButton: 'px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-colors',
+                        closeButton: 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                    },
+                    width: '600px',
+                    padding: '2rem'
+                });
+            }).fail(function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Failed to load job details. Transaction might not be synchronized yet.',
+                    customClass: { popup: 'rounded-2xl dark:bg-slate-900', confirmButton: 'px-6 py-2 bg-slate-800 text-white rounded-xl' }
+                });
+            });
+        }
+    });
+};
 </script>
 <style>
             /* Frozen Table - matching total_stock pattern */

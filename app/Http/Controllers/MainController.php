@@ -596,7 +596,7 @@ class MainController extends Controller
             // Calculate days open for open jobs
             $daysOpen = null;
             if ($isOpen && $job->tanggal_job) {
-                $daysOpen = \Carbon\Carbon::parse($job->tanggal_job)->diffInDays(now());
+                $daysOpen = intval(\Carbon\Carbon::parse($job->tanggal_job)->diffInDays(now()));
             }
 
             $stateLabel = match($state) {
@@ -635,5 +635,15 @@ class MainController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
         ]);
+    }
+    public function repairJobDetails($nomor_job)
+    {
+        $job = htransaksi::with(['dtransaksi', 'mobil', 'supplier'])->where('nomor_job', $nomor_job)->first();
+        
+        if (!$job) {
+            return response()->json(['error' => 'Job not found'], 404);
+        }
+
+        return view('maintenance.job-details', compact('job'));
     }
 }

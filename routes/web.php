@@ -51,6 +51,7 @@ Route::prefix('maintenance')->name('maintenance.')->group(function () {
     Route::get('/vehicle-transactions-export', [MainController::class, 'vehicleTransactionsExport'])->name('vehicle.transactions.export');
     Route::get('/repair-jobs', [MainController::class, 'repairJobs'])->name('repair.jobs');
     Route::get('/repair-jobs-data', [MainController::class, 'repairJobsData'])->name('repair.jobs.data');
+    Route::get('/repair-job-details/{nomor_job}', [MainController::class, 'repairJobDetails'])->name('repair.job.details');
     
     // Odoo settings for Maintenance
     Route::get('/odoo/settings', [MaintenanceOdooSettingController::class, 'index'])->name('odoo.settings');
