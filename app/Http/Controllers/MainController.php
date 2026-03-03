@@ -321,7 +321,7 @@ class MainController extends Controller
             'recordsTotal' => $recordsTotal,
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
-            'grandTotals' => $this->calculateGrandTotals($request->nama_customer, $request->nomor_polisi, $request->start_date_transaksi, $request->end_date_transaksi)
+            'grandTotals' => $this->calculateGrandTotals($request->nama_customer, $request->nomor_polisi, $request->start_date_transaksi, $request->end_date_transaksi, $search)
         ]);
     }
 
@@ -463,7 +463,7 @@ class MainController extends Controller
 
     return $query;
 }
-    private function calculateGrandTotals($nama_customer, $nomor_polisi, $start, $end)
+    private function calculateGrandTotals($nama_customer, $nomor_polisi, $start, $end, $search = null)
     {
         $query = htransaksi::query();
 
@@ -493,6 +493,17 @@ class MainController extends Controller
             $query->where('tanggal_job', '<=', $end);
         }
 
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nomor_job', 'like', "%{$search}%")
+                  ->orWhere('nomor_chassis', 'like', "%{$search}%")
+                  ->orWhere('keterangan', 'like', "%{$search}%")
+                  ->orWhereHas('mobil', function ($mq) use ($search) {
+                      $mq->where('nomor_polisi', 'like', "%{$search}%");
+                  });
+            });
+        }
+
         $totals = $query->selectRaw('
             SUM(harga_total) as total_harga,
             SUM(harga_pajak) as total_pajak,
@@ -500,9 +511,9 @@ class MainController extends Controller
         ')->first();
 
         return [
-            'hargaTotal' => $totals->total_harga ?? 0,
-            'hargaPajak' => $totals->total_pajak ?? 0,
-            'grandTotal' => $totals->grand_total ?? 0,
+            'hargaTotal' => (float) ($totals->total_harga ?? 0),
+            'hargaPajak' => (float) ($totals->total_pajak ?? 0),
+            'grandTotal' => (float) ($totals->grand_total ?? 0),
         ];
     }
 
