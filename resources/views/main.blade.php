@@ -57,11 +57,84 @@
                 </button>
             </div>
         </form>
+
+        @if(isset($vehicleResults) && $vehicleResults->count() > 0)
+            <div class="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
+                    <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Daftar Mobil untuk Customer: <span class="text-indigo-600 dark:text-indigo-400">{{ \App\Models\customer::where('kode_customer', request('nama_customer'))->value('nama_customer') ?? request('nama_customer') }}</span></h3>
+                </div>
+                <div class="p-6 overflow-x-auto">
+                    <table id="vehicleListTable" class="w-full text-sm text-left whitespace-nowrap">
+                        <thead class="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-900/50 dark:text-slate-400">
+                            <tr>
+                                <th class="px-4 py-3 font-bold">Nomor Polisi</th>
+                                <th class="px-4 py-3 font-bold">Nomor Chassis</th>
+                                <th class="px-4 py-3 font-bold">Model</th>
+                                <th class="px-4 py-3 font-bold whitespace-normal">Tahun Pembuatan</th>
+                                <th class="px-4 py-3 font-bold">Warna</th>
+                                <th class="px-4 py-3 font-bold">Nomor Mesin</th>
+                                <th class="px-4 py-3 font-bold whitespace-normal">Tanggal Pembelian</th>
+                                <th class="px-4 py-3 font-bold">Kode Supplier</th>
+                                <th class="px-4 py-3 font-bold text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                            @foreach($vehicleResults as $v)
+                            <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ $v->nomor_polisi ?: '-' }}</td>
+                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->nomor_chassis ?: '-' }}</td>
+                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->model ?: '-' }}</td>
+                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->tahun_pembuatan ?: '-' }}</td>
+                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->warna ?: '-' }}</td>
+                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->nomor_mesin ?: '-' }}</td>
+                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->tanggal_pembelian ?: '-' }}</td>
+                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->kode_sup ?: '-' }}</td>
+                                <td class="px-4 py-3 text-center">
+                                    <a href="{{ route('maintenance.vehicle.transactions', [
+                                        'nama_customer' => request('nama_customer'),
+                                        'nomor_polisi' => $v->nomor_polisi,
+                                        'start_date_transaksi' => request('start_date_transaksi'),
+                                        'end_date_transaksi' => request('end_date_transaksi')
+                                    ]) }}" class="inline-flex items-center px-4 py-2 bg-cyan-500 text-white text-xs font-medium rounded-lg hover:bg-cyan-600 transition-colors shadow-sm">
+                                        Lihat Transaksi
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    
+                    <div class="mt-6 flex justify-start">
+                        <a href="{{ route('maintenance.vehicle.transactions', [
+                                        'nama_customer' => request('nama_customer'),
+                                        'start_date_transaksi' => request('start_date_transaksi'),
+                                        'end_date_transaksi' => request('end_date_transaksi')
+                                    ]) }}" class="px-6 py-3 bg-slate-600 text-white text-sm font-medium rounded-xl hover:bg-slate-700 transition-colors shadow-sm inline-flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                            Show All Transactions for {{ \App\Models\customer::where('kode_customer', request('nama_customer'))->value('nama_customer') ?? request('nama_customer') }}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        @elseif(isset($vehicleResults) && request('nama_customer'))
+            <div class="mt-8 bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700/50 rounded-2xl p-6 text-center">
+                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 class="text-lg font-bold text-amber-800 dark:text-amber-500 mb-1">No Vehicles Found</h3>
+                <p class="text-amber-700 dark:text-amber-400/80">No vehicles or maintenance records found for this customer within the selected dates.</p>
+            </div>
+        @endif
     </div>
 </div>
 @endsection
 
 @section('scripts')
+<!-- Export Dependencies -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
@@ -150,6 +223,72 @@ $(document).ready(function() {
         $('#start_date_transaksi').val('');
         $('#end_date_transaksi').val('');
     });
+
+    if ($('#vehicleListTable').length > 0) {
+        $('#vehicleListTable').DataTable({
+            "pageLength": 10,
+            "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
+            "language": {
+                "search": "",
+                "searchPlaceholder": "Search..."
+            },
+            "dom": '<"flex flex-col md:flex-row items-center justify-between gap-4 mb-4"Bf>rt<"flex flex-col md:flex-row items-center justify-between gap-4 mt-4"ip>',
+            "buttons": [
+                {
+                    extend: 'excelHtml5',
+                    text: '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Excel</span>',
+                    className: 'btn-export'
+                },
+                {
+                    extend: 'pdfHtml5',
+                    text: '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>PDF</span>',
+                    className: 'btn-export'
+                }
+            ],
+            drawCallback: function() {
+                $('.dataTables_filter input').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500');
+            }
+        });
+    }
 });
 </script>
+
+<style>
+/* Adjust DataTables export buttons to look like the screenshot */
+.dt-buttons .btn-export {
+    background-color: #64748b !important;
+    border-color: #475569 !important;
+    color: white !important;
+    padding: 0.5rem 1rem !important;
+    border-radius: 0.5rem !important;
+    font-size: 0.875rem !important;
+    margin-right: 0.5rem !important;
+}
+.dt-buttons .btn-export:hover {
+    background-color: #475569 !important;
+}
+
+/* Pagination styles */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    padding: 0.25rem 0.625rem;
+    border: 1px solid rgb(226 232 240);
+    margin: 0 2px;
+    border-radius: 0.5rem;
+    font-size: 0.8125rem;
+    background: white;
+    color: rgb(71 85 105) !important;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.dark .dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: rgb(30 41 59);
+    border-color: rgb(51 65 85);
+    color: rgb(148 163 184) !important;
+}
+.dataTables_wrapper .dataTables_paginate .paginate_button.current {
+    background: rgb(79 70 229) !important;
+    color: white !important;
+    border-color: rgb(79 70 229) !important;
+}
+</style>
 @endsection
