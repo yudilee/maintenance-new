@@ -508,6 +508,7 @@ class MainController extends Controller
         $closedStates = ['done', '2binvoiced'];
 
         $totalJobs = htransaksi::count();
+        $openJobs = htransaksi::whereIn('state', $openStates)->count();
         $closedJobs = htransaksi::whereIn('state', $closedStates)->count();
 
         return view('repair-jobs', compact('totalJobs', 'openJobs', 'closedJobs'));
