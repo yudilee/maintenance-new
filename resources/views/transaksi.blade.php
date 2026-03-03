@@ -56,6 +56,29 @@
             </div>
         </form>
 
+        @if($mobilDetail)
+        <div class="bg-white dark:bg-slate-800 border-l-4 border-indigo-500 rounded-2xl shadow-sm mb-8 overflow-hidden">
+            <div class="bg-slate-50 dark:bg-slate-800/80 px-5 py-3 border-b border-slate-100 dark:border-slate-700">
+                <h3 class="font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider text-sm">Detail Mobil</h3>
+            </div>
+            <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
+                <div class="space-y-3">
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Polisi:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->nomor_polisi ?: '-' }}</span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Tahun Pembuatan:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->tahun_pembuatan ?: '-' }}</span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Tanggal Pembelian:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->tanggal_pembelian ?: '-' }}</span></div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Chassis:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->nomor_chassis ?: '-' }}</span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Warna:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->warna ?: '-' }}</span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Kode Supplier:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->kode_sup ?: '-' }}</span></div>
+                </div>
+                <div class="space-y-3">
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Model:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->model ?: '-' }}</span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Mesin:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->nomor_mesin ?: '-' }}</span></div>
+                </div>
+            </div>
+        </div>
+        @endif
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-indigo-300 transition-colors">
