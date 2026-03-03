@@ -88,26 +88,20 @@
             </div>
         </div>
 
-        <div id="dt-controls-top" class="mb-3"></div>
-
-        <div class="frozen-table-container">
-            <table id="repairJobsTable" class="frozen-table" style="min-width: 1000px;">
-                <thead>
-                    <tr>
-                        <th class="sticky-col" style="min-width:200px;">Job Number</th>
-                        <th style="min-width:100px;">Date</th>
-                        <th class="text-center" style="min-width:140px;">Status</th>
-                        <th style="min-width:200px;">Vehicle</th>
-                        <th style="min-width:200px;">Supplier</th>
-                        <th class="text-right" style="min-width:140px;">Total</th>
-                        <th style="min-width:100px;">Close Date</th>
-                    </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
-        </div>
-        
-        <div id="dt-controls-bottom" class="mt-3"></div>
+        <table id="repairJobsTable" class="frozen-table" style="min-width: 1000px;">
+            <thead>
+                <tr>
+                    <th class="sticky-col" style="min-width:200px;">Job Number</th>
+                    <th style="min-width:100px;">Date</th>
+                    <th class="text-center" style="min-width:140px;">Status</th>
+                    <th style="min-width:200px;">Vehicle</th>
+                    <th style="min-width:200px;">Supplier</th>
+                    <th class="text-right" style="min-width:140px;">Total</th>
+                    <th style="min-width:100px;">Close Date</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
     </div>
 </div>
 @endsection
@@ -209,7 +203,7 @@ function repairJobsPage() {
                     info: 'Showing _START_ to _END_ of _TOTAL_ jobs',
                     lengthMenu: 'Show _MENU_ jobs',
                 },
-                dom: '<"flex flex-col md:flex-row items-center justify-between gap-4"Bf>rt<"flex flex-col md:flex-row items-center justify-between gap-4 mt-2"ip>',
+                dom: '<"flex flex-col md:flex-row items-center justify-between gap-4 mb-3"Bf><"frozen-table-container"rt><"flex flex-col md:flex-row items-center justify-between gap-4 mt-3"ip>',
                 buttons: [
                     {
                         extend: 'colvis',
@@ -221,12 +215,6 @@ function repairJobsPage() {
                     $('#repairJobsTable_length select').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm mx-2');
                 }
             });
-
-            // Move DOM to outside logic
-            setTimeout(() => {
-                $('#repairJobsTable_wrapper > .flex').first().appendTo('#dt-controls-top');
-                $('#repairJobsTable_wrapper > .flex').last().appendTo('#dt-controls-bottom');
-            }, 50);
         },
 
         reloadTable() {
@@ -243,7 +231,7 @@ window.filterByVehicle = function(nomorPolisi) {
     
     // Scroll back to the top where the search box is visible
     setTimeout(() => {
-        document.getElementById('dt-controls-top').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('repairJobsTable_wrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
 };
 
