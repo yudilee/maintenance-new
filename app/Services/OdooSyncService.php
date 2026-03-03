@@ -311,22 +311,16 @@ class OdooSyncService
                 $htransaksi = htransaksi::where('nomor_job', $jobNo)->first();
                 if (!$htransaksi) continue;
 
-                $calculatedTotal = 0;
-                $calculatedTax = 0;
+                $calculatedTotal = $move['amount_untaxed'] ?? 0;
+                $calculatedTax = $move['amount_tax'] ?? 0;
 
                 dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
                 
                 if (isset($billLinesMap[$move['id']])) {
                     foreach ($billLinesMap[$move['id']] as $line) {
-                        if ($line['display_type'] === 'payment_term') continue;
+                        if (in_array($line['display_type'], ['payment_term', 'tax'])) continue;
 
                         $amt = $line['price_subtotal'];
-                        if ($line['display_type'] === 'tax') {
-                            $amt = abs($line['balance'] ?? 0);
-                            $calculatedTax += $amt;
-                        } else {
-                            $calculatedTotal += $amt;
-                        }
 
                         dtransaksi::create([
                             'nomor_invoice' => $htransaksi->nomor_invoice,
@@ -346,7 +340,7 @@ class OdooSyncService
                     'nomor_invoice' => $invoiceNo,
                     'harga_part' => $calculatedTotal,
                     'harga_pajak' => $calculatedTax,
-                    'harga_total' => $calculatedTotal + $calculatedTax,
+                    'harga_total' => $move['amount_total'] ?? ($calculatedTotal + $calculatedTax),
                     'tanggal_invoice' => $move['invoice_date'] ?: $htransaksi->tanggal_job
                 ]);
             }
