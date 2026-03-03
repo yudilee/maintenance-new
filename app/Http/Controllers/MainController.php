@@ -497,6 +497,7 @@ class MainController extends Controller
         ')->first();
 
         return [
+            'hargaTotal' => $totals->total_harga ?? 0,
             'hargaPajak' => $totals->total_pajak ?? 0,
             'grandTotal' => $totals->grand_total ?? 0,
         ];
