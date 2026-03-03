@@ -172,8 +172,10 @@ function repairJobsPage() {
                     {
                         data: 'nomor_polisi',
                         render: function(data, type, row) {
-                            return '<div class="font-medium text-slate-700 dark:text-slate-300">' + data + '</div>' +
-                                   '<div class="text-xs text-slate-400">' + (row.model || '') + '</div>';
+                            return '<a href="javascript:void(0)" onclick="window.filterByVehicle(\'' + data + '\')" class="inline-block flex-col group" title="Click to filter by this vehicle">' +
+                                   '<div class="font-medium text-indigo-600 dark:text-indigo-400 group-hover:underline">' + data + '</div>' +
+                                   '<div class="text-xs text-slate-400 group-hover:text-slate-500">' + (row.model || '') + '</div>' +
+                                   '</a>';
                         }
                     },
                     {
@@ -234,6 +236,16 @@ function repairJobsPage() {
         }
     };
 }
+
+window.filterByVehicle = function(nomorPolisi) {
+    // Set the search box value and trigger DataTables search
+    $('#repairJobsTable').DataTable().search(nomorPolisi).draw();
+    
+    // Scroll back to the top where the search box is visible
+    setTimeout(() => {
+        document.getElementById('dt-controls-top').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+};
 
 window.showJobDetails = function(nomorJob) {
     Swal.fire({
