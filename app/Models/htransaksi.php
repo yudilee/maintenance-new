@@ -42,6 +42,11 @@ class htransaksi extends Model
         'state',
     ];
 
+    public function getNomorChassisAttribute($value)
+    {
+        return rtrim((string)$value);
+    }
+
     public function dtransaksi()
     {
         return $this->hasMany(dtransaksi::class, 'nomor_invoice', 'nomor_invoice');
