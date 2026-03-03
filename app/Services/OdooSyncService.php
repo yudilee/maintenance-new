@@ -242,7 +242,7 @@ class OdooSyncService
                     'id_customer' => 0,
                     'sup_invoice' => 0,
                     'pajak' => '0',
-                    'kode_sup' => '',
+                    'kode_sup' => '0',
                     'kode_servis' => 0,
                     'nomor_req' => '',
                     'harga_part' => 0,
@@ -314,6 +314,16 @@ class OdooSyncService
                 $calculatedTotal = $move['amount_untaxed'] ?? 0;
                 $calculatedTax = $move['amount_tax'] ?? 0;
 
+                // Sync Vendor/Supplier
+                $supplierId = '0';
+                if (!empty($move['partner_id']) && is_array($move['partner_id'])) {
+                    $supplierId = 'O-' . $move['partner_id'][0];
+                    \App\Models\supplier::updateOrCreate(
+                        ['kode_supplier' => $supplierId],
+                        ['nama_supplier' => substr($move['partner_id'][1], 0, 100)]
+                    );
+                }
+
                 dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
                 
                 if (isset($billLinesMap[$move['id']])) {
@@ -338,6 +348,7 @@ class OdooSyncService
 
                 $htransaksi->update([
                     'nomor_invoice' => $invoiceNo,
+                    'kode_sup' => $supplierId,
                     'harga_part' => $calculatedTotal,
                     'harga_pajak' => $calculatedTax,
                     'harga_total' => $move['amount_total'] ?? ($calculatedTotal + $calculatedTax),

@@ -88,6 +88,9 @@
         </div>
     </div>
 
+    {{-- Buttons --}}
+    <div id="dt-buttons-container" class="mb-4"></div>
+
     {{-- DataTable --}}
     <div class="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
@@ -204,12 +207,21 @@ function repairJobsPage() {
                     lengthMenu: 'Show _MENU_ jobs',
                 },
                 dom: '<"flex items-center justify-between flex-wrap gap-4 p-4"lf>rt<"flex items-center justify-between flex-wrap gap-4 p-4 border-t border-slate-100 dark:border-slate-800"ip>',
+                buttons: [
+                    {
+                        extend: 'colvis',
+                        text: '<span class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Show/Hide Columns</span>',
+                    }
+                ],
                 drawCallback: function() {
                     // Style the search and length controls
                     $('#repairJobsTable_filter input').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500');
                     $('#repairJobsTable_length select').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm');
                 }
             });
+
+            // Append buttons
+            this.table.buttons().container().appendTo('#dt-buttons-container');
         },
 
         reloadTable() {
@@ -220,4 +232,23 @@ function repairJobsPage() {
     };
 }
 </script>
+<style>
+    /* DataTables overrides layout for Buttons */
+    .dt-buttons .dt-button {
+        @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-700;
+    }
+    .dt-button-collection .dt-button {
+        @apply w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between;
+        border: none !important;
+        background: transparent !important;
+        box-shadow: none !important;
+    }
+    .dt-button-collection {
+        @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl overflow-hidden min-w-[200px] p-2;
+    }
+    .dt-button-collection .dt-button.active::after {
+        content: '✓';
+        @apply text-indigo-600 dark:text-indigo-400 font-bold ml-2;
+    }
+</style>
 @endsection
