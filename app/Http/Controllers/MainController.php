@@ -36,10 +36,10 @@ class MainController extends Controller
                 }
 
                 // Extract distinct vehicle IDs first using SQL instead of loading all htransaksi rows into RAM
-                $vehicleIds = $htransaksiQuery->select('id_kendaraan')->distinct()->pluck('id_kendaraan');
+                $vehicleIds = $htransaksiQuery->select('nomor_chassis')->distinct()->pluck('nomor_chassis');
                 
                 // Fetch the vehicles matching those IDs
-                $vehicleResults = mobil::whereIn('id', $vehicleIds)->get()->unique('nomor_chassis')->values();
+                $vehicleResults = mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
             }
         }
 
@@ -69,10 +69,10 @@ class MainController extends Controller
                 }
 
                 // Extract distinct vehicle IDs first using SQL instead of loading all htransaksi rows into RAM
-                $vehicleIds = $htransaksiQuery->select('id_kendaraan')->distinct()->pluck('id_kendaraan');
+                $vehicleIds = $htransaksiQuery->select('nomor_chassis')->distinct()->pluck('nomor_chassis');
                 
                 // Fetch the vehicles matching those IDs
-                $vehicleResults = mobil::whereIn('id', $vehicleIds)->get()->unique('nomor_chassis')->values();
+                $vehicleResults = mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
             }
         }
         // If both nomor_polisi and nama_customer are selected
