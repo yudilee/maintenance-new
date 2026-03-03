@@ -316,7 +316,6 @@ Kode Supplier: {{ $mobilDetail->kode_sup }}
                                     '12%', // Nomor Job
                                     '10%', // Tanggal Job
                                     '8%', // Posisi KM
-                                    '14%', // Nomor Invoice
                                     '30%', // Deskripsi
                                     '6%', // Jumlah
                                     '12%', // Harga
@@ -373,7 +372,7 @@ Kode Supplier: {{ $mobilDetail->kode_sup }}
                     }
                 ],
                 "columnDefs": [{
-                    "targets": [3, 4, 11],
+                    "targets": [3, 10],
                     "visible": false
                 }]
             });
@@ -454,9 +453,9 @@ Kode Supplier: {{ $mobilDetail->kode_sup }}
                         orientation: 'landscape',
                         pageSize: 'A4',
                         exportOptions: {
-                            columns: [0, 1, 2, 5, 6, 7, 8, 9,
-                                10
-                            ] // Only export specific columns (exclude 3,4,11)
+                            columns: [0, 1, 2, 4, 5, 6, 7, 8,
+                                9
+                            ] // Only export specific columns (exclude 3, 10)
                         },
                         customize: function(doc) {
                             if (mobilDetail) {
@@ -473,7 +472,6 @@ Kode Supplier: {{ $mobilDetail->kode_sup }}
                                     '12%', // Nomor Job
                                     '10%', // Tanggal Job
                                     '8%', // Posisi KM
-                                    '14%', // Nomor Invoice
                                     '30%', // Deskripsi
                                     '6%', // Jumlah
                                     '12%', // Harga
@@ -530,7 +528,7 @@ Kode Supplier: {{ $mobilDetail->kode_sup }}
                     }
                 ],
                 "columnDefs": [{
-                    "targets": [3, 4, 11],
+                    "targets": [3, 10],
                     "visible": false
                 }]
             });

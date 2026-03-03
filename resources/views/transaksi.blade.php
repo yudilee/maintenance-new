@@ -260,7 +260,6 @@
                         <th style="min-width:100px;">Tanggal Job</th>
                         <th style="min-width:80px;">Posisi KM</th>
                         <th style="min-width:140px;">Maintenance/Service</th>
-                        <th style="min-width:140px;">Nomor Invoice</th>
                         <th style="min-width:200px;">Deskripsi</th>
                         <th style="min-width:60px;">Jumlah</th>
                         <th style="min-width:100px;">Harga</th>
@@ -365,9 +364,6 @@
                         "data": "maintenance_service"
                     },
                     {
-                        "data": "nomor_invoice"
-                    },
-                    {
                         "data": "deskripsi"
                     },
                     {
@@ -447,7 +443,7 @@
                         var wb = XLSX.utils.book_new();
                         var wsData = [
                             ['Nomor Job', 'Tanggal Job', 'Posisi KM',
-                                'Maintenance/Service', 'Nomor Invoice',
+                                'Maintenance/Service',
                                 'Deskripsi',
                                 'Jumlah', 'Harga', 'Harga Total', 'Harga Pajak', 'Keterangan'
                             ]
@@ -472,7 +468,6 @@
                                 row.tanggal_job,
                                 row.posisi_km,
                                 row.maintenance_service || '',
-                                row.nomor_invoice,
                                 row.deskripsi,
                                 row.jumlah,
                                 hargaFormatted,
@@ -504,9 +499,6 @@
                             {
                                 wch: 20
                             }, // Maintenance/Service
-                            {
-                                wch: 15
-                            }, // Nomor Invoice
                             {
                                 wch: 40
                             }, // Deskripsi
@@ -573,7 +565,6 @@
                                                 {text: 'Tgl Job', style: 'tableHeader'},
                                                 {text: 'Pos KM', style: 'tableHeader'},
                                                 {text: 'Maintenance/Service', style: 'tableHeader'},
-                                                {text: 'No Invoice', style: 'tableHeader'},
                                                 {text: 'Deskripsi', style: 'tableHeader'},
                                                 {text: 'Jumlah', style: 'tableHeader'},
                                                 {text: 'Harga', style: 'tableHeader'},
@@ -620,11 +611,6 @@
                                                 {
                                                     text: row
                                                         .maintenance_service ||
-                                                        '',
-                                                    fillColor: null
-                                                },
-                                                {
-                                                    text: row.nomor_invoice ||
                                                         '',
                                                     fillColor: null
                                                 },

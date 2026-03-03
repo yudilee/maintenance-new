@@ -260,14 +260,10 @@ class MainController extends Controller
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
                     'maintenance_service' => $maintenanceService,
                     'workshop_harent' => $workshopHarent,
-                    'nomor_invoice' => $details->first()->nomor_invoice ?? '-',
                     'deskripsi' => $details->first()->deskripsi ?? '-',
                     'jumlah' => $details->first()->jumlah ?? '-',
-                    'harga' => ($details->first()->harga ?? 0) != 0 ? number_format($details->first()->harga, 0, ',', '.') : '-',
                     'harga_total' => ($transaction->harga_total ?? 0) != 0 ? number_format($transaction->harga_total, 0, ',', '.') : '-',
                     'harga_pajak' => ($transaction->harga_pajak ?? 0) != 0 ? number_format($transaction->harga_pajak, 0, ',', '.') : '-',
-                    'harga_jual' => number_format($transaction->harga_jual ?? 0, 0, ',', '.'),
-                    'net_profit' => number_format(($transaction->harga_jual + $transaction->harga_pajak_jual) - ($transaction->harga_total + $transaction->harga_pajak), 0, ',', '.'),
                     'keterangan' => $details->first()->keterangan ?? ($transaction->keterangan ?? '-'),
                     'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
                     'is_detail' => false
@@ -282,16 +278,12 @@ class MainController extends Controller
                         'posisi_km' => '',
                         'nomor_chassis' => '',
                         'nomor_polisi' => '',
-                        'maintenance_service' => '',
                         'workshop_harent' => '',
-                        'nomor_invoice' => '',
                         'deskripsi' => $detail->deskripsi ?? '-',
                         'jumlah' => $isTaxLine ? '' : ($detail->jumlah ?? '-'),
                         'harga' => $isTaxLine ? '' : number_format($detail->harga ?? 0, 0, ',', '.'),
                         'harga_total' => '',
                         'harga_pajak' => $isTaxLine ? number_format($detail->value ?? 0, 0, ',', '.') : '',
-                        'harga_jual' => '',
-                        'net_profit' => '',
                         'keterangan' => '',
                         'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
                         'is_detail' => true
@@ -308,16 +300,12 @@ class MainController extends Controller
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
-                    'maintenance_service' => $maintenanceService,
                     'workshop_harent' => $workshopHarent,
-                    'nomor_invoice' => '-',
                     'deskripsi' => '-',
                     'jumlah' => '-',
                     'harga' => '-',
                     'harga_total' => number_format($transaction->harga_total ?? 0, 0, ',', '.'),
                     'harga_pajak' => number_format($transaction->harga_pajak ?? 0, 0, ',', '.'),
-                    'harga_jual' => number_format($transaction->harga_jual ?? 0, 0, ',', '.'),
-                    'net_profit' => number_format(($transaction->harga_jual + $transaction->harga_pajak_jual) - ($transaction->harga_total + $transaction->harga_pajak), 0, ',', '.'),
                     'keterangan' => $transaction->keterangan ?? '-',
                     'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
                     'is_detail' => false
@@ -380,7 +368,6 @@ class MainController extends Controller
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
                     'workshop_harent' => $workshopHarent,
                     'maintenance_service' => $maintenanceService,
-                    'nomor_invoice' => $details->first()->nomor_invoice ?? '-',
                     'deskripsi' => $details->first()->deskripsi ?? '-',
                     'jumlah' => $details->first()->jumlah ?? '-',
                     'harga' => $details->first()->harga ?? 0,
@@ -398,10 +385,8 @@ class MainController extends Controller
                         'tanggal_job' => '',
                         'posisi_km' => '',
                         'nomor_chassis' => '',
-                        'nomor_polisi' => '',
                         'workshop_harent' => '',
                         'maintenance_service' => '',
-                        'nomor_invoice' => '',
                         'deskripsi' => $detail->deskripsi ?? '-',
                         'jumlah' => $detail->jumlah ?? '-',
                         'harga' => $detail->harga ?? 0,
@@ -421,7 +406,6 @@ class MainController extends Controller
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
                     'workshop_harent' => $workshopHarent,
                     'maintenance_service' => $maintenanceService,
-                    'nomor_invoice' => '-',
                     'deskripsi' => '-',
                     'jumlah' => '-',
                     'harga' => '-',
@@ -486,11 +470,8 @@ class MainController extends Controller
                 $query->where('id_customer', $customer->id);
             } else {
                 return [
-                    'hargaTotal' => 0,
                     'hargaPajak' => 0,
                     'grandTotal' => 0,
-                    'totalJual' => 0,
-                    'netProfit' => 0,
                 ];
             }
         }
@@ -512,17 +493,12 @@ class MainController extends Controller
         $totals = $query->selectRaw('
             SUM(harga_total) as total_harga,
             SUM(harga_pajak) as total_pajak,
-            SUM(COALESCE(harga_total, 0) + COALESCE(harga_pajak, 0)) as grand_total,
-            SUM(COALESCE(harga_jual, 0) + COALESCE(harga_pajak_jual, 0)) as total_jual,
-            SUM((COALESCE(harga_jual, 0) + COALESCE(harga_pajak_jual, 0)) - (COALESCE(harga_total, 0) + COALESCE(harga_pajak, 0))) as net_profit
+            SUM(COALESCE(harga_total, 0) + COALESCE(harga_pajak, 0)) as grand_total
         ')->first();
 
         return [
-            'hargaTotal' => $totals->total_harga ?? 0,
             'hargaPajak' => $totals->total_pajak ?? 0,
             'grandTotal' => $totals->grand_total ?? 0,
-            'totalJual' => $totals->total_jual ?? 0,
-            'netProfit' => $totals->net_profit ?? 0,
         ];
     }
 
@@ -532,11 +508,9 @@ class MainController extends Controller
         $closedStates = ['done', '2binvoiced'];
 
         $totalJobs = htransaksi::count();
-        $openJobs = htransaksi::whereIn('state', $openStates)->count();
         $closedJobs = htransaksi::whereIn('state', $closedStates)->count();
-        $totalRevenue = htransaksi::whereIn('state', $closedStates)->sum('harga_total');
 
-        return view('repair-jobs', compact('totalJobs', 'openJobs', 'closedJobs', 'totalRevenue'));
+        return view('repair-jobs', compact('totalJobs', 'openJobs', 'closedJobs'));
     }
 
     public function repairJobsData(Request $request)
@@ -578,7 +552,6 @@ class MainController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('nomor_job', 'like', "%{$search}%")
                   ->orWhere('nomor_chassis', 'like', "%{$search}%")
-                  ->orWhere('nomor_invoice', 'like', "%{$search}%")
                   ->orWhere('keterangan', 'like', "%{$search}%")
                   ->orWhereHas('mobil', function ($mq) use ($search) {
                       $mq->where('nomor_polisi', 'like', "%{$search}%");
@@ -628,10 +601,8 @@ class MainController extends Controller
                 'supplier' => $job->supplier->nama_supplier ?? '-',
                 'service_type' => $job->nomor_sv ?? '-',
                 'state' => $state,
-                'state_label' => $stateLabel,
                 'is_open' => $isOpen,
                 'days_open' => $daysOpen,
-                'nomor_invoice' => $isOpen ? '-' : ($job->nomor_invoice ?? '-'),
                 'harga_total' => number_format($job->harga_total ?? 0, 0, ',', '.'),
                 'harga_total_raw' => $job->harga_total ?? 0,
                 'harga_pajak' => number_format($job->harga_pajak ?? 0, 0, ',', '.'),
