@@ -760,7 +760,7 @@
             });
 
             @if(request('start_date_transaksi') && request('end_date_transaksi'))
-                $('#tanggal_job_transaksi').val("{{ \Carbon\Carbon::parse(request('start_date_transaksi'))->format('DD-MM-YYYY') }} - {{ \Carbon\Carbon::parse(request('end_date_transaksi'))->format('DD-MM-YYYY') }}");
+                $('#tanggal_job_transaksi').val("{{ \Carbon\Carbon::parse(request('start_date_transaksi'))->format('d-m-Y') }} - {{ \Carbon\Carbon::parse(request('end_date_transaksi'))->format('d-m-Y') }}");
             @endif
 
             $('#tanggal_job_transaksi').on('apply.daterangepicker', function(ev, picker) {
