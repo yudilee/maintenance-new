@@ -602,6 +602,7 @@ class MainController extends Controller
                 'supplier' => $job->supplier->nama_supplier ?? '-',
                 'service_type' => $job->nomor_sv ?? '-',
                 'state' => $state,
+                'state_label' => $stateLabel,
                 'is_open' => $isOpen,
                 'days_open' => $daysOpen,
                 'harga_total' => number_format($job->harga_total ?? 0, 0, ',', '.'),
