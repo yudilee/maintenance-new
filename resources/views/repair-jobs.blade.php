@@ -32,6 +32,20 @@
                     </div>
                 </div>
 
+                <div class="w-full md:w-auto flex-grow">
+                    <label for="nomor_polisi_select" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Nomor Polisi</label>
+                    <select id="nomor_polisi_select" x-model="nomorPolisiFilter" x-on:change="reloadTable()" class="w-full select2-nomor-polisi">
+                        <option></option>
+                    </select>
+                </div>
+
+                <div class="w-full md:w-auto flex-grow">
+                    <label for="nama_customer_select" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Nama Customer</label>
+                    <select id="nama_customer_select" x-model="namaCustomerFilter" x-on:change="reloadTable()" class="w-full select2-customer">
+                        <option></option>
+                    </select>
+                </div>
+
                 <div class="flex-grow flex flex-col md:flex-row gap-4">
                     <div class="flex-1">
                         <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">From Date</label>
@@ -46,7 +60,7 @@
                 </div>
 
                 <div class="w-full md:w-auto mt-4 md:mt-0">
-                    <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; reloadTable()" 
+                    <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; nomorPolisiFilter = ''; namaCustomerFilter = ''; $('#nomor_polisi_select').val(null).trigger('change'); $('#nama_customer_select').val(null).trigger('change'); reloadTable()" 
                             class="w-full md:w-auto px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Reset
@@ -113,6 +127,8 @@ function repairJobsPage() {
         statusFilter: 'all',
         startDate: '',
         endDate: '',
+        nomorPolisiFilter: '',
+        namaCustomerFilter: '',
         table: null,
 
         initTable() {
@@ -126,6 +142,8 @@ function repairJobsPage() {
                         d.status = self.statusFilter;
                         d.start_date = self.startDate;
                         d.end_date = self.endDate;
+                        d.nomor_polisi = self.nomorPolisiFilter;
+                        d.customer = self.namaCustomerFilter;
                     }
                 },
                 columns: [
@@ -266,6 +284,64 @@ window.showJobDetails = function(nomorJob) {
         }
     });
 };
+
+$(document).ready(function() {
+    // Select2 Initialization for Nomor Polisi
+    $('.select2-nomor-polisi').select2({
+        placeholder: "Cari nomor polisi...",
+        allowClear: true,
+        ajax: {
+            url: "{{ route('maintenance.nomor_polisi.search') }}",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return { q: params.term, page: params.page };
+            },
+            processResults: function(data, params) {
+                params.page = params.page || 1;
+                return {
+                    results: data.map(function(item) { return { id: item, text: item }; }),
+                    pagination: { more: (params.page * 30) < data.total_count }
+                };
+            },
+            cache: true
+        }
+    }).on('change', function(e) {
+        // AlpineJS integration
+        let val = $(this).val();
+        let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
+        alpineData.nomorPolisiFilter = val;
+        alpineData.reloadTable();
+    });
+
+    // Select2 Initialization for Customer
+    $('.select2-customer').select2({
+        placeholder: "Cari kode/nama customer...",
+        allowClear: true,
+        ajax: {
+            url: "{{ route('maintenance.nama_customer.search') }}",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return { q: params.term, page: params.page };
+            },
+            processResults: function(data, params) {
+                params.page = params.page || 1;
+                return {
+                    results: data.map(function(item) { return { id: item.kode_customer, text: item.kode_customer + ' - ' + item.nama_customer }; }),
+                    pagination: { more: (params.page * 30) < data.total_count }
+                };
+            },
+            cache: true
+        }
+    }).on('change', function(e) {
+        // AlpineJS integration
+        let val = $(this).val();
+        let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
+        alpineData.namaCustomerFilter = val;
+        alpineData.reloadTable();
+    });
+});
 </script>
 <style>
             /* Frozen Table - matching total_stock pattern */

@@ -554,10 +554,36 @@ class MainController extends Controller
 
         // Customer filter
         if ($request->filled('customer')) {
-            $cust = customer::where('kode_customer', $request->customer)->first();
-            if ($cust) {
-                $query->where('id_customer', $cust->id);
+            $customerName = \App\Models\customer::where('kode_customer', $request->customer)->value('nama_customer');
+            if ($customerName) {
+                // Older Foxpro data or current data
+                $query->where(function($q) use ($request, $customerName) {
+                     $q->whereHas('mobil', function($mq) use ($request) {
+                         $mq->where('customer', $request->customer);
+                     })
+                     ->orWhere('keterangan', 'like', "%{$customerName}%");
+                });
+            } else {
+                 $query->whereHas('mobil', function($mq) use ($request) {
+                     $mq->where('customer', $request->customer);
+                 });
             }
+        }
+
+        // Nomor Polisi filter
+        if ($request->filled('nomor_polisi')) {
+            $nomorPolisi = $request->nomor_polisi;
+            $chassis = \App\Models\mobil::where('nomor_polisi', $nomorPolisi)->value('nomor_chassis');
+            
+            $query->where(function($q) use ($nomorPolisi, $chassis) {
+                $q->whereHas('mobil', function($mq) use ($nomorPolisi) {
+                    $mq->where('nomor_polisi', $nomorPolisi);
+                });
+                
+                if ($chassis) {
+                    $q->orWhere('nomor_chassis', $chassis);
+                }
+            });
         }
 
         $recordsTotal = $query->count();
