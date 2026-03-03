@@ -235,20 +235,56 @@ function repairJobsPage() {
 <style>
     /* DataTables overrides layout for Buttons */
     .dt-buttons .dt-button {
-        @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-4 py-2 rounded-xl font-medium shadow-sm transition-all hover:bg-slate-50 dark:hover:bg-slate-700;
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        padding: 0.5rem 1rem;
+        border-radius: 0.75rem;
+        font-weight: 500;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        transition: all 0.2s;
+    }
+    .dt-buttons .dt-button:hover {
+        background-color: #f8fafc;
+    }
+    .dark .dt-buttons .dt-button {
+        background-color: #1e293b;
+        border-color: #334155;
+        color: #cbd5e1;
+    }
+    .dark .dt-buttons .dt-button:hover {
+        background-color: #334155;
+    }
+    .dt-button-collection {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        padding: 0.5rem;
+        min-width: 200px;
+    }
+    .dark .dt-button-collection {
+        background-color: #1e293b;
+        border-color: #334155;
     }
     .dt-button-collection .dt-button {
-        @apply w-full text-left px-4 py-2 hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center justify-between;
+        width: 100%;
+        text-align: left;
         border: none !important;
         background: transparent !important;
         box-shadow: none !important;
-    }
-    .dt-button-collection {
-        @apply bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-xl rounded-xl overflow-hidden min-w-[200px] p-2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
     .dt-button-collection .dt-button.active::after {
         content: '✓';
-        @apply text-indigo-600 dark:text-indigo-400 font-bold ml-2;
+        color: #4f46e5;
+        font-weight: 700;
+        margin-left: 0.5rem;
+    }
+    .dark .dt-button-collection .dt-button.active::after {
+        color: #818cf8;
     }
 </style>
 @endsection
