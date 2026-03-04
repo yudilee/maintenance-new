@@ -61,9 +61,10 @@ Route::prefix('maintenance')->name('maintenance.')->group(function () {
     Route::post('/odoo/test-connection', [MaintenanceOdooSettingController::class, 'testConnection'])->name('odoo.test_connection');
     Route::post('/odoo/sync-now', [MaintenanceOdooSettingController::class, 'syncNow'])->name('odoo.sync_now');
     Route::get('/odoo/sync-status', [MaintenanceOdooSettingController::class, 'syncStatus'])->name('odoo.sync_status');
+});
 
-    // Two-Factor Authentication
-    Route::get('2fa', [\App\Http\Controllers\TwoFactorController::class, 'index'])->name('2fa.index');
+// Two-Factor Authentication
+Route::get('2fa', [\App\Http\Controllers\TwoFactorController::class, 'index'])->name('2fa.index');
     Route::post('2fa/enable', [\App\Http\Controllers\TwoFactorController::class, 'enable'])->name('2fa.enable');
     Route::post('2fa/confirm', [\App\Http\Controllers\TwoFactorController::class, 'confirm'])->name('2fa.confirm');
     Route::post('2fa/disable', [\App\Http\Controllers\TwoFactorController::class, 'disable'])->name('2fa.disable');
@@ -111,4 +112,3 @@ Route::prefix('maintenance')->name('maintenance.')->group(function () {
         Route::get('roles/{role}/fields/{doctype}', [\App\Http\Controllers\Admin\RoleController::class, 'fieldPermissions'])->name('roles.field-permissions');
         Route::post('roles/{role}/fields/{doctype}', [\App\Http\Controllers\Admin\RoleController::class, 'updateFieldPermissions'])->name('roles.update-field-permissions');
     });
-});
