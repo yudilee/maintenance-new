@@ -79,13 +79,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/repair-job-details/{nomor_job}', [MainController::class, 'repairJobDetails'])
             ->where('nomor_job', '.*')
             ->name('repair.job.details');
-
-        // Odoo settings for Maintenance
-        Route::get('/odoo/settings', [MaintenanceOdooSettingController::class, 'index'])->name('odoo.settings');
-        Route::post('/odoo/settings', [MaintenanceOdooSettingController::class, 'store'])->name('odoo.settings.store');
-        Route::post('/odoo/test-connection', [MaintenanceOdooSettingController::class, 'testConnection'])->name('odoo.test_connection');
-        Route::post('/odoo/sync-now', [MaintenanceOdooSettingController::class, 'syncNow'])->name('odoo.sync_now');
-        Route::get('/odoo/sync-status', [MaintenanceOdooSettingController::class, 'syncStatus'])->name('odoo.sync_status');
     });
 
     // ──────────────────────────────────────────
@@ -102,6 +95,16 @@ Route::middleware('auth')->group(function () {
     // ──────────────────────────────────────────
     // Admin Routes (requires admin role)
     // ──────────────────────────────────────────
+    
+    // Odoo settings for Maintenance (Admin Only)
+    Route::middleware('role:admin')->group(function () {
+        Route::get('maintenance/odoo/settings', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'index'])->name('maintenance.odoo.settings');
+        Route::post('maintenance/odoo/settings', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'store'])->name('maintenance.odoo.settings.store');
+        Route::post('maintenance/odoo/test-connection', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'testConnection'])->name('maintenance.odoo.test_connection');
+        Route::post('maintenance/odoo/sync-now', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'syncNow'])->name('maintenance.odoo.sync_now');
+        Route::get('maintenance/odoo/sync-status', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'syncStatus'])->name('maintenance.odoo.sync_status');
+    });
+
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {
 
         // User Management
