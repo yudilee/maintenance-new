@@ -14,4 +14,9 @@ class Customer extends Model
         'kode_customer',
         'nama_customer',
     ];
+
+    public function htransaksis()
+    {
+        return $this->hasMany(Htransaksi::class, 'id_customer');
+    }
 }

@@ -60,4 +60,9 @@ class Htransaksi extends Model
     {
         return $this->belongsTo(Supplier::class, 'kode_sup', 'kode_supplier');
     }
+
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class, 'id_customer');
+    }
 }

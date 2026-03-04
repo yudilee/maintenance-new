@@ -28,6 +28,11 @@ class Mobil extends Model
 
     public function getNomorChassisAttribute($value)
     {
-        return trim($value);
+        return trim((string)$value);
+    }
+
+    public function htransaksis()
+    {
+        return $this->hasMany(Htransaksi::class, 'nomor_chassis', 'nomor_chassis');
     }
 }

@@ -24,4 +24,9 @@ class Dtransaksi extends Model
         'value',
         'lbr_grp',
     ];
+
+    public function htransaksi()
+    {
+        return $this->belongsTo(Htransaksi::class, 'nomor_invoice', 'nomor_invoice');
+    }
 }

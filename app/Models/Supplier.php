@@ -14,4 +14,9 @@ class Supplier extends Model
         'kode_supplier',
         'nama_supplier',
     ];
+
+    public function htransaksis()
+    {
+        return $this->hasMany(Htransaksi::class, 'kode_sup', 'kode_supplier');
+    }
 }
