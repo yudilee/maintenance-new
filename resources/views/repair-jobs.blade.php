@@ -327,11 +327,7 @@ $(document).ready(function() {
                 return { q: params.term, page: params.page };
             },
             processResults: function(data, params) {
-                params.page = params.page || 1;
-                return {
-                    results: data.map(function(item) { return { id: item, text: item }; }),
-                    pagination: { more: (params.page * 30) < data.total_count }
-                };
+                return { results: data };
             },
             cache: true
         }
@@ -355,11 +351,7 @@ $(document).ready(function() {
                 return { q: params.term, page: params.page };
             },
             processResults: function(data, params) {
-                params.page = params.page || 1;
-                return {
-                    results: data.map(function(item) { return { id: item.kode_customer, text: item.kode_customer + ' - ' + item.nama_customer }; }),
-                    pagination: { more: (params.page * 30) < data.total_count }
-                };
+                return { results: data };
             },
             cache: true
         }
