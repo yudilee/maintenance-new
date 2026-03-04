@@ -26,28 +26,30 @@ class BackupService
 
         $config = config('database.connections.mysql');
         
-        // Create temporary SQL file first, then gzip (more reliable than piping)
-        $tempSqlPath = $path . '.tmp.sql';
-        
-        // Build mysqldump command - capture stderr, disable SSL for internal Docker network
-        // --no-tablespaces avoids PROCESS privilege requirement
+        // Pipe mysqldump directly to gzip file (avoids loading entire dump into PHP memory)
         $command = sprintf(
-            'mysqldump --skip-ssl --no-tablespaces --user=%s --password=%s --host=%s --port=%s %s 2>/dev/null',
+            'mysqldump --skip-ssl --no-tablespaces --user=%s --password=%s --host=%s --port=%s %s 2>/dev/null | gzip > %s',
             escapeshellarg($config['username']),
             escapeshellarg($config['password']),
             escapeshellarg($config['host']),
             escapeshellarg($config['port']),
-            escapeshellarg($config['database'])
+            escapeshellarg($config['database']),
+            escapeshellarg($path)
         );
 
-        // Execute and capture output
-        $sqlContent = shell_exec($command);
+        // Execute the piped command
+        $returnCode = 0;
+        $output = [];
+        exec($command, $output, $returnCode);
+
+        // Check if file was created and has content
+        clearstatcache(true, $path);
+        $fileSize = file_exists($path) ? filesize($path) : 0;
         
-        // Check if mysqldump returned valid SQL (should start with comments or SET)
-        if (empty($sqlContent) || strlen($sqlContent) < 100) {
-            // Try again with stderr to get actual error
+        if ($fileSize < 100) {
+            // Try to get the actual error
             $errorCommand = sprintf(
-                'mysqldump --skip-ssl --no-tablespaces --user=%s --password=%s --host=%s --port=%s %s 2>&1',
+                'mysqldump --skip-ssl --no-tablespaces --user=%s --password=%s --host=%s --port=%s %s 2>&1 | head -5',
                 escapeshellarg($config['username']),
                 escapeshellarg($config['password']),
                 escapeshellarg($config['host']),
@@ -55,32 +57,13 @@ class BackupService
                 escapeshellarg($config['database'])
             );
             $errorOutput = shell_exec($errorCommand);
+            
+            // Clean up failed file
+            if (file_exists($path)) {
+                unlink($path);
+            }
+            
             throw new \Exception('Backup failed: ' . ($errorOutput ?: 'mysqldump returned empty output'));
-        }
-
-        // Write SQL to temp file
-        file_put_contents($tempSqlPath, $sqlContent);
-        
-        // Gzip the file
-        $gzHandle = gzopen($path, 'wb9');
-        if (!$gzHandle) {
-            unlink($tempSqlPath);
-            throw new \Exception('Failed to create gzip file');
-        }
-        gzwrite($gzHandle, $sqlContent);
-        gzclose($gzHandle);
-        
-        // Clean up temp file
-        if (file_exists($tempSqlPath)) {
-            unlink($tempSqlPath);
-        }
-
-        // Get accurate file size
-        clearstatcache(true, $path);
-        $fileSize = file_exists($path) ? filesize($path) : 0;
-        
-        if ($fileSize < 100) {
-            throw new \Exception('Backup file is too small (' . $fileSize . ' bytes), backup may have failed');
         }
 
         // Create BackupLog record
