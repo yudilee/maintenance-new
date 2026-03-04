@@ -121,6 +121,35 @@
 @endsection
 
 @section('scripts')
+<!-- Select2 Dependencies & Styles -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<style>
+.select2-container--default .select2-selection--single {
+    @apply border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 h-10 rounded-xl flex items-center shadow-sm;
+}
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+    @apply text-slate-700 dark:text-slate-200 text-sm pl-3 font-normal;
+    line-height: normal;
+}
+.select2-container--default .select2-selection--single .select2-selection__arrow {
+    @apply h-10 right-2;
+}
+.select2-dropdown {
+    @apply border-slate-200 dark:border-slate-600 rounded-xl shadow-lg border-t-0 bg-white dark:bg-slate-700 text-sm;
+    overflow: hidden;
+}
+.select2-search--dropdown .select2-search__field {
+    @apply border-slate-200 dark:border-slate-600 rounded-lg text-sm bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200;
+}
+.select2-results__option {
+    @apply text-slate-700 dark:text-slate-300 px-4 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/40;
+}
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    @apply bg-indigo-600 text-white;
+}
+</style>
+
 <script>
 function repairJobsPage() {
     return {
