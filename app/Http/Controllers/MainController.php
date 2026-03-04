@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\customer;
+use App\Models\Customer;
 use Illuminate\Http\Request;
-use App\Models\htransaksi;
-use App\Models\mobil;
-use App\Models\dtransaksi;
+use App\Models\Htransaksi;
+use App\Models\Mobil;
+use App\Models\Dtransaksi;
 
 class MainController extends Controller
 {
@@ -22,10 +22,10 @@ class MainController extends Controller
 
         // If only nama_customer is selected, show the directory of vehicles on the main page
         if ($request->filled('nama_customer') && !$request->filled('nomor_polisi')) {
-            $customer = customer::where('kode_customer', $request->nama_customer)->first();
+            $customer = Customer::where('kode_customer', $request->nama_customer)->first();
             if ($customer) {
                 // Get all htransaksi for this customer and date range
-                $htransaksiQuery = htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
+                $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
 
                 if ($request->start_date_transaksi && $request->end_date_transaksi) {
                     $htransaksiQuery->whereBetween('tanggal_job', [$request->start_date_transaksi, $request->end_date_transaksi]);
@@ -39,7 +39,7 @@ class MainController extends Controller
                 $vehicleIds = $htransaksiQuery->select('nomor_chassis')->distinct()->pluck('nomor_chassis');
                 
                 // Fetch the vehicles matching those IDs
-                $vehicleResults = mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
+                $vehicleResults = Mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
             }
         }
 
@@ -55,10 +55,10 @@ class MainController extends Controller
         // If only nama_customer is selected
         if ($request->filled('nama_customer') && !$request->filled('nomor_polisi')) {
             // $request->nama_customer now contains kode_customer
-            $customer = customer::where('kode_customer', $request->nama_customer)->first();
+            $customer = Customer::where('kode_customer', $request->nama_customer)->first();
             if ($customer) {
                 // Get all htransaksi for this customer and date range
-                $htransaksiQuery = htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
+                $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
 
                 if ($request->start_date && $request->end_date) {
                     $htransaksiQuery->whereBetween('tanggal_job', [$request->start_date, $request->end_date]);
@@ -72,13 +72,13 @@ class MainController extends Controller
                 $vehicleIds = $htransaksiQuery->select('nomor_chassis')->distinct()->pluck('nomor_chassis');
                 
                 // Fetch the vehicles matching those IDs
-                $vehicleResults = mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
+                $vehicleResults = Mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
             }
         }
         // If both nomor_polisi and nama_customer are selected
         elseif ($request->filled('nama_customer') && $request->filled('nomor_polisi')) {
-            $customer = customer::where('kode_customer', $request->nama_customer)->first();
-            $query = htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
+            $customer = Customer::where('kode_customer', $request->nama_customer)->first();
+            $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
             if ($customer) {
                 $query->where('id_customer', $customer->id);
             }
@@ -96,16 +96,16 @@ class MainController extends Controller
             }
 
             $results = $query->get();
-            $mobilDetail = mobil::where('nomor_polisi', $request->nomor_polisi)->first();
+            $mobilDetail = Mobil::where('nomor_polisi', $request->nomor_polisi)->first();
         }
         // If only nomor_polisi or other cases, keep your existing logic...
         else {
-            $query = htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
+            $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
             if ($request->nomor_polisi) {
                 $query->whereHas('mobil', function ($q) use ($request) {
                     $q->where('nomor_polisi', $request->nomor_polisi);
                 });
-                $mobilDetail = mobil::where('nomor_polisi', $request->nomor_polisi)->first();
+                $mobilDetail = Mobil::where('nomor_polisi', $request->nomor_polisi)->first();
             }
 
             if ($request->start_date && $request->end_date) {
@@ -130,7 +130,7 @@ class MainController extends Controller
     public function searchNomorPolisi(Request $request)
     {
         $search = $request->q;
-        $results = mobil::select('nomor_polisi')
+        $results = Mobil::select('nomor_polisi')
             ->where('nomor_polisi', 'like', '%' . $search . '%')
             ->groupBy('nomor_polisi')
             ->limit(20)
@@ -147,7 +147,7 @@ class MainController extends Controller
     public function searchDeskripsi(Request $request)
     {
         $search = $request->q;
-        $results = dtransaksi::select('deskripsi')
+        $results = Dtransaksi::select('deskripsi')
             ->where('deskripsi', 'like', '%' . $search . '%')
             ->groupBy('deskripsi')
             ->limit(20)
@@ -164,7 +164,7 @@ class MainController extends Controller
     public function searchCustomer(Request $request)
     {
         $search = $request->q;
-        $results = \App\Models\customer::select('kode_customer', 'nama_customer')
+        $results = \App\Models\Customer::select('kode_customer', 'nama_customer')
             ->whereRaw("CONCAT(kode_customer, ' - ', nama_customer) LIKE ?", ["%{$search}%"])
             ->groupBy('kode_customer', 'nama_customer')
             ->limit(20)
@@ -197,9 +197,9 @@ class MainController extends Controller
         $grandTotals = $this->calculateGrandTotals($nama_customer, $nomor_polisi, $start, $end);
 
         if ($nama_customer) {
-            $customer = customer::where('kode_customer', $nama_customer)->first();
+            $customer = Customer::where('kode_customer', $nama_customer)->first();
             if ($customer) {
-                $query = htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
+                $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
 
                 // Add date filtering here
                 if ($start && $end) {
@@ -214,7 +214,7 @@ class MainController extends Controller
                     $query->whereHas('mobil', function ($q) use ($nomor_polisi) {
                         $q->where('nomor_polisi', $nomor_polisi);
                     });
-                    $mobilDetail = mobil::where('nomor_polisi', $nomor_polisi)->first();
+                    $mobilDetail = Mobil::where('nomor_polisi', $nomor_polisi)->first();
                 }
 
                 // Use pagination - 100 items per page
@@ -235,7 +235,7 @@ class MainController extends Controller
         $end = $request->end_date_transaksi;
 
         if ($nomor_polisi) {
-            $mobilDetail = mobil::where('nomor_polisi', $nomor_polisi)->first();
+            $mobilDetail = Mobil::where('nomor_polisi', $nomor_polisi)->first();
         }
 
         // Get grand totals for all transactions (not just current page)
@@ -464,15 +464,15 @@ class MainController extends Controller
 
     private function buildTransactionQuery($nama_customer, $nomor_polisi, $start, $end)
 {
-    $query = htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
+    $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
 
     if ($nama_customer) {
-        $customer = customer::where('kode_customer', $nama_customer)->first();
+        $customer = Customer::where('kode_customer', $nama_customer)->first();
         if ($customer) {
             $query->where('id_customer', $customer->id);
         } else {
             // If a customer was provided but not found, return an empty query
-            return htransaksi::whereRaw('1 = 0');
+            return Htransaksi::whereRaw('1 = 0');
         }
     }
 
@@ -496,10 +496,10 @@ class MainController extends Controller
 }
     private function calculateGrandTotals($nama_customer, $nomor_polisi, $start, $end, $search = null)
     {
-        $query = htransaksi::query();
+        $query = Htransaksi::query();
 
         if ($nama_customer) {
-            $customer = customer::where('kode_customer', $nama_customer)->first();
+            $customer = Customer::where('kode_customer', $nama_customer)->first();
             if ($customer) {
                 $query->where('id_customer', $customer->id);
             } else {
@@ -553,9 +553,9 @@ class MainController extends Controller
         $openStates = ['confirmed', 'under_repair', 'ready'];
         $closedStates = ['done', '2binvoiced'];
 
-        $totalJobs = htransaksi::count();
-        $openJobs = htransaksi::whereIn('state', $openStates)->count();
-        $closedJobs = htransaksi::whereIn('state', $closedStates)->count();
+        $totalJobs = Htransaksi::count();
+        $openJobs = Htransaksi::whereIn('state', $openStates)->count();
+        $closedJobs = Htransaksi::whereIn('state', $closedStates)->count();
 
         return view('repair-jobs', compact('totalJobs', 'openJobs', 'closedJobs'));
     }
@@ -565,7 +565,7 @@ class MainController extends Controller
         $openStates = ['confirmed', 'under_repair', 'ready'];
         $closedStates = ['done', '2binvoiced'];
 
-        $query = htransaksi::with(['mobil', 'supplier']);
+        $query = Htransaksi::with(['mobil', 'supplier']);
 
         // Status filter
         $statusFilter = $request->input('status', 'all');
@@ -585,7 +585,7 @@ class MainController extends Controller
 
         // Customer filter
         if ($request->filled('customer')) {
-            $customerName = \App\Models\customer::where('kode_customer', $request->customer)->value('nama_customer');
+            $customerName = \App\Models\Customer::where('kode_customer', $request->customer)->value('nama_customer');
             if ($customerName) {
                 // Older Foxpro data or current data
                 $query->where(function($q) use ($request, $customerName) {
@@ -604,7 +604,7 @@ class MainController extends Controller
         // Nomor Polisi filter
         if ($request->filled('nomor_polisi')) {
             $nomorPolisi = $request->nomor_polisi;
-            $chassis = \App\Models\mobil::where('nomor_polisi', $nomorPolisi)->value('nomor_chassis');
+            $chassis = \App\Models\Mobil::where('nomor_polisi', $nomorPolisi)->value('nomor_chassis');
             
             $query->where(function($q) use ($nomorPolisi, $chassis) {
                 $q->whereHas('mobil', function($mq) use ($nomorPolisi) {
@@ -623,7 +623,7 @@ class MainController extends Controller
         $search = $request->input('search.value', '');
         if ($search) {
             // Pre-fetch matching chassis for vehicles to massively speed up search
-            $mobilChassisList = \App\Models\mobil::where('nomor_polisi', 'like', "%{$search}%")
+            $mobilChassisList = \App\Models\Mobil::where('nomor_polisi', 'like', "%{$search}%")
                 ->pluck('nomor_chassis')
                 ->filter()
                 ->toArray();
@@ -702,7 +702,7 @@ class MainController extends Controller
     }
     public function repairJobDetails($nomor_job)
     {
-        $job = htransaksi::with(['dtransaksi', 'mobil', 'supplier'])->where('nomor_job', $nomor_job)->first();
+        $job = Htransaksi::with(['dtransaksi', 'mobil', 'supplier'])->where('nomor_job', $nomor_job)->first();
         
         if (!$job) {
             return response()->json(['error' => 'Job not found'], 404);

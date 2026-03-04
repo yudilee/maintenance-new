@@ -5,30 +5,26 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class mobil extends Model
+class Mobil extends Model
 {
     use HasFactory;
 
-    //Nama Table
     protected $table = 'mobil';
     public $timestamps = false;
 
     protected $fillable = [
         'id',
-        'nomor_kk',
         'nomor_chassis',
         'nomor_polisi',
-        'nopol',
         'model',
-        'tahun_pembuatan',
+        'merk',
+        'tahun',
         'warna',
-        'nomor_mesin',
-        'tanggal_pembelian',
-        'kode_sup',
+        'id_customer',
     ];
 
-    public function getNomorChassisAttribute($value)
+    public function customer()
     {
-        return trim($value);
+        return $this->belongsTo(Customer::class, 'id_customer', 'id');
     }
 }

@@ -5,11 +5,10 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class dtransaksi extends Model
+class Dtransaksi extends Model
 {
     use HasFactory;
 
-    //Nama Table
     protected $table = 'dtransaksi';
     public $timestamps = false;
 

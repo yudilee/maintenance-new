@@ -5,13 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class htransaksi extends Model
+class Htransaksi extends Model
 {
     use HasFactory;
 
-    //Nama Table
     protected $table = 'htransaksi';
-    public $timestamps = false; // <--- Add this line
+    public $timestamps = false;
 
     protected $fillable = [
         'id',
@@ -49,16 +48,16 @@ class htransaksi extends Model
 
     public function dtransaksi()
     {
-        return $this->hasMany(dtransaksi::class, 'nomor_invoice', 'nomor_invoice');
+        return $this->hasMany(Dtransaksi::class, 'nomor_invoice', 'nomor_invoice');
     }
 
     public function mobil()
     {
-        return $this->belongsTo(mobil::class, 'nomor_chassis', 'nomor_chassis');
+        return $this->belongsTo(Mobil::class, 'nomor_chassis', 'nomor_chassis');
     }
 
     public function supplier()
     {
-        return $this->belongsTo(supplier::class, 'kode_sup', 'kode_supplier');
+        return $this->belongsTo(Supplier::class, 'kode_sup', 'kode_supplier');
     }
 }

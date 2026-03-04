@@ -25,5 +25,8 @@ Thumbs.db
 maintenance(2).sql
 mysql/
 odoo_debug_output.json
+check_jo_bill.php
+*.xlsx
 *.pdf
-*.php
+LotSerial*
+Odoo Repair Order*

@@ -4,11 +4,11 @@ namespace App\Services;
 
 use App\Models\OdooSetting;
 use App\Models\ImportHistory;
-use App\Models\htransaksi;
-use App\Models\dtransaksi;
-use App\Models\mobil;
-use App\Models\customer;
-use App\Models\supplier;
+use App\Models\Htransaksi;
+use App\Models\Dtransaksi;
+use App\Models\Mobil;
+use App\Models\Customer;
+use App\Models\Supplier;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -209,11 +209,11 @@ class OdooSyncService
                 if (!$chassisNo) continue;
 
                 // Sync Vehicle
-                $mobil = mobil::where('nomor_chassis', $chassisNo)->first();
+                $mobil = Mobil::where('nomor_chassis', $chassisNo)->first();
                 if ($mobil) {
                     $mobil->update(['nomor_polisi' => $plateNo ?: $mobil->nomor_polisi]);
                 } else {
-                    $mobil = mobil::create([
+                    $mobil = Mobil::create([
                         'nomor_chassis' => $chassisNo,
                         'nomor_polisi' => substr($plateNo ?? '', 0, 25),
                         'nopol' => substr($plateNo ?? '', 0, 25),
@@ -231,7 +231,7 @@ class OdooSyncService
                 $supplierId = '0';
                 if (!empty($ro['partner_id']) && is_array($ro['partner_id'])) {
                     $supplierId = 'O-' . $ro['partner_id'][0];
-                    \App\Models\supplier::updateOrCreate(
+                    \App\Models\Supplier::updateOrCreate(
                         ['kode_supplier' => $supplierId],
                         ['nama_supplier' => substr($ro['partner_id'][1], 0, 100)]
                     );
@@ -266,10 +266,10 @@ class OdooSyncService
                     'state' => $ro['state'] ?? null,
                 ];
 
-                $htransaksi = htransaksi::updateOrCreate(['nomor_job' => $jobNo], $headerData);
+                $htransaksi = Htransaksi::updateOrCreate(['nomor_job' => $jobNo], $headerData);
 
                 // Sync Detail Lines (Draft from JO)
-                dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
+                Dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
                 $totalJO = 0;
                 
                 $lines = array_merge($ro['order_line_ids'], $ro['repair_service_ids']);
@@ -283,7 +283,7 @@ class OdooSyncService
                     }
 
                     $totalJO += $subtotal;
-                    dtransaksi::create([
+                    Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
                         'deskripsi' => substr($ld['name'], 0, 255),
                         'jumlah' => $ld['quantity'],
@@ -318,7 +318,7 @@ class OdooSyncService
 
                 if (!$jobNo) continue;
 
-                $htransaksi = htransaksi::where('nomor_job', $jobNo)->first();
+                $htransaksi = Htransaksi::where('nomor_job', $jobNo)->first();
                 if (!$htransaksi) continue;
 
                 $calculatedTotal = $move['amount_untaxed'] ?? 0;
@@ -328,13 +328,13 @@ class OdooSyncService
                 $supplierId = '0';
                 if (!empty($move['partner_id']) && is_array($move['partner_id'])) {
                     $supplierId = 'O-' . $move['partner_id'][0];
-                    \App\Models\supplier::updateOrCreate(
+                    \App\Models\Supplier::updateOrCreate(
                         ['kode_supplier' => $supplierId],
                         ['nama_supplier' => substr($move['partner_id'][1], 0, 100)]
                     );
                 }
 
-                dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
+                Dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
                 
                 if (isset($billLinesMap[$move['id']])) {
                     foreach ($billLinesMap[$move['id']] as $line) {
@@ -342,7 +342,7 @@ class OdooSyncService
 
                         $amt = $line['price_subtotal'];
 
-                        dtransaksi::create([
+                        Dtransaksi::create([
                             'nomor_invoice' => $htransaksi->nomor_invoice,
                             'deskripsi' => substr($line['name'], 0, 255),
                             'jumlah' => $line['quantity'],
