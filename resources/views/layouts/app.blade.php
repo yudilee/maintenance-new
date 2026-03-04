@@ -192,11 +192,27 @@
                  :class="sidebarCollapsed ? 'items-center justify-center p-2' : ''">
                 <div class="flex items-center gap-3" :class="sidebarCollapsed ? 'justify-center' : ''">
                     <div class="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/50 flex items-center justify-center text-indigo-700 dark:text-indigo-300 font-bold text-xs flex-shrink-0">
-                        U
+                        @if(auth()->check())
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        @else
+                            ?
+                        @endif
                     </div>
-                    <div :class="sidebarCollapsed ? 'hidden' : 'block'">
-                        <div class="text-sm font-bold text-slate-700 dark:text-slate-200">User</div>
-                        <div class="text-xs text-slate-500 dark:text-slate-400">Admin</div>
+                    <div :class="sidebarCollapsed ? 'hidden' : 'block flex-1'">
+                        @if(auth()->check())
+                            <div class="text-sm font-bold text-slate-700 dark:text-slate-200 truncate">{{ auth()->user()->name }}</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400 capitalize">{{ auth()->user()->role ?? 'User' }}</div>
+                            <form method="POST" action="{{ route('logout') }}" class="mt-1">
+                                    @csrf
+                                    <button type="submit" class="text-xs text-red-500 hover:text-red-600 transition-colors">Logout</button>
+                            </form>
+                        @else
+                            <div class="text-sm font-bold text-slate-700 dark:text-slate-200">Guest</div>
+                            <div class="text-xs text-slate-500 dark:text-slate-400">Not logged in</div>
+                            <div class="mt-1 flex gap-2">
+                                <a href="{{ route('login') }}" class="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">Login</a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

@@ -11,6 +11,20 @@ use App\Http\Controllers\OdooSettingController as MaintenanceOdooSettingControll
 
 Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
+// Authentication Routes
+Route::middleware('guest')->group(function () {
+    Route::get('login', [\App\Http\Controllers\AuthController::class, 'showLogin'])->name('login');
+    Route::post('login', [\App\Http\Controllers\AuthController::class, 'login']);
+    
+    // Registration
+    Route::get('register', [\App\Http\Controllers\AuthController::class, 'showRegister'])->name('register');
+    Route::post('register', [\App\Http\Controllers\AuthController::class, 'register']);
+});
+
+Route::middleware('auth')->group(function () {
+    Route::post('logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
+});
+
 // Import Data Routes
 Route::get('/import', [ImportController::class, 'index'])->name('import');
 Route::post('/import/excel', [ImportController::class, 'uploadExcel'])->name('import.excel');
