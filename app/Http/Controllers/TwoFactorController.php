@@ -38,9 +38,8 @@ class TwoFactorController extends Controller
         $secret = $this->generateSecret();
         
         // Store temporarily (not confirmed yet)
-        $user->update([
-            'two_factor_secret' => encrypt($secret),
-        ]);
+        $user->two_factor_secret = encrypt($secret);
+        $user->save();
         
         // Generate otpauth URL for QR code
         $appName = config('app.name', 'Control Tower');
@@ -74,11 +73,10 @@ class TwoFactorController extends Controller
         // Generate recovery codes
         $recoveryCodes = $this->generateRecoveryCodes();
         
-        $user->update([
-            'two_factor_enabled' => true,
-            'two_factor_confirmed_at' => now(),
-            'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
-        ]);
+        $user->two_factor_enabled = true;
+        $user->two_factor_confirmed_at = now();
+        $user->two_factor_recovery_codes = encrypt(json_encode($recoveryCodes));
+        $user->save();
         
         return view('auth.two-factor-recovery', compact('recoveryCodes'));
     }
@@ -98,12 +96,11 @@ class TwoFactorController extends Controller
             return back()->with('error', 'Incorrect password.');
         }
         
-        $user->update([
-            'two_factor_enabled' => false,
-            'two_factor_secret' => null,
-            'two_factor_recovery_codes' => null,
-            'two_factor_confirmed_at' => null,
-        ]);
+        $user->two_factor_enabled = false;
+        $user->two_factor_secret = null;
+        $user->two_factor_recovery_codes = null;
+        $user->two_factor_confirmed_at = null;
+        $user->save();
         
         return back()->with('success', 'Two-factor authentication has been disabled.');
     }
@@ -129,9 +126,8 @@ class TwoFactorController extends Controller
         
         $recoveryCodes = $this->generateRecoveryCodes();
         
-        $user->update([
-            'two_factor_recovery_codes' => encrypt(json_encode($recoveryCodes)),
-        ]);
+        $user->two_factor_recovery_codes = encrypt(json_encode($recoveryCodes));
+        $user->save();
         
         return view('auth.two-factor-recovery', compact('recoveryCodes'));
     }
@@ -181,9 +177,8 @@ class TwoFactorController extends Controller
         if (in_array($code, $recoveryCodes)) {
             // Remove used recovery code
             $recoveryCodes = array_diff($recoveryCodes, [$code]);
-            $user->update([
-                'two_factor_recovery_codes' => encrypt(json_encode(array_values($recoveryCodes))),
-            ]);
+            $user->two_factor_recovery_codes = encrypt(json_encode(array_values($recoveryCodes)));
+            $user->save();
             
             $this->completeLogin($user, $request);
             return redirect()->intended('/')->with('warning', 'You used a recovery code. Please regenerate your codes.');

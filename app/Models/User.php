@@ -23,8 +23,6 @@ class User extends Authenticatable
         'password',
         'role',
         'auth_source',
-        'two_factor_enabled',
-        'two_factor_confirmed_at',
     ];
 
     /**
