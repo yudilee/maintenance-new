@@ -60,7 +60,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/settings/targets', [SettingsController::class, 'updateTargets'])->name('settings.targets');
     Route::post('/settings/odoo', [SettingsController::class, 'updateOdoo'])->name('settings.odoo');
 
-    // API-style routes (still web-authenticated for now)
+    // JSON API endpoints (session-authenticated, called from frontend JS)
     Route::get('/api/settings/targets', [SettingsController::class, 'getTargets'])->name('api.settings.targets');
     Route::get('/api/repair-history/{lotNumber}', [\App\Http\Controllers\RepairHistoryController::class, 'show'])->name('api.repair.history');
 
