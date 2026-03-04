@@ -31,14 +31,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/details', [DashboardController::class, 'details'])->name('details');
     Route::get('/export', [DashboardController::class, 'export'])->name('export');
     Route::get('/print', [DashboardController::class, 'print'])->name('print');
-    Route::get('/rental-pairs', [DashboardController::class, 'rentalPairs'])->name('rental.pairs');
+    Route::get('/rental-pairs', [\App\Http\Controllers\RentalController::class, 'index'])->name('rental.pairs');
     Route::get('/summary', [DashboardController::class, 'summary'])->name('summary');
     Route::post('/generate', [DashboardController::class, 'upload'])->name('summary.generate');
 
     // Total Stock
-    Route::get('/total-stock', [DashboardController::class, 'totalStock'])->name('total.stock');
-    Route::post('/total-stock/filter', [DashboardController::class, 'filterTotalStock'])->name('total.stock.filter');
-    Route::post('/total-stock/export', [DashboardController::class, 'exportTotalStock'])->name('total.stock.export');
+    Route::get('/total-stock', [\App\Http\Controllers\StockController::class, 'index'])->name('total.stock');
+    Route::post('/total-stock/filter', [\App\Http\Controllers\StockController::class, 'filter'])->name('total.stock.filter');
+    Route::post('/total-stock/export', [\App\Http\Controllers\StockController::class, 'export'])->name('total.stock.export');
 
     // Help
     Route::get('/help', function () { return view('help'); })->name('help');
@@ -62,21 +62,21 @@ Route::middleware('auth')->group(function () {
 
     // API-style routes (still web-authenticated for now)
     Route::get('/api/settings/targets', [SettingsController::class, 'getTargets'])->name('api.settings.targets');
-    Route::get('/api/repair-history/{lotNumber}', [DashboardController::class, 'repairHistory'])->name('api.repair.history');
+    Route::get('/api/repair-history/{lotNumber}', [\App\Http\Controllers\RepairHistoryController::class, 'show'])->name('api.repair.history');
 
     // ──────────────────────────────────────────
     // Maintenance (Operational Costs) Module
     // ──────────────────────────────────────────
     Route::prefix('maintenance')->name('maintenance.')->group(function () {
         Route::get('/', [MainController::class, 'index'])->name('dashboard');
-        Route::get('/nomor-polisi-search', [MainController::class, 'searchNomorPolisi'])->name('nomor_polisi.search');
-        Route::get('/nama-customer-search', [MainController::class, 'searchCustomer'])->name('nama_customer.search');
-        Route::get('/vehicle-transactions', [MainController::class, 'vehicleTransactions'])->name('vehicle.transactions');
-        Route::get('/vehicle-transactions-data', [MainController::class, 'vehicleTransactionsData'])->name('vehicle.transactions.data');
-        Route::get('/vehicle-transactions-export', [MainController::class, 'vehicleTransactionsExport'])->name('vehicle.transactions.export');
-        Route::get('/repair-jobs', [MainController::class, 'repairJobs'])->name('repair.jobs');
-        Route::get('/repair-jobs-data', [MainController::class, 'repairJobsData'])->name('repair.jobs.data');
-        Route::get('/repair-job-details/{nomor_job}', [MainController::class, 'repairJobDetails'])
+        Route::get('/nomor-polisi-search', [\App\Http\Controllers\SearchController::class, 'nomorPolisi'])->name('nomor_polisi.search');
+        Route::get('/nama-customer-search', [\App\Http\Controllers\SearchController::class, 'customer'])->name('nama_customer.search');
+        Route::get('/vehicle-transactions', [\App\Http\Controllers\VehicleTransactionController::class, 'index'])->name('vehicle.transactions');
+        Route::get('/vehicle-transactions-data', [\App\Http\Controllers\VehicleTransactionController::class, 'data'])->name('vehicle.transactions.data');
+        Route::get('/vehicle-transactions-export', [\App\Http\Controllers\VehicleTransactionController::class, 'export'])->name('vehicle.transactions.export');
+        Route::get('/repair-jobs', [\App\Http\Controllers\RepairJobController::class, 'index'])->name('repair.jobs');
+        Route::get('/repair-jobs-data', [\App\Http\Controllers\RepairJobController::class, 'data'])->name('repair.jobs.data');
+        Route::get('/repair-job-details/{nomor_job}', [\App\Http\Controllers\RepairJobController::class, 'details'])
             ->where('nomor_job', '.*')
             ->name('repair.job.details');
     });
