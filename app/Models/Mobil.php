@@ -14,17 +14,20 @@ class Mobil extends Model
 
     protected $fillable = [
         'id',
+        'nomor_kk',
         'nomor_chassis',
         'nomor_polisi',
+        'nopol',
         'model',
-        'merk',
-        'tahun',
+        'tahun_pembuatan',
         'warna',
-        'id_customer',
+        'nomor_mesin',
+        'tanggal_pembelian',
+        'kode_sup',
     ];
 
-    public function customer()
+    public function getNomorChassisAttribute($value)
     {
-        return $this->belongsTo(Customer::class, 'id_customer', 'id');
+        return trim($value);
     }
 }
