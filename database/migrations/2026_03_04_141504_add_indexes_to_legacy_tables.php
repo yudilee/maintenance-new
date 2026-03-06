@@ -11,21 +11,33 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('htransaksi', function (Blueprint $table) {
-            $table->index('nomor_chassis');
-            $table->index('tanggal_job');
-            $table->index('nomor_job');
-            $table->index('id_customer');
-        });
+        try {
+            if (Schema::hasTable('htransaksi')) {
+                Schema::table('htransaksi', function (Blueprint $table) {
+                    $table->index('nomor_chassis');
+                    $table->index('tanggal_job');
+                    $table->index('nomor_job');
+                    $table->index('id_customer');
+                });
+            }
+        } catch (\Exception $e) { }
 
-        Schema::table('mobil', function (Blueprint $table) {
-            $table->index('nomor_chassis');
-            $table->index('nomor_polisi');
-        });
+        try {
+            if (Schema::hasTable('mobil')) {
+                Schema::table('mobil', function (Blueprint $table) {
+                    $table->index('nomor_chassis');
+                    $table->index('nomor_polisi');
+                });
+            }
+        } catch (\Exception $e) { }
 
-        Schema::table('dtransaksi', function (Blueprint $table) {
-            $table->index('nomor_invoice');
-        });
+        try {
+            if (Schema::hasTable('dtransaksi')) {
+                Schema::table('dtransaksi', function (Blueprint $table) {
+                    $table->index('nomor_invoice');
+                });
+            }
+        } catch (\Exception $e) { }
     }
 
     /**
