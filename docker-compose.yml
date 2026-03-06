@@ -5,17 +5,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sdp_dashboard
+    container_name: maintenance_new
     restart: unless-stopped
     ports:
-      - "8085:80"
+      - "8087:80"
     volumes:
-      - .:/var/www/html
-      - sdp_storage:/var/www/html/storage/app
+      - maintenance_new_storage:/var/www/html/storage/app
     networks:
       - maintenance_sail
     environment:
-      - APP_NAME=SDP_Dashboard
+      - APP_NAME=Maintenance_new
       - APP_ENV=production
       - APP_DEBUG=true
       - APP_URL=https://sdp-dashboard.hartonomotor-group.com
@@ -29,7 +28,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: sdp_scheduler
+    container_name: maintenance_new_scheduler
     restart: unless-stopped
     entrypoint: []
     command: >
@@ -39,12 +38,11 @@ services:
         sleep 60;
       done"
     volumes:
-      - .:/var/www/html
-      - sdp_storage:/var/www/html/storage/app
+      - maintenance_new_storage:/var/www/html/storage/app
     networks:
       - maintenance_sail
     environment:
-      - APP_NAME=SDP_Dashboard
+      - APP_NAME=Maintenance_new
       - APP_ENV=production
       - APP_DEBUG=false
       - APP_URL=https://sdp-dashboard.hartonomotor-group.com
@@ -58,7 +56,7 @@ services:
 
   mysql:
     image: mysql:8.0
-    container_name: sdp_mysql
+    container_name: maintenance_new_mysql
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: sdp
@@ -66,7 +64,7 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_ROOT_PASSWORD: password
     volumes:
-      - sdp_mysql_data:/var/lib/mysql
+      - maintenance_new_mysql_data:/var/lib/mysql
       - ./mysql/init:/docker-entrypoint-initdb.d
     networks:
       - maintenance_sail
@@ -74,8 +72,8 @@ services:
       - "3307:3306"
 
 volumes:
-  sdp_storage:
-  sdp_mysql_data:
+  maintenance_new_storage:
+  maintenance_new_mysql_data:
 
 
 networks:
