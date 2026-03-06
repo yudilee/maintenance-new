@@ -18,7 +18,12 @@ services:
       - APP_ENV=production
       - APP_DEBUG=true
       - APP_URL=https://sdp-dashboard.hartonomotor-group.com
-      - SESSION_DRIVER=file
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=sdp
+      - DB_USERNAME=sdp
+      - DB_PASSWORD=password
       - SESSION_DRIVER=file
       - CACHE_STORE=file
       - TZ=Asia/Jakarta
@@ -46,7 +51,12 @@ services:
       - APP_ENV=production
       - APP_DEBUG=false
       - APP_URL=https://sdp-dashboard.hartonomotor-group.com
-      - SESSION_DRIVER=file
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=sdp
+      - DB_USERNAME=sdp
+      - DB_PASSWORD=password
       - SESSION_DRIVER=file
       - CACHE_STORE=file
       - TZ=Asia/Jakarta
