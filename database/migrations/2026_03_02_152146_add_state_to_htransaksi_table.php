@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('htransaksi', function (Blueprint $table) {
-            $table->string('state')->nullable();
-        });
+        if (Schema::hasTable('htransaksi')) {
+            Schema::table('htransaksi', function (Blueprint $table) {
+                if (!Schema::hasColumn('htransaksi', 'state')) {
+                    $table->string('state')->default('draft')->after('harga_pajak_jual');
+                }
+            });
+        }
     }
 
     /**

@@ -11,10 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('htransaksi', function (Blueprint $table) {
-            $table->bigInteger('harga_jual')->default(0)->after('harga_pajak');
-            $table->bigInteger('harga_pajak_jual')->default(0)->after('harga_jual');
-        });
+        if (Schema::hasTable('htransaksi')) {
+            Schema::table('htransaksi', function (Blueprint $table) {
+                if (!Schema::hasColumn('htransaksi', 'harga_jual')) {
+                    $table->bigInteger('harga_jual')->default(0)->after('harga_pajak');
+                }
+                if (!Schema::hasColumn('htransaksi', 'harga_pajak_jual')) {
+                    $table->bigInteger('harga_pajak_jual')->default(0)->after('harga_jual');
+                }
+            });
+        }
     }
 
     /**
