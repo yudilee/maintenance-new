@@ -19,27 +19,35 @@ class MainController extends Controller
             return redirect()->route('maintenance.vehicle.transactions', $request->all());
         }
 
-        // If only nama_customer is selected, show the directory of vehicles on the main page
-        if ($request->filled('nama_customer') && !$request->filled('nomor_polisi')) {
+        // If no specific vehicle is selected, process other filters
+        $hasFilters = false;
+        $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
+
+        if ($request->filled('nama_customer')) {
             $customer = Customer::where('kode_customer', $request->nama_customer)->first();
             if ($customer) {
-                // Get all htransaksi for this customer and date range
-                $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
-
-                if ($request->start_date_transaksi && $request->end_date_transaksi) {
-                    $htransaksiQuery->whereBetween('tanggal_job', [$request->start_date_transaksi, $request->end_date_transaksi]);
-                } elseif ($request->start_date_transaksi) {
-                    $htransaksiQuery->where('tanggal_job', '>=', $request->start_date_transaksi);
-                } elseif ($request->end_date_transaksi) {
-                    $htransaksiQuery->where('tanggal_job', '<=', $request->end_date_transaksi);
-                }
-
-                // Extract distinct vehicle IDs first using SQL instead of loading all htransaksi rows into RAM
-                $vehicleIds = $htransaksiQuery->select('nomor_chassis')->distinct()->pluck('nomor_chassis');
-                
-                // Fetch the vehicles matching those IDs
-                $vehicleResults = Mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
+                $htransaksiQuery->where('id_customer', $customer->id);
+                $hasFilters = true;
             }
+        }
+
+        if ($request->filled('start_date_transaksi') || $request->filled('end_date_transaksi')) {
+            if ($request->filled('start_date_transaksi') && $request->filled('end_date_transaksi')) {
+                $htransaksiQuery->whereBetween('tanggal_job', [$request->start_date_transaksi, $request->end_date_transaksi]);
+            } elseif ($request->filled('start_date_transaksi')) {
+                $htransaksiQuery->where('tanggal_job', '>=', $request->start_date_transaksi);
+            } elseif ($request->filled('end_date_transaksi')) {
+                $htransaksiQuery->where('tanggal_job', '<=', $request->end_date_transaksi);
+            }
+            $hasFilters = true;
+        }
+
+        if ($hasFilters) {
+            // Extract distinct vehicle IDs first using SQL instead of loading all htransaksi rows into RAM
+            $vehicleIds = $htransaksiQuery->select('nomor_chassis')->distinct()->pluck('nomor_chassis');
+            
+            // Fetch the vehicles matching those IDs
+            $vehicleResults = Mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
         }
 
         return view('main', compact('vehicleResults', 'mobilDetail'));

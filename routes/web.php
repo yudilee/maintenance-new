@@ -26,42 +26,13 @@ Route::middleware('auth')->group(function () {
     // Logout
     Route::post('logout', [\App\Http\Controllers\AuthController::class, 'logout'])->name('logout');
 
-    // Dashboard
-    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/details', [DashboardController::class, 'details'])->name('details');
-    Route::get('/export', [DashboardController::class, 'export'])->name('export');
-    Route::get('/print', [DashboardController::class, 'print'])->name('print');
-    Route::get('/rental-pairs', [\App\Http\Controllers\RentalController::class, 'index'])->name('rental.pairs');
-    Route::get('/summary', [DashboardController::class, 'summary'])->name('summary');
-    Route::post('/generate', [DashboardController::class, 'upload'])->name('summary.generate');
-
-    // Total Stock
-    Route::get('/total-stock', [\App\Http\Controllers\StockController::class, 'index'])->name('total.stock');
-    Route::post('/total-stock/filter', [\App\Http\Controllers\StockController::class, 'filter'])->name('total.stock.filter');
-    Route::post('/total-stock/export', [\App\Http\Controllers\StockController::class, 'export'])->name('total.stock.export');
-
-    // Help
-    Route::get('/help', function () { return view('help'); })->name('help');
-
-    // Import Data
-    Route::prefix('import')->name('import')->group(function () {
-        Route::get('/', [ImportController::class, 'index']);
-        Route::post('/excel', [ImportController::class, 'uploadExcel'])->name('.excel');
-        Route::post('/odoo/config', [ImportController::class, 'saveOdooConfig'])->name('.odoo.config');
-        Route::post('/odoo/test', [ImportController::class, 'testOdooConnection'])->name('.odoo.test');
-        Route::post('/odoo/sync', [ImportController::class, 'syncOdoo'])->name('.odoo.sync');
-        Route::get('/odoo/schedule', [ImportController::class, 'getSchedule'])->name('.odoo.schedule.get');
-        Route::post('/odoo/schedule', [ImportController::class, 'saveSchedule'])->name('.odoo.schedule.save');
-        Route::get('/history', [ImportController::class, 'history'])->name('.history');
-    });
+    // Redirect root to Maintenance Dashboard
+    Route::redirect('/', '/maintenance');
 
     // Settings
     Route::get('/settings', [SettingsController::class, 'index'])->name('settings');
-    Route::post('/settings/targets', [SettingsController::class, 'updateTargets'])->name('settings.targets');
-    Route::post('/settings/odoo', [SettingsController::class, 'updateOdoo'])->name('settings.odoo');
+    Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.general');
 
-    // JSON API endpoints (session-authenticated, called from frontend JS)
-    Route::get('/api/settings/targets', [SettingsController::class, 'getTargets'])->name('api.settings.targets');
     Route::get('/api/repair-history/{lotNumber}', [\App\Http\Controllers\RepairHistoryController::class, 'show'])->name('api.repair.history');
 
     // ──────────────────────────────────────────
@@ -69,6 +40,7 @@ Route::middleware('auth')->group(function () {
     // ──────────────────────────────────────────
     Route::prefix('maintenance')->name('maintenance.')->group(function () {
         Route::get('/', [MainController::class, 'index'])->name('dashboard');
+        Route::get('/search', [\App\Http\Controllers\GlobalSearchController::class, 'search'])->name('search');
         Route::get('/nomor-polisi-search', [\App\Http\Controllers\SearchController::class, 'nomorPolisi'])->name('nomor_polisi.search');
         Route::get('/nama-customer-search', [\App\Http\Controllers\SearchController::class, 'customer'])->name('nama_customer.search');
         Route::get('/vehicle-transactions', [\App\Http\Controllers\VehicleTransactionController::class, 'index'])->name('vehicle.transactions');
@@ -98,11 +70,11 @@ Route::middleware('auth')->group(function () {
     
     // Odoo settings for Maintenance (Admin Only)
     Route::middleware('role:admin')->group(function () {
-        Route::get('maintenance/odoo/settings', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'index'])->name('maintenance.odoo.settings');
-        Route::post('maintenance/odoo/settings', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'store'])->name('maintenance.odoo.settings.store');
-        Route::post('maintenance/odoo/test-connection', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'testConnection'])->name('maintenance.odoo.test_connection');
-        Route::post('maintenance/odoo/sync-now', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'syncNow'])->name('maintenance.odoo.sync_now');
-        Route::get('maintenance/odoo/sync-status', [\App\Http\Controllers\MaintenanceOdooSettingController::class, 'syncStatus'])->name('maintenance.odoo.sync_status');
+        Route::get('maintenance/odoo/settings', [\App\Http\Controllers\OdooSettingController::class, 'index'])->name('maintenance.odoo.settings');
+        Route::post('maintenance/odoo/settings', [\App\Http\Controllers\OdooSettingController::class, 'store'])->name('maintenance.odoo.settings.store');
+        Route::post('maintenance/odoo/test-connection', [\App\Http\Controllers\OdooSettingController::class, 'testConnection'])->name('maintenance.odoo.test_connection');
+        Route::post('maintenance/odoo/sync-now', [\App\Http\Controllers\OdooSettingController::class, 'syncNow'])->name('maintenance.odoo.sync_now');
+        Route::get('maintenance/odoo/sync-status', [\App\Http\Controllers\OdooSettingController::class, 'syncStatus'])->name('maintenance.odoo.sync_status');
     });
 
     Route::prefix('admin')->name('admin.')->middleware('role:admin')->group(function () {

@@ -12,7 +12,7 @@ class AuthController extends Controller
     public function showLogin()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('maintenance.dashboard');
         }
         return view('auth.login');
     }
@@ -51,7 +51,7 @@ class AuthController extends Controller
             
             // No 2FA - complete login
             $this->completeLogin($user, $request);
-            return redirect()->intended(route('dashboard'));
+            return redirect()->intended(route('maintenance.dashboard'));
         }
 
         return back()->withErrors([
@@ -80,7 +80,7 @@ class AuthController extends Controller
     public function showRegister()
     {
         if (Auth::check()) {
-            return redirect()->route('dashboard');
+            return redirect()->route('maintenance.dashboard');
         }
         return view('auth.register');
     }
@@ -103,7 +103,7 @@ class AuthController extends Controller
 
         Auth::login($user);
 
-        return redirect()->route('dashboard');
+        return redirect()->route('maintenance.dashboard');
     }
 
     public function logout(Request $request)

@@ -1,206 +1,80 @@
 @extends('layouts.guest')
 
-@section('title', 'Login')
-
-@push('styles')
-<style>
-    body {
-        background: linear-gradient(135deg, #001112 0%, #003D43 50%, #00A1AA 100%);
-        min-height: 100vh;
-    }
-    
-    .login-card {
-        background: rgba(255, 255, 255, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 20px;
-        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        overflow: hidden;
-    }
-    
-    .login-header {
-        background: linear-gradient(135deg, #003D43 0%, #00A1AA 100%);
-        padding: 2.5rem;
-        text-align: center;
-        color: white;
-    }
-    
-    .login-header .logo-icon {
-        width: 80px;
-        height: 80px;
-        background: rgba(255, 255, 255, 0.15);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 1rem;
-        font-size: 2.5rem;
-    }
-    
-    .login-header h3 {
-        font-weight: 700;
-        margin-bottom: 0.25rem;
-        letter-spacing: 0.5px;
-    }
-    
-    .login-header p {
-        opacity: 0.85;
-        font-size: 0.95rem;
-    }
-    
-    .login-body {
-        padding: 2.5rem;
-    }
-    
-    .form-control, .form-select {
-        border-radius: 10px;
-        padding: 0.85rem 1rem;
-        border: 2px solid #e0e0e0;
-        transition: all 0.3s ease;
-    }
-    
-    .form-control:focus, .form-select:focus {
-        border-color: #00A1AA;
-        box-shadow: 0 0 0 4px rgba(0, 161, 170, 0.1);
-    }
-    
-    .form-label {
-        font-weight: 600;
-        color: #333;
-        margin-bottom: 0.5rem;
-    }
-    
-    .btn-login {
-        background: linear-gradient(135deg, #00A1AA 0%, #003D43 100%);
-        border: none;
-        border-radius: 10px;
-        padding: 1rem;
-        font-weight: 600;
-        font-size: 1.05rem;
-        letter-spacing: 0.5px;
-        box-shadow: 0 8px 20px rgba(0, 161, 170, 0.3);
-        transition: all 0.3s ease;
-    }
-    
-    .btn-login:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 12px 25px rgba(0, 161, 170, 0.4);
-        background: linear-gradient(135deg, #00b5bf 0%, #004a50 100%);
-    }
-    
-    .form-check-input:checked {
-        background-color: #00A1AA;
-        border-color: #00A1AA;
-    }
-    
-    .alert-danger {
-        border-radius: 10px;
-        border-left: 4px solid #dc3545;
-    }
-    
-    .input-icon {
-        position: relative;
-    }
-    
-    .input-icon i {
-        position: absolute;
-        left: 1rem;
-        top: 50%;
-        transform: translateY(-50%);
-        color: #aaa;
-    }
-    
-    .input-icon .form-control,
-    .input-icon .form-select {
-        padding-left: 2.75rem;
-    }
-    
-    .divider {
-        display: flex;
-        align-items: center;
-        text-align: center;
-        color: #aaa;
-        font-size: 0.85rem;
-        margin: 1.5rem 0;
-    }
-    
-    .divider::before,
-    .divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid #e0e0e0;
-    }
-    
-    .divider span {
-        padding: 0 1rem;
-    }
-    
-    .footer-text {
-        text-align: center;
-        margin-top: 2rem;
-        color: rgba(255, 255, 255, 0.7);
-        font-size: 0.85rem;
-    }
-</style>
-@endpush
+@section('title', 'Login - Vehicle maintenance record')
 
 @section('content')
-<div class="row justify-content-center">
-    <div class="col-md-5 col-lg-4">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="logo-icon">
-                    <i class="bi bi-speedometer2"></i>
+<div class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/50 dark:border-slate-800/50 overflow-hidden theme-transition ring-1 ring-slate-200 dark:ring-slate-800">
+    
+    <!-- Header Section -->
+    <div class="px-8 pt-10 pb-8 text-center bg-gradient-to-b from-indigo-50/50 to-white/0 dark:from-indigo-950/20 dark:to-slate-900/0">
+        <div class="mx-auto w-20 h-20 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-white/50 dark:ring-white/10 rotate-3 transform transition-transform hover:rotate-0">
+            <svg class="w-10 h-10 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+        </div>
+        <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Vehicle maintenance record</h3>
+        <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Log into your workshop account</p>
+    </div>
+    
+    <!-- Body Section -->
+    <div class="px-8 pb-10">
+        @if($errors->any())
+        <div class="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm space-y-1">
+            @foreach($errors->all() as $error)
+                <div class="flex items-start gap-2">
+                    <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>{{ $error }}</span>
                 </div>
-                <h3>Control Tower</h3>
-                <p class="mb-0">Workshop Management System</p>
+            @endforeach
+        </div>
+        @endif
+
+        <form action="{{ route('login') }}" method="POST" class="space-y-5">
+            @csrf
+            
+            <!-- Email -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Email Address</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <input type="email" name="email" class="w-full pl-11 pr-4 py-3 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all sm:text-sm shadow-sm" placeholder="admin@example.com" value="{{ old('email') }}" required autofocus>
+                </div>
             </div>
             
-            <div class="login-body">
-                @if($errors->any())
-                <div class="alert alert-danger py-2 mb-4">
-                    @foreach($errors->all() as $error)
-                        <div><i class="bi bi-exclamation-circle me-1"></i>{{ $error }}</div>
-                    @endforeach
+            <!-- Password -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
+                    <input type="password" name="password" class="w-full pl-11 pr-4 py-3 bg-slate-50/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 focus:bg-white dark:focus:bg-slate-900 transition-all sm:text-sm shadow-sm" placeholder="••••••••" required>
                 </div>
-                @endif
-
-                <form action="{{ route('login') }}" method="POST">
-                    @csrf
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <div class="input-icon">
-                            <i class="bi bi-envelope"></i>
-                            <input type="email" name="email" class="form-control" placeholder="Enter your email" value="{{ old('email') }}" required autofocus>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <label class="form-label">Password</label>
-                        <div class="input-icon">
-                            <i class="bi bi-lock"></i>
-                            <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
-                        </div>
-                    </div>
-                    
-                    {{-- Login Source is now auto-detected - trying internal DB first, then all LDAP servers --}}
-
-                    <div class="mb-4 form-check">
-                        <input type="checkbox" name="remember" class="form-check-input" id="remember">
-                        <label class="form-check-label" for="remember">Remember me</label>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-login btn-primary w-100">
-                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
-                    </button>
-                </form>
             </div>
-        </div>
-        
-        <p class="footer-text">
-            <i class="bi bi-shield-lock me-1"></i>Secure Login &bull; © {{ date('Y') }} IT Dept HRM Surabaya
-        </p>
+            
+            <!-- Remember Me -->
+            <div class="flex items-center pt-2">
+                <div class="relative flex items-start">
+                    <div class="flex h-6 items-center">
+                        <input id="remember" name="remember" type="checkbox" class="h-4 w-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-600 dark:focus:ring-indigo-500 dark:bg-slate-800 transition-colors cursor-pointer">
+                    </div>
+                    <div class="ml-2.5 text-sm leading-6">
+                        <label for="remember" class="font-medium text-slate-600 dark:text-slate-400 select-none cursor-pointer">Remember me for 30 days</label>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="pt-2">
+                <button type="submit" class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-md shadow-indigo-200 dark:shadow-none text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all hover:-translate-y-0.5 relative overflow-hidden group">
+                    <div class="absolute inset-0 bg-white/20 group-hover:translate-x-full -translate-x-full transition-transform duration-500 ease-in-out skew-x-12"></div>
+                    <span>Sign In to Dashboard</span>
+                    <svg class="h-4 w-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection
