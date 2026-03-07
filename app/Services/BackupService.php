@@ -17,7 +17,7 @@ class BackupService
     public function create($remark = null)
     {
         $filename = 'backup-' . Carbon::now()->format('Y-m-d-H-i-s') . '.sql.gz';
-        $path = storage_path('app/' . $this->backupFolder . '/' . $filename);
+        $path = Storage::disk($this->disk)->path($this->backupFolder . '/' . $filename);
         
         // Ensure directory exists
         if (!file_exists(dirname($path))) {
@@ -87,7 +87,7 @@ class BackupService
 
     public function restore($filename)
     {
-        $path = storage_path('app/' . $this->backupFolder . '/' . $filename);
+        $path = Storage::disk($this->disk)->path($this->backupFolder . '/' . $filename);
         
         if (!file_exists($path)) {
             throw new \Exception('Backup file not found.');
@@ -103,7 +103,7 @@ class BackupService
     public function restoreFromFile(UploadedFile $file)
     {
         // Save uploaded file temporarily
-        $tempPath = storage_path('app/temp_restore_' . time() . '.sql.gz');
+        $tempPath = Storage::disk($this->disk)->path('temp_restore_' . time() . '.sql.gz');
         $file->move(dirname($tempPath), basename($tempPath));
 
         try {
