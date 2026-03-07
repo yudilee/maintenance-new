@@ -15,6 +15,10 @@ fi
 echo "Running migrations..."
 php artisan migrate --force
 
+# Seed Admin User
+echo "Seeding Admin User..."
+php artisan db:seed --class=AdminUserSeeder --force
+
 # Start Apache
 echo "Starting Apache..."
 exec apache2-foreground
