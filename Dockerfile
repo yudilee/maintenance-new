@@ -20,6 +20,9 @@ RUN apt-get update && apt-get install -y \
 ENV TZ=Asia/Jakarta
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+# Increase PHP upload limits
+RUN echo "upload_max_filesize = 500M\npost_max_size = 500M\nmemory_limit = 1024M" > /usr/local/etc/php/conf.d/uploads.ini
+
 # Install Node.js (for building assets)
 RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs
