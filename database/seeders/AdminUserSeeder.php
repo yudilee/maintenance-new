@@ -21,11 +21,13 @@ class AdminUserSeeder extends Seeder
                 'name' => 'IT Admin',
                 'email' => $email,
                 'password' => \Illuminate\Support\Facades\Hash::make('admin987'),
+                'role' => 'admin',
             ]);
             $this->command->info('Admin user created successfully.');
         } else {
             $user->update([
                 'password' => \Illuminate\Support\Facades\Hash::make('admin987'),
+                'role' => 'admin',
             ]);
             $this->command->info('Admin user password updated.');
         }
