@@ -19,6 +19,11 @@ php artisan migrate --force
 echo "Seeding Admin User..."
 php artisan db:seed --class=AdminUserSeeder --force
 
+# Fix Permissions for Logs and Cache
+echo "Fixing storage permissions..."
+chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+
 # Start Apache
 echo "Starting Apache..."
 exec apache2-foreground
