@@ -87,6 +87,9 @@ class OdooSettingController extends Controller
     public function syncNow(Request $request)
     {
         try {
+            if ($request->query('force') == '1') {
+                \App\Models\OdooSetting::first()?->update(['last_sync' => null]);
+            }
             $service = new OdooSyncService();
             $result  = $service->sync('Manual');
             return response()->json([
