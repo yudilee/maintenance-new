@@ -32,20 +32,21 @@
                 </div>
 
                 <div class="flex-grow flex flex-col md:flex-row gap-4">
-                    <div class="flex-1">
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">From Date</label>
-                        <input type="date" x-model="startDate" @change="reloadTable()"
-                               class="w-full text-sm border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm px-3">
-                    </div>
-                    <div class="flex-1">
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">To Date</label>
-                        <input type="date" x-model="endDate" @change="reloadTable()"
-                               class="w-full text-sm border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm px-3">
+                    <div class="flex-1 w-full">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Tanggal Job</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <input type="text" id="tanggal_job_filter"
+                                   class="pl-10 w-full text-sm border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm px-3"
+                                   placeholder="Pilih rentang tanggal...">
+                        </div>
                     </div>
                 </div>
 
                 <div class="w-full md:w-auto mt-4 md:mt-0">
-                    <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; nomorPolisiFilter = ''; namaCustomerFilter = ''; $('#nomor_polisi_select').val(null).trigger('change'); $('#nama_customer_select').val(null).trigger('change'); reloadTable()" 
+                    <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; nomorPolisiFilter = ''; namaCustomerFilter = ''; $('#nomor_polisi_select').val(null).trigger('change'); $('#nama_customer_select').val(null).trigger('change'); $('#tanggal_job_filter').val(''); reloadTable()" 
                             class="w-full md:w-auto px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Reset
@@ -157,6 +158,10 @@
 <!-- Select2 Dependencies & Styles -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+<script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
 <style>
     /* Base styles (Light mode) */
     .select2-container--default .select2-selection--single {
@@ -448,6 +453,35 @@ $(document).ready(function() {
         let val = $(this).val();
         let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
         alpineData.namaCustomerFilter = val;
+        alpineData.reloadTable();
+    });
+
+    // Date range picker logic
+    $('#tanggal_job_filter').daterangepicker({
+        autoUpdateInput: false,
+        locale: {
+            cancelLabel: 'Clear',
+            format: 'DD-MM-YYYY'
+        }
+    });
+
+    $('#tanggal_job_filter').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
+        
+        // AlpineJS integration
+        let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
+        alpineData.startDate = picker.startDate.format('YYYY-MM-DD');
+        alpineData.endDate = picker.endDate.format('YYYY-MM-DD');
+        alpineData.reloadTable();
+    });
+
+    $('#tanggal_job_filter').on('cancel.daterangepicker', function(ev, picker) {
+        $(this).val('');
+        
+        // AlpineJS integration
+        let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
+        alpineData.startDate = '';
+        alpineData.endDate = '';
         alpineData.reloadTable();
     });
 });
