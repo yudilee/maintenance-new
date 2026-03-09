@@ -247,7 +247,7 @@ class OdooSyncService
                     'nomor_chassis' => substr($chassisNo, 0, 50),
                     'posisi_km' => $ro['km_pickup'] ?? 0,
                     'mtrs' => $ro['km_pickup'] ?? 0,
-                    'keterangan' => substr(strip_tags($ro['compute_job_card_repair_notes'] ?? ''), 0, 255),
+                    'keterangan' => substr($this->sanitizeText(strip_tags($ro['compute_job_card_repair_notes'] ?? '')), 0, 255),
                     'nomor_sv' => substr($ro['service_type'] ?? '', 0, 50),
                     'id_customer' => 0,
                     'sup_invoice' => 0,
@@ -438,5 +438,14 @@ class OdooSyncService
             'items' => $items,
             'details' => $details
         ]);
+    }
+
+    private function sanitizeText(string $text): string
+    {
+        // Remove invalid UTF-8 sequences
+        $clean = mb_convert_encoding($text, 'UTF-8', 'UTF-8');
+        // Remove non-printable and invalid XML/JSON characters
+        $clean = preg_replace('/[^\x{0009}\x{000A}\x{000D}\x{0020}-\x{D7FF}\x{E000}-\x{FFFD}\x{10000}-\x{10FFFF}]/u', '', $clean ?? '');
+        return $clean ?? '';
     }
 }
