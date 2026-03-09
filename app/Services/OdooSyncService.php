@@ -76,7 +76,7 @@ class OdooSyncService
                     'repair.order', 'search_read',
                     [$roDomain],
                     [
-                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id'],
+                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids'],
                         'limit' => $limit,
                         'offset' => $offset,
                         'order' => 'create_date asc' // Fetch oldest first so updates replace correctly
@@ -133,12 +133,14 @@ class OdooSyncService
             $allRoLineIds = []; // repair.order.line
             $allRoServiceIds = []; // repair.service
             $allRoMoveIds = []; // account.move (Sales Invoices)
+            $allVendorBillIds = []; // vendor bills from ROs
             
             foreach ($ros as $ro) {
                 if (!empty($ro['lot_id'])) $allLotIds[] = is_array($ro['lot_id']) ? $ro['lot_id'][0] : $ro['lot_id'];
                 if (!empty($ro['order_line_ids'])) $allRoLineIds = array_merge($allRoLineIds, $ro['order_line_ids']);
                 if (!empty($ro['repair_service_ids'])) $allRoServiceIds = array_merge($allRoServiceIds, $ro['repair_service_ids']);
                 if (!empty($ro['move_id'])) $allRoMoveIds[] = is_array($ro['move_id']) ? $ro['move_id'][0] : $ro['move_id'];
+                if (!empty($ro['vendor_bill_ids'])) $allVendorBillIds = array_merge($allVendorBillIds, $ro['vendor_bill_ids']);
             }
             foreach ($moves as $move) {
                 if (!empty($move['line_ids'])) $allLineIds = array_merge($allLineIds, $move['line_ids']);
@@ -148,6 +150,7 @@ class OdooSyncService
             $allLineIds = array_values(array_unique($allLineIds));
             $allRoLineIds = array_values(array_unique($allRoLineIds));
             $allRoServiceIds = array_values(array_unique($allRoServiceIds));
+            $allVendorBillIds = array_values(array_unique($allVendorBillIds));
 
             // Fetch Lots (Vehicles)
             $lotsMap = [];
@@ -187,6 +190,24 @@ class OdooSyncService
             if (!empty($allRoMoveIds)) {
                 $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'account.move', 'read', [$allRoMoveIds], ['fields' => ['amount_tax']]]);
                 if ($res['success']) foreach ($res['result'] as $rm) $roMovesMap[$rm['id']] = $rm;
+            }
+
+            // Fetch Vendor Bills linked to ROs (for tax amounts)
+            // Map: repair_order_id => bill data
+            $vendorBillsByRo = [];
+            if (!empty($allVendorBillIds)) {
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'account.move', 'read', [$allVendorBillIds], ['fields' => ['repair_id', 'amount_tax', 'amount_untaxed', 'amount_total', 'state']]]);
+                if ($res['success']) {
+                    foreach ($res['result'] as $bill) {
+                        $roId = is_array($bill['repair_id']) ? $bill['repair_id'][0] : $bill['repair_id'];
+                        if ($roId) {
+                            // Keep the bill with highest amount_total if multiple
+                            if (!isset($vendorBillsByRo[$roId]) || $bill['amount_total'] > $vendorBillsByRo[$roId]['amount_total']) {
+                                $vendorBillsByRo[$roId] = $bill;
+                            }
+                        }
+                    }
+                }
             }
             // --- End Batch Pre-fetch ---
 
@@ -321,15 +342,21 @@ class OdooSyncService
                     ]);
                 }
                 $roMoveId = is_array($ro['move_id']) ? $ro['move_id'][0] : $ro['move_id'];
+                $roId = $ro['id'];
                 $roTax = 0;
-                if ($roMoveId && isset($roMovesMap[$roMoveId])) {
+                $roHargaTotal = $totalJO;
+                // Prefer vendor bill (most accurate, includes tax)
+                if (isset($vendorBillsByRo[$roId])) {
+                    $roTax = $vendorBillsByRo[$roId]['amount_tax'];
+                    $roHargaTotal = $vendorBillsByRo[$roId]['amount_untaxed'] ?: $totalJO;
+                } elseif ($roMoveId && isset($roMovesMap[$roMoveId])) {
                     $roTax = $roMovesMap[$roMoveId]['amount_tax'];
                 }
 
                 $htransaksi->update([
-                    'harga_part' => $totalJO,
-                    'harga_total' => $totalJO,
-                    'harga_jual' => $totalJO,
+                    'harga_part' => $roHargaTotal,
+                    'harga_total' => $roHargaTotal,
+                    'harga_jual' => $roHargaTotal,
                     'harga_pajak' => $roTax,
                     'harga_pajak_jual' => $roTax,
                 ]);
