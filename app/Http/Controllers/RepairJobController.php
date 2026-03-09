@@ -61,7 +61,7 @@ class RepairJobController extends Controller
             $customerName = \App\Models\Customer::where('kode_customer', $request->customer)->value('nama_customer');
             $query->where(function($q) use ($request, $customerName) {
                 $q->whereHas('mobil', function($mq) use ($request) {
-                    $mq->where('customer', $request->customer);
+                    $mq->where('mobil.customer', $request->customer);
                 });
                 if ($customerName) {
                     $q->orWhere('keterangan', 'like', "%{$customerName}%");
