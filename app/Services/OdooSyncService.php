@@ -272,9 +272,33 @@ class OdooSyncService
                 Dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
                 $totalJO = 0;
                 
-                $lines = array_merge($ro['order_line_ids'], $ro['repair_service_ids']);
-                foreach ($lines as $lid) {
-                    $ld = $roLinesMap[$lid] ?? ($roServicesMap[$lid] ?? null);
+                // Process Parts (order_line_ids) from roLinesMap
+                foreach ($ro['order_line_ids'] as $lid) {
+                    $ld = $roLinesMap[$lid] ?? null;
+                    if (!$ld) continue;
+
+                    $subtotal = $ld['price_subtotal'];
+                    if ($subtotal == 0 && $ld['price_unit'] > 0) {
+                        $subtotal = $ld['price_unit'] * $ld['quantity'];
+                    }
+
+                    $totalJO += $subtotal;
+                    Dtransaksi::create([
+                        'nomor_invoice' => $htransaksi->nomor_invoice,
+                        'deskripsi' => substr($ld['name'], 0, 255),
+                        'jumlah' => $ld['quantity'],
+                        'harga' => $ld['price_unit'],
+                        'value' => $subtotal,
+                        'discount' => 0,
+                        'mnt_grp' => '',
+                        'lbr_grp' => '',
+                        'note' => ''
+                    ]);
+                }
+
+                // Process Services (repair_service_ids) from roServicesMap
+                foreach ($ro['repair_service_ids'] as $lid) {
+                    $ld = $roServicesMap[$lid] ?? null;
                     if (!$ld) continue;
 
                     $subtotal = $ld['price_subtotal'];
