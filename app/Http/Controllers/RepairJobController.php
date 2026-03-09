@@ -59,18 +59,14 @@ class RepairJobController extends Controller
         // Customer filter
         if ($request->filled('customer')) {
             $customerName = \App\Models\Customer::where('kode_customer', $request->customer)->value('nama_customer');
-            if ($customerName) {
-                $query->where(function($q) use ($request, $customerName) {
-                     $q->whereHas('mobil', function($mq) use ($request) {
-                         $mq->where('customer', $request->customer);
-                     })
-                     ->orWhere('keterangan', 'like', "%{$customerName}%");
+            $query->where(function($q) use ($request, $customerName) {
+                $q->whereHas('mobil', function($mq) use ($request) {
+                    $mq->where('customer', $request->customer);
                 });
-            } else {
-                 $query->whereHas('mobil', function($mq) use ($request) {
-                     $mq->where('customer', $request->customer);
-                 });
-            }
+                if ($customerName) {
+                    $q->orWhere('keterangan', 'like', "%{$customerName}%");
+                }
+            });
         }
 
         // Nomor Polisi filter
@@ -93,7 +89,7 @@ class RepairJobController extends Controller
 
         // DataTables search
         $search = $request->input('search.value', '');
-        if ($search) {
+        if (!empty($search)) {
             $mobilChassisList = \App\Models\Mobil::where('nomor_polisi', 'like', "%{$search}%")
                 ->pluck('nomor_chassis')
                 ->filter()
