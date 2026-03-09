@@ -76,7 +76,7 @@ class OdooSyncService
                     'repair.order', 'search_read',
                     [$roDomain],
                     [
-                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids'],
+                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids', 'schedule_date', 'repair_end_datetime'],
                         'limit' => $limit,
                         'offset' => $offset,
                         'order' => 'create_date asc' // Fetch oldest first so updates replace correctly
@@ -263,9 +263,9 @@ class OdooSyncService
                 $headerData = [
                     'nomor_job' => $jobNo,
                     'nomor_invoice' => $jobNo, // Default to jobNo if no bill yet
-                    'tanggal_job' => Carbon::parse($ro['create_date'])->format('Y-m-d'),
-                    'tanggal_invoice' => Carbon::parse($ro['create_date'])->format('Y-m-d'),
-                    'tanggal_close' => Carbon::parse($ro['create_date'])->format('Y-m-d'),
+                    'tanggal_job' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : Carbon::parse($ro['create_date'])->format('Y-m-d'),
+                    'tanggal_invoice' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : Carbon::parse($ro['create_date'])->format('Y-m-d'),
+                    'tanggal_close' => $ro['repair_end_datetime'] ? Carbon::parse($ro['repair_end_datetime'])->format('Y-m-d') : ($ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : Carbon::parse($ro['create_date'])->format('Y-m-d')),
                     'nomor_chassis' => substr($chassisNo, 0, 50),
                     'posisi_km' => $ro['km_pickup'] ?? 0,
                     'mtrs' => $ro['km_pickup'] ?? 0,
