@@ -489,6 +489,83 @@
     .dark .select2-container--default .select2-results__option--selected {
         background-color: #475569;
     }
+    
+    /* DateRangePicker Dark Mode overrides */
+    .dark .daterangepicker {
+        background-color: #1e293b;
+        border-color: #475569;
+        color: #e2e8f0;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    .dark .daterangepicker .calendar-table {
+        background-color: #1e293b;
+        border-color: #1e293b;
+    }
+    .dark .daterangepicker .calendar-table .next span, 
+    .dark .daterangepicker .calendar-table .prev span {
+        border-color: #cbd5e1;
+    }
+    .dark .daterangepicker td.off, 
+    .dark .daterangepicker td.off.in-range, 
+    .dark .daterangepicker td.off.start-date, 
+    .dark .daterangepicker td.off.end-date {
+        background-color: #0f172a;
+        border-color: transparent;
+        color: #475569;
+    }
+    .dark .daterangepicker td.available:hover, 
+    .dark .daterangepicker th.available:hover {
+        background-color: #334155;
+        color: #f8fafc;
+    }
+    .dark .daterangepicker td.in-range {
+        background-color: rgba(79, 70, 229, 0.2);
+        color: #e2e8f0;
+    }
+    .dark .daterangepicker td.active, 
+    .dark .daterangepicker td.active:hover {
+        background-color: #4f46e5;
+        color: #ffffff;
+    }
+    .dark .daterangepicker .drp-buttons {
+        border-top-color: #475569;
+    }
+    .dark .daterangepicker .drp-buttons .btn {
+        font-weight: 500;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+    }
+    .dark .daterangepicker .drp-buttons .btn-primary {
+        background-color: #4f46e5;
+        border-color: #4f46e5;
+    }
+    .dark .daterangepicker .drp-buttons .btn-default {
+        background-color: #334155;
+        border-color: #475569;
+        color: #e2e8f0;
+    }
+    .dark .daterangepicker select.monthselect, 
+    .dark .daterangepicker select.yearselect {
+        background-color: #334155;
+        border-color: #475569;
+        color: #e2e8f0;
+        border-radius: 0.375rem;
+        padding: 2px 4px;
+    }
+    .dark .daterangepicker:before {
+        border-bottom-color: #475569 !important;
+    }
+    .dark .daterangepicker:after {
+        border-bottom-color: #1e293b !important;
+    }
+    .dark .daterangepicker.drop-up:before {
+        border-bottom-color: transparent !important;
+        border-top-color: #475569 !important;
+    }
+    .dark .daterangepicker.drop-up:after {
+        border-bottom-color: transparent !important;
+        border-top-color: #1e293b !important;
+    }
     </style>
 
     <script>
