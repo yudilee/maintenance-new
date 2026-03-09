@@ -249,7 +249,11 @@ class VehicleTransactionController extends Controller
     {
         $closedStates = ['done', '2binvoiced'];
         $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
-            ->whereIn('state', $closedStates);
+            ->where(function($q) use ($closedStates) {
+                $q->whereIn('state', $closedStates)
+                  ->orWhereNull('state')
+                  ->orWhere('state', '');
+            });
 
         if ($nama_customer) {
             $customer = Customer::where('kode_customer', $nama_customer)->first();
@@ -282,7 +286,11 @@ class VehicleTransactionController extends Controller
     private function calculateGrandTotals($nama_customer, $nomor_polisi, $start, $end, $search = null)
     {
         $closedStates = ['done', '2binvoiced'];
-        $query = Htransaksi::whereIn('state', $closedStates);
+        $query = Htransaksi::where(function($q) use ($closedStates) {
+            $q->whereIn('state', $closedStates)
+              ->orWhereNull('state')
+              ->orWhere('state', '');
+        });
 
         if ($nama_customer) {
             $customer = Customer::where('kode_customer', $nama_customer)->first();
