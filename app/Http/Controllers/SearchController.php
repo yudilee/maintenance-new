@@ -46,6 +46,7 @@ class SearchController extends Controller
         $results = \App\Models\Customer::select('kode_customer', 'nama_customer')
             ->whereRaw("CONCAT(kode_customer, ' - ', nama_customer) LIKE ?", ["%{$search}%"])
             ->groupBy('kode_customer', 'nama_customer')
+            ->orderBy('nama_customer', 'asc')
             ->limit(20)
             ->get();
 
