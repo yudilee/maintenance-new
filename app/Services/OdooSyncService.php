@@ -329,6 +329,7 @@ class OdooSyncService
                     'harga_part' => $totalJO,
                     'harga_total' => $totalJO,
                     'harga_jual' => $totalJO,
+                    'harga_pajak' => $roTax,
                     'harga_pajak_jual' => $roTax,
                 ]);
                 $itemsSynced++;
