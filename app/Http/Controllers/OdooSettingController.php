@@ -92,16 +92,18 @@ class OdooSettingController extends Controller
             }
             $service = new OdooSyncService();
             $result  = $service->sync('Manual');
+            $message = mb_convert_encoding($result['message'] ?? 'Sync complete.', 'UTF-8', 'UTF-8');
             return response()->json([
                 'success' => $result['success'],
-                'message' => $result['message'] ?? 'Sync complete.',
+                'message' => $message,
                 'items'   => $result['items'] ?? 0,
-            ], $result['success'] ? 200 : 500);
+            ], $result['success'] ? 200 : 500, [], JSON_INVALID_UTF8_SUBSTITUTE);
         } catch (\Throwable $e) {
+            $message = mb_convert_encoding($e->getMessage(), 'UTF-8', 'UTF-8');
             return response()->json([
                 'success' => false,
-                'message' => 'Sync error: ' . $e->getMessage(),
-            ], 500);
+                'message' => 'Sync error: ' . $message,
+            ], 500, [], JSON_INVALID_UTF8_SUBSTITUTE);
         }
     }
 

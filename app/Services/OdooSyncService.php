@@ -195,6 +195,7 @@ class OdooSyncService
 
             // Step A: Process Job Orders (Repair Orders)
             foreach ($ros as $ro) {
+                try {
                 $jobNo = $ro['name'];
                 $chassisNo = $ro['lot_vehicle_ref'];
                 $orderLotId = is_array($ro['lot_id']) ? $ro['lot_id'][0] : null;
@@ -285,7 +286,7 @@ class OdooSyncService
                     $totalJO += $subtotal;
                     Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
-                        'deskripsi' => substr($ld['name'], 0, 255),
+                        'deskripsi' => substr($this->sanitizeText($ld['name']), 0, 255),
                         'jumlah' => $ld['quantity'],
                         'harga' => $ld['price_unit'],
                         'value' => $subtotal,
@@ -309,7 +310,7 @@ class OdooSyncService
                     $totalJO += $subtotal;
                     Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
-                        'deskripsi' => substr($ld['name'], 0, 255),
+                        'deskripsi' => substr($this->sanitizeText($ld['name']), 0, 255),
                         'jumlah' => $ld['quantity'],
                         'harga' => $ld['price_unit'],
                         'value' => $subtotal,
@@ -333,6 +334,9 @@ class OdooSyncService
                     'harga_pajak_jual' => $roTax,
                 ]);
                 $itemsSynced++;
+                } catch (\Exception $roEx) {
+                    Log::warning('Skipping RO due to error: ' . ($ro['name'] ?? 'unknown') . ' - ' . $roEx->getMessage());
+                }
             }
 
             // Step B: Overwrite with Bills (More accurate financials)
