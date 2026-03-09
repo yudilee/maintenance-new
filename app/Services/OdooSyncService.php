@@ -65,7 +65,7 @@ class OdooSyncService
                 $roDomain[] = ['write_date', '>=', $lastSyncUTC];
             } else {
                 // If first time syncing, pull EVERYTHING created since Jan 1 2026
-                $roDomain[] = ['create_date', '>=', '2026-01-01 00:00:00'];
+                $roDomain[] = ['create_date', '>=', '2025-01-01 00:00:00'];
             }
 
             $offset = 0;
@@ -95,7 +95,7 @@ class OdooSyncService
             if ($lastSyncUTC) {
                 $billDomain[] = ['write_date', '>=', $lastSyncUTC];
             } else {
-                $billDomain[] = ['create_date', '>=', '2026-01-01 00:00:00'];
+                $billDomain[] = ['create_date', '>=', '2025-01-01 00:00:00'];
             }
 
             $offset = 0;
