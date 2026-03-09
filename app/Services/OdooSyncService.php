@@ -263,9 +263,9 @@ class OdooSyncService
                 $headerData = [
                     'nomor_job' => $jobNo,
                     'nomor_invoice' => $jobNo, // Default to jobNo if no bill yet
-                    'tanggal_job' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : Carbon::parse($ro['create_date'])->format('Y-m-d'),
-                    'tanggal_invoice' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : Carbon::parse($ro['create_date'])->format('Y-m-d'),
-                    'tanggal_close' => $ro['repair_end_datetime'] ? Carbon::parse($ro['repair_end_datetime'])->format('Y-m-d') : ($ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : Carbon::parse($ro['create_date'])->format('Y-m-d')),
+                    'tanggal_job' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : null,
+                    'tanggal_invoice' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : null,
+                    'tanggal_close' => $ro['repair_end_datetime'] ? Carbon::parse($ro['repair_end_datetime'])->format('Y-m-d') : null,
                     'nomor_chassis' => substr($chassisNo, 0, 50),
                     'posisi_km' => $ro['km_pickup'] ?? 0,
                     'mtrs' => $ro['km_pickup'] ?? 0,
