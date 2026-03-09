@@ -459,6 +459,42 @@ $(document).ready(function() {
                 background: rgb(30 41 59 / 0.5);
             }
             
+            /* Column resize handle */
+            .frozen-table thead th {
+                position: relative;
+                overflow: visible;
+            }
+            .frozen-table thead th .col-resize-handle {
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 6px;
+                cursor: col-resize;
+                z-index: 40;
+                background: transparent;
+                transition: background 0.15s;
+            }
+            .frozen-table thead th .col-resize-handle:hover,
+            .frozen-table thead th .col-resize-handle.resizing {
+                background: rgb(99 102 241 / 0.5);
+            }
+            .frozen-table thead th .col-resize-handle::after {
+                content: '';
+                position: absolute;
+                right: 2px;
+                top: 25%;
+                bottom: 25%;
+                width: 2px;
+                border-radius: 1px;
+                background: rgb(148 163 184 / 0.4);
+                transition: background 0.15s;
+            }
+            .frozen-table thead th .col-resize-handle:hover::after,
+            .frozen-table thead th .col-resize-handle.resizing::after {
+                background: rgb(99 102 241);
+            }
+
             #repairJobsTable_wrapper { margin-top: 0; }
             .dataTables_wrapper .dataTables_paginate .paginate_button {
                 padding: 0.25rem 0.625rem;
@@ -540,4 +576,65 @@ $(document).ready(function() {
         color: #818cf8;
     }
 </style>
+
+<script>
+// ── Column Resize Logic (Repair Jobs) ────────────────────────────────
+(function() {
+    function initColumnResize(tableId) {
+        var table = document.getElementById(tableId);
+        if (!table) return;
+
+        var headers = table.querySelectorAll('thead th');
+        headers.forEach(function(th) {
+            var oldHandle = th.querySelector('.col-resize-handle');
+            if (oldHandle) oldHandle.remove();
+
+            var handle = document.createElement('div');
+            handle.classList.add('col-resize-handle');
+            th.appendChild(handle);
+
+            var startX, startWidth, thEl;
+
+            handle.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                thEl = th;
+                startX = e.pageX;
+                startWidth = th.offsetWidth;
+                handle.classList.add('resizing');
+
+                var overlay = document.createElement('div');
+                overlay.id = 'resize-overlay';
+                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;cursor:col-resize;';
+                document.body.appendChild(overlay);
+
+                function onMouseMove(e) {
+                    var newWidth = startWidth + (e.pageX - startX);
+                    if (newWidth < 50) newWidth = 50;
+                    thEl.style.width = newWidth + 'px';
+                    thEl.style.minWidth = newWidth + 'px';
+                }
+
+                function onMouseUp() {
+                    handle.classList.remove('resizing');
+                    var ov = document.getElementById('resize-overlay');
+                    if (ov) ov.remove();
+                    document.removeEventListener('mousemove', onMouseMove);
+                    document.removeEventListener('mouseup', onMouseUp);
+                }
+
+                document.addEventListener('mousemove', onMouseMove);
+                document.addEventListener('mouseup', onMouseUp);
+            });
+        });
+    }
+
+    $(document).ready(function() {
+        $('#repairJobsTable').on('draw.dt', function() {
+            initColumnResize('repairJobsTable');
+        });
+        setTimeout(function() { initColumnResize('repairJobsTable'); }, 200);
+    });
+})();
+</script>
 @endsection

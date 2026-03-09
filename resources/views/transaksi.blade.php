@@ -5,7 +5,7 @@
     <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
-                Maintenance Cost
+                Maintenance History
                 <span class="text-sm font-normal text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-lg ml-3">
                     {{ $nomor_polisi ? $nomor_polisi . ' - ' : '' }}{{ $nama_customer ? $nama_customer : 'All Vehicles' }}
                 </span>
@@ -82,7 +82,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-indigo-300 transition-colors">
-                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Maintenance Cost</div>
+                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Maintenance History Cost</div>
                 <div id="kpi-cost" class="text-2xl font-black text-rose-600 dark:text-rose-400">Rp {{ number_format($grandTotals['hargaTotal'], 0, ',', '.') }}</div>
             </div>
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-indigo-300 transition-colors">
@@ -208,6 +208,105 @@
             .dark .frozen-table tbody tr.is-detail-row td.sticky-col {
                 background: rgb(15 23 42);
             }
+            /* Column resize handle */
+            .frozen-table thead th {
+                position: relative;
+                overflow: visible;
+            }
+            .frozen-table thead th .col-resize-handle {
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 6px;
+                cursor: col-resize;
+                z-index: 40;
+                background: transparent;
+                transition: background 0.15s;
+            }
+            .frozen-table thead th .col-resize-handle:hover,
+            .frozen-table thead th .col-resize-handle.resizing {
+                background: rgb(99 102 241 / 0.5);
+            }
+            .frozen-table thead th .col-resize-handle::after {
+                content: '';
+                position: absolute;
+                right: 2px;
+                top: 25%;
+                bottom: 25%;
+                width: 2px;
+                border-radius: 1px;
+                background: rgb(148 163 184 / 0.4);
+                transition: background 0.15s;
+            }
+            .frozen-table thead th .col-resize-handle:hover::after,
+            .frozen-table thead th .col-resize-handle.resizing::after {
+                background: rgb(99 102 241);
+            }
+
+            /* DataTables Buttons overrides */
+            .dt-buttons .dt-button {
+                background-color: #ffffff;
+                border: 1px solid #e2e8f0;
+                color: #334155;
+                padding: 0.5rem 1rem;
+                border-radius: 0.75rem;
+                font-weight: 500;
+                box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                transition: all 0.2s;
+            }
+            .dt-buttons .dt-button:hover {
+                background-color: #f8fafc;
+            }
+            .dark .dt-buttons .dt-button {
+                background-color: #1e293b;
+                border-color: #334155;
+                color: #cbd5e1;
+            }
+            .dark .dt-buttons .dt-button:hover {
+                background-color: #334155;
+            }
+            .dt-button-collection {
+                background-color: #ffffff;
+                border: 1px solid #e2e8f0;
+                border-radius: 0.75rem;
+                box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                padding: 0.5rem;
+                min-width: 200px;
+            }
+            .dark .dt-button-collection {
+                background-color: #1e293b;
+                border-color: #334155;
+            }
+            .dt-button-collection .dt-button {
+                width: 100%;
+                text-align: left;
+                border: none !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.375rem 0.75rem;
+                border-radius: 0.5rem;
+                font-size: 0.8125rem;
+            }
+            .dt-button-collection .dt-button:hover {
+                background-color: rgb(241 245 249) !important;
+            }
+            .dark .dt-button-collection .dt-button:hover {
+                background-color: rgb(51 65 85) !important;
+            }
+            .dt-button-collection .dt-button.active::after {
+                content: '✓';
+                color: #4f46e5;
+                font-weight: 700;
+                margin-left: 0.5rem;
+            }
+            .dark .dt-button-collection .dt-button.active::after {
+                color: #818cf8;
+            }
+
             /* DataTables overrides */
             #transaksiTable_wrapper { padding: 1rem 0 0; }
             .dataTables_wrapper .dataTables_length select,
@@ -433,7 +532,7 @@
                 "dom": '<"#dt-controls-top"Blf>rt<"#dt-controls-bottom"ip>',
                 "buttons": [{
                         extend: 'colvis',
-                        text: 'Show/Hide Columns'
+                        text: '<span class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Show/Hide Columns</span>'
                     },
                     {
                         text: 'Export Excel (All Data)',
@@ -799,6 +898,70 @@
                 $('#end_date_transaksi').val('');
             });
         });
+    </script>
+
+    <script>
+    // ── Column Resize Logic ──────────────────────────────────────────────
+    (function() {
+        function initColumnResize(tableId) {
+            var table = document.getElementById(tableId);
+            if (!table) return;
+
+            var headers = table.querySelectorAll('thead th');
+            headers.forEach(function(th) {
+                // Remove any old handles first
+                var oldHandle = th.querySelector('.col-resize-handle');
+                if (oldHandle) oldHandle.remove();
+
+                var handle = document.createElement('div');
+                handle.classList.add('col-resize-handle');
+                th.appendChild(handle);
+
+                var startX, startWidth, thEl;
+
+                handle.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    thEl = th;
+                    startX = e.pageX;
+                    startWidth = th.offsetWidth;
+                    handle.classList.add('resizing');
+
+                    var overlay = document.createElement('div');
+                    overlay.id = 'resize-overlay';
+                    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;cursor:col-resize;';
+                    document.body.appendChild(overlay);
+
+                    function onMouseMove(e) {
+                        var newWidth = startWidth + (e.pageX - startX);
+                        if (newWidth < 50) newWidth = 50;
+                        thEl.style.width = newWidth + 'px';
+                        thEl.style.minWidth = newWidth + 'px';
+                    }
+
+                    function onMouseUp() {
+                        handle.classList.remove('resizing');
+                        var ov = document.getElementById('resize-overlay');
+                        if (ov) ov.remove();
+                        document.removeEventListener('mousemove', onMouseMove);
+                        document.removeEventListener('mouseup', onMouseUp);
+                    }
+
+                    document.addEventListener('mousemove', onMouseMove);
+                    document.addEventListener('mouseup', onMouseUp);
+                });
+            });
+        }
+
+        // Initialize after DataTable draws
+        $(document).ready(function() {
+            $('#transaksiTable').on('draw.dt', function() {
+                initColumnResize('transaksiTable');
+            });
+            // Initial call
+            setTimeout(function() { initColumnResize('transaksiTable'); }, 200);
+        });
+    })();
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
