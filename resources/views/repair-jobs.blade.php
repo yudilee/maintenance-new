@@ -17,21 +17,6 @@
         {{-- Filter Config UI --}}
         <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 mb-6">
             <div class="flex flex-col md:flex-row gap-4 items-end">
-                <div class="w-full md:w-auto">
-                    <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Status</label>
-                    <div class="inline-flex rounded-xl border border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 p-1">
-                        <button @click="statusFilter = 'all'; reloadTable()"
-                                :class="statusFilter === 'all' ? 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/50 dark:text-indigo-300 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
-                                class="px-4 py-2 text-sm font-medium rounded-lg transition-all">All</button>
-                        <button @click="statusFilter = 'open'; reloadTable()"
-                                :class="statusFilter === 'open' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
-                                class="px-4 py-2 text-sm font-medium rounded-lg transition-all">Open</button>
-                        <button @click="statusFilter = 'closed'; reloadTable()"
-                                :class="statusFilter === 'closed' ? 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300 shadow-sm' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
-                                class="px-4 py-2 text-sm font-medium rounded-lg transition-all">Closed</button>
-                    </div>
-                </div>
-
                 <div class="w-full md:w-auto flex-grow">
                     <label for="nomor_polisi_select" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Nomor Polisi</label>
                     <select id="nomor_polisi_select" x-model="nomorPolisiFilter" x-on:change="reloadTable()" class="w-full select2-nomor-polisi">
@@ -69,37 +54,85 @@
             </div>
         </div>
 
-        {{-- KPI Cards --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-indigo-300 transition-colors">
-                <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
-                    <div class="w-6 h-6 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+        {{-- Status Cards - All clickable --}}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+            {{-- Total Jobs --}}
+            <button @click="statusFilter = 'all'; reloadTable()"
+                    :class="statusFilter === 'all' ? 'ring-2 ring-indigo-500 border-indigo-300 dark:border-indigo-600' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300'"
+                    class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                     </div>
-                    Total Jobs
+                    Total
                 </div>
-                <div class="text-2xl font-black text-slate-800 dark:text-slate-100">{{ number_format($totalJobs) }}</div>
-            </div>
+                <div class="text-xl font-black text-slate-800 dark:text-slate-100">{{ number_format($totalJobs) }}</div>
+            </button>
 
-            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-amber-300 transition-colors">
-                 <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
-                    <div class="w-6 h-6 rounded bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            {{-- Confirmed --}}
+            <button @click="statusFilter = 'confirmed'; reloadTable()"
+                    :class="statusFilter === 'confirmed' ? 'ring-2 ring-blue-500 border-blue-300 dark:border-blue-600' : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'"
+                    class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-                    Open Jobs
+                    Confirmed
                 </div>
-                <div class="text-2xl font-black text-amber-600 dark:text-amber-400">{{ number_format($openJobs) }}</div>
-            </div>
+                <div class="text-xl font-black text-blue-600 dark:text-blue-400">{{ number_format($confirmedJobs) }}</div>
+            </button>
 
-            <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-green-300 transition-colors">
-                 <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-2">
-                    <div class="w-6 h-6 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            {{-- Under Repair --}}
+            <button @click="statusFilter = 'under_repair'; reloadTable()"
+                    :class="statusFilter === 'under_repair' ? 'ring-2 ring-amber-500 border-amber-300 dark:border-amber-600' : 'border-slate-200 dark:border-slate-700 hover:border-amber-300'"
+                    class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
-                    Closed Jobs
+                    Under Repair
                 </div>
-                <div class="text-2xl font-black text-green-600 dark:text-green-400">{{ number_format($closedJobs) }}</div>
-            </div>
+                <div class="text-xl font-black text-amber-600 dark:text-amber-400">{{ number_format($underRepairJobs) }}</div>
+            </button>
+
+            {{-- Ready --}}
+            <button @click="statusFilter = 'ready'; reloadTable()"
+                    :class="statusFilter === 'ready' ? 'ring-2 ring-purple-500 border-purple-300 dark:border-purple-600' : 'border-slate-200 dark:border-slate-700 hover:border-purple-300'"
+                    class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    Ready
+                </div>
+                <div class="text-xl font-black text-purple-600 dark:text-purple-400">{{ number_format($readyJobs) }}</div>
+            </button>
+
+            {{-- Done --}}
+            <button @click="statusFilter = 'done'; reloadTable()"
+                    :class="statusFilter === 'done' ? 'ring-2 ring-green-500 border-green-300 dark:border-green-600' : 'border-slate-200 dark:border-slate-700 hover:border-green-300'"
+                    class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    Done
+                </div>
+                <div class="text-xl font-black text-green-600 dark:text-green-400">{{ number_format($doneJobs) }}</div>
+            </button>
+
+            {{-- To Invoice --}}
+            <button @click="statusFilter = '2binvoiced'; reloadTable()"
+                    :class="statusFilter === '2binvoiced' ? 'ring-2 ring-teal-500 border-teal-300 dark:border-teal-600' : 'border-slate-200 dark:border-slate-700 hover:border-teal-300'"
+                    class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
+                    </div>
+                    To Invoice
+                </div>
+                <div class="text-xl font-black text-teal-600 dark:text-teal-400">{{ number_format($toInvoiceJobs) }}</div>
+            </button>
         </div>
 
         <table id="repairJobsTable" class="frozen-table" style="min-width: 1000px;">

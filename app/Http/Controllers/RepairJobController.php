@@ -16,7 +16,18 @@ class RepairJobController extends Controller
         $openJobs = Htransaksi::whereIn('state', $openStates)->count();
         $closedJobs = Htransaksi::whereIn('state', $closedStates)->count();
 
-        return view('repair-jobs', compact('totalJobs', 'openJobs', 'closedJobs'));
+        // Individual state counts
+        $confirmedJobs = Htransaksi::where('state', 'confirmed')->count();
+        $underRepairJobs = Htransaksi::where('state', 'under_repair')->count();
+        $readyJobs = Htransaksi::where('state', 'ready')->count();
+        $doneJobs = Htransaksi::where('state', 'done')->count();
+        $toInvoiceJobs = Htransaksi::where('state', '2binvoiced')->count();
+
+        return view('repair-jobs', compact(
+            'totalJobs', 'openJobs', 'closedJobs',
+            'confirmedJobs', 'underRepairJobs', 'readyJobs',
+            'doneJobs', 'toInvoiceJobs'
+        ));
     }
 
     public function data(Request $request)
@@ -32,6 +43,9 @@ class RepairJobController extends Controller
             $query->whereIn('state', $openStates);
         } elseif ($statusFilter === 'closed') {
             $query->whereIn('state', $closedStates);
+        } elseif ($statusFilter !== 'all' && $statusFilter !== '') {
+            // Individual state filter (e.g., 'confirmed', 'under_repair', etc.)
+            $query->where('state', $statusFilter);
         }
 
         // Date range filter
