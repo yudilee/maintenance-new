@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Carbon\Carbon;
 use App\Models\BackupLog;
-use App\Models\AuditLog;
 use Illuminate\Support\Facades\Auth;
 
 class BackupService
@@ -155,21 +154,6 @@ class BackupService
         if ($returnVar !== 0) {
             throw new \Exception('Restore failed with exit code ' . $returnVar);
         }
-        
-        // Log the restoration action
-        AuditLog::create([
-            'user_id' => Auth::id(),
-            'action' => 'RESTORE',
-            'model_type' => 'Database',
-            'model_id' => 0,
-            'details' => json_encode([
-                'file' => $filename,
-                'restored_by' => Auth::check() ? Auth::user()->name : 'System',
-                'timestamp' => now()->toDateTimeString()
-            ]),
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent()
-        ]);
     }
 
     public function delete($filename)
