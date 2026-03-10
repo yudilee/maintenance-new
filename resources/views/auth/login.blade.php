@@ -7,10 +7,8 @@
     
     <!-- Header Section -->
     <div class="px-8 pt-10 pb-8 text-center bg-gradient-to-b from-indigo-50/50 to-white/0 dark:from-indigo-950/20 dark:to-slate-900/0">
-        <div class="mx-auto w-20 h-20 bg-indigo-100 dark:bg-indigo-900/40 rounded-2xl flex items-center justify-center mb-6 shadow-inner ring-1 ring-white/50 dark:ring-white/10 rotate-3 transform transition-transform hover:rotate-0">
-            <svg class="w-10 h-10 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+        <div class="mx-auto mb-6 flex items-center justify-center">
+            <img src="{{ \App\Models\Setting::get('app_logo_path', asset('images/harent-logo.png')) }}" alt="Vehicle maintenance record" class="h-16 w-auto object-contain">
         </div>
         <h3 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white mb-2">Vehicle maintenance record</h3>
         <p class="text-slate-500 dark:text-slate-400 text-sm font-medium">Log into your workshop account</p>

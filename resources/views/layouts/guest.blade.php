@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'Vehicle maintenance record')</title>
-    <link rel="icon" href="{{ asset('images/logo.png') }}">
+    <link rel="icon" href="{{ asset('images/harent-logo.png') }}">
 
     <!-- Tailwind CSS & Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])

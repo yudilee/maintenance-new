@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Vehicle maintenance record')</title>
-    <link rel="icon" href="{{ asset('images/logo.png') }}">
+    <link rel="icon" href="{{ asset('images/harent-logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -86,7 +86,7 @@
     <!-- Mobile Header -->
     <header class="lg:hidden flex items-center justify-between p-4 glass sticky top-0 z-50">
         <a href="{{ \App\Models\Setting::get('app_logo_link', route('maintenance.dashboard')) }}" class="flex items-center gap-2">
-            <img src="{{ \App\Models\Setting::get('app_logo_path', asset('images/logo.png')) }}" alt="Vehicle maintenance record" class="h-10 w-auto object-contain">
+            <img src="{{ \App\Models\Setting::get('app_logo_path', asset('images/harent-logo.png')) }}" alt="Vehicle maintenance record" class="h-10 w-auto object-contain">
         </a>
         <div class="flex items-center gap-2">
             <button @click="toggleTheme()" class="p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none transition-colors">
@@ -109,7 +109,7 @@
             <a href="{{ \App\Models\Setting::get('app_logo_link', route('maintenance.dashboard')) }}" 
                class="h-20 flex items-center justify-center border-b border-slate-100 flex-shrink-0 hover:opacity-80 transition-opacity" 
                :class="sidebarCollapsed ? 'px-0' : 'px-6 justify-start'">
-                <img src="{{ \App\Models\Setting::get('app_logo_path', asset('images/logo.png')) }}" alt="Vehicle maintenance record" 
+                <img src="{{ \App\Models\Setting::get('app_logo_path', asset('images/harent-logo.png')) }}" alt="Vehicle maintenance record" 
                      class="transition-all duration-300 object-contain"
                      :class="sidebarCollapsed ? 'h-8 w-8' : 'h-12 w-auto'" />
             </a>
