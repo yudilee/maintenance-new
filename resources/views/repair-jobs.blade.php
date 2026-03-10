@@ -382,25 +382,45 @@ window.showJobDetails = function(nomorJob) {
         didOpen: () => {
             Swal.showLoading();
             $.get("{{ url('/maintenance/repair-job-details') }}/" + nomorJob, function(htmlTemplate) {
+                const isDark = document.documentElement.classList.contains('dark');
                 Swal.fire({
                     html: htmlTemplate,
                     showCloseButton: true,
                     showConfirmButton: true,
                     confirmButtonText: 'Close',
                     customClass: {
-                        popup: 'rounded-2xl dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-xl',
+                        popup: 'rounded-2xl border shadow-xl job-detail-popup',
                         confirmButton: 'px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition-colors',
-                        closeButton: 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'
+                        closeButton: 'swal-close-btn'
                     },
                     width: '600px',
-                    padding: '2rem'
+                    padding: '2rem',
+                    didRender: () => {
+                        const popup = Swal.getPopup();
+                        const closeBtn = Swal.getCloseButton();
+                        if (isDark) {
+                            popup.style.backgroundColor = '#0f172a';
+                            popup.style.borderColor = '#1e293b';
+                            popup.style.color = '#e2e8f0';
+                            if (closeBtn) {
+                                closeBtn.style.color = '#94a3b8';
+                            }
+                        } else {
+                            popup.style.backgroundColor = '#ffffff';
+                            popup.style.borderColor = '#f1f5f9';
+                            popup.style.color = '#0f172a';
+                            if (closeBtn) {
+                                closeBtn.style.color = '#64748b';
+                            }
+                        }
+                    }
                 });
             }).fail(function() {
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
                     text: 'Failed to load job details. Transaction might not be synchronized yet.',
-                    customClass: { popup: 'rounded-2xl dark:bg-slate-900', confirmButton: 'px-6 py-2 bg-slate-800 text-white rounded-xl' }
+                    customClass: { popup: 'rounded-2xl', confirmButton: 'px-6 py-2 bg-slate-800 text-white rounded-xl' }
                 });
             });
         }
