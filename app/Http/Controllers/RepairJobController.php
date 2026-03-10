@@ -9,8 +9,8 @@ class RepairJobController extends Controller
 {
     public function index(Request $request)
     {
-        $openStates = ['confirmed', 'under_repair', 'ready'];
-        $closedStates = ['done', '2binvoiced'];
+        $openStates = ['confirmed', 'under_repair', 'draft', 'on_hold_repair'];
+        $closedStates = ['done', 'close'];
 
         $totalJobs = Htransaksi::count();
         $openJobs = Htransaksi::whereIn('state', $openStates)->count();
@@ -19,9 +19,9 @@ class RepairJobController extends Controller
         // Individual state counts
         $confirmedJobs = Htransaksi::where('state', 'confirmed')->count();
         $underRepairJobs = Htransaksi::where('state', 'under_repair')->count();
-        $readyJobs = Htransaksi::where('state', 'ready')->count();
+        $readyJobs = Htransaksi::where('state', 'draft')->count();
         $doneJobs = Htransaksi::where('state', 'done')->count();
-        $toInvoiceJobs = Htransaksi::where('state', '2binvoiced')->count();
+        $toInvoiceJobs = Htransaksi::where('state', 'close')->count();
 
         return view('repair-jobs', compact(
             'totalJobs', 'openJobs', 'closedJobs',
@@ -127,9 +127,11 @@ class RepairJobController extends Controller
             $stateLabel = match($state) {
                 'confirmed' => 'Confirmed',
                 'under_repair' => 'Under Repair',
-                'ready' => 'Ready',
-                '2binvoiced' => 'To Invoice',
+                'draft' => 'Draft',
                 'done' => 'Done',
+                'close' => 'Close',
+                'cancel' => 'Cancelled',
+                'on_hold_repair' => 'On Hold',
                 default => ucfirst($state),
             };
 

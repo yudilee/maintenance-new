@@ -96,15 +96,15 @@
                 <div class="text-xl font-black text-amber-600 dark:text-amber-400">{{ number_format($underRepairJobs) }}</div>
             </button>
 
-            {{-- Ready --}}
-            <button @click="statusFilter = 'ready'; reloadTable()"
-                    :class="statusFilter === 'ready' ? 'ring-2 ring-purple-500 border-purple-300 dark:border-purple-600' : 'border-slate-200 dark:border-slate-700 hover:border-purple-300'"
+            {{-- Draft --}}
+            <button @click="statusFilter = 'draft'; reloadTable()"
+                    :class="statusFilter === 'draft' ? 'ring-2 ring-purple-500 border-purple-300 dark:border-purple-600' : 'border-slate-200 dark:border-slate-700 hover:border-purple-300'"
                     class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
                     <div class="w-5 h-5 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                     </div>
-                    Ready
+                    Draft
                 </div>
                 <div class="text-xl font-black text-purple-600 dark:text-purple-400">{{ number_format($readyJobs) }}</div>
             </button>
@@ -122,15 +122,15 @@
                 <div class="text-xl font-black text-green-600 dark:text-green-400">{{ number_format($doneJobs) }}</div>
             </button>
 
-            {{-- To Invoice --}}
-            <button @click="statusFilter = '2binvoiced'; reloadTable()"
-                    :class="statusFilter === '2binvoiced' ? 'ring-2 ring-teal-500 border-teal-300 dark:border-teal-600' : 'border-slate-200 dark:border-slate-700 hover:border-teal-300'"
+            {{-- Close --}}
+            <button @click="statusFilter = 'close'; reloadTable()"
+                    :class="statusFilter === 'close' ? 'ring-2 ring-teal-500 border-teal-300 dark:border-teal-600' : 'border-slate-200 dark:border-slate-700 hover:border-teal-300'"
                     class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
                     <div class="w-5 h-5 rounded bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
                     </div>
-                    To Invoice
+                    Close
                 </div>
                 <div class="text-xl font-black text-teal-600 dark:text-teal-400">{{ number_format($toInvoiceJobs) }}</div>
             </button>
