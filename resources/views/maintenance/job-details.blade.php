@@ -48,7 +48,7 @@
 
     <div class="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 flex justify-between items-end">
         <div>
-            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Subtotal (Parts/Service)</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">Total (incl. tax)</p>
             <p class="text-sm font-medium text-slate-700 dark:text-slate-300">Rp {{ number_format($job->harga_total ?? 0, 0, ',', '.') }}</p>
             
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 mb-1">Tax Element (PPN)</p>
@@ -56,7 +56,7 @@
         </div>
         <div class="text-right">
             <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-widest mb-1 font-bold">Grand Total</p>
-            <p class="text-2xl font-black text-indigo-600 dark:text-indigo-400">Rp {{ number_format( ($job->harga_total ?? 0) + ($job->harga_pajak ?? 0) , 0, ',', '.') }}</p>
+            <p class="text-2xl font-black text-indigo-600 dark:text-indigo-400">Rp {{ number_format($job->harga_total ?? 0, 0, ',', '.') }}</p>
         </div>
     </div>
 </div>
