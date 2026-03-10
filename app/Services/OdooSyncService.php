@@ -249,15 +249,10 @@ class OdooSyncService
                     ]);
                 }
 
-                // Sync Vendor/Supplier from Repair Order (Step A fallback)
+                // We no longer sync Vendor/Supplier from Repair Order's partner_id here,
+                // because on a repair.order, partner_id is actually the Customer.
+                // The true vendor will be extracted exclusively from Vendor Bills in Step B.
                 $supplierId = '0';
-                if (!empty($ro['partner_id']) && is_array($ro['partner_id'])) {
-                    $supplierId = 'O-' . $ro['partner_id'][0];
-                    \App\Models\Supplier::updateOrCreate(
-                        ['kode_supplier' => $supplierId],
-                        ['nama_supplier' => mb_substr($ro['partner_id'][1], 0, 100, 'UTF-8')]
-                    );
-                }
 
                 // Sync Head
                 $headerData = [
