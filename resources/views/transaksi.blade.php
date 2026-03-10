@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden theme-transition mb-6">
+<div x-data="transaksiPage()" x-init="initTable()" class="bg-white dark:bg-slate-900 rounded-3xl shadow-sm border border-slate-100 dark:border-slate-800 overflow-hidden theme-transition mb-6">
     <div class="p-6 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
@@ -15,46 +15,41 @@
     </div>
 
     <div class="p-6">
-        <form method="GET" action="" id="filterForm" class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 mb-6 space-y-4">
-            <div>
+        <div class="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-700 mb-6 flex flex-col md:flex-row gap-4 items-end">
+            <div class="w-full md:w-1/3 flex-grow">
                 <label for="nomor_polisi_select" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Nomor Polisi</label>
-                <select id="nomor_polisi_select" name="nomor_polisi" class="w-full select2-nomor-polisi">
+                <select id="nomor_polisi_select" x-model="nomorPolisiFilter" x-on:change="reloadTable()" class="w-full select2-nomor-polisi">
                     <option></option>
-                    @if($nomor_polisi)
-                        <option value="{{ $nomor_polisi }}" selected>{{ $nomor_polisi }}</option>
-                    @endif
                 </select>
             </div>
 
-            <div>
+            <div class="w-full md:w-1/3 flex-grow">
                 <label for="nama_customer_select" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Nama Customer</label>
-                <select id="nama_customer_select" name="nama_customer" class="w-full select2-customer">
+                <select id="nama_customer_select" x-model="namaCustomerFilter" x-on:change="reloadTable()" class="w-full select2-customer">
                     <option></option>
-                    @if($nama_customer)
-                        <option value="{{ $nama_customer }}" selected>{{ $nama_customer }}</option>
-                    @endif
                 </select>
             </div>
             
-            <div class="flex flex-col md:flex-row gap-4 items-end">
-                <div class="flex-grow">
+            <div class="flex-grow flex flex-col md:flex-row gap-4 w-full md:w-auto">
+                <div class="flex-1 w-full">
                     <label for="tanggal_job_transaksi" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Tanggal Job</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
-                        <input type="text" class="pl-10 w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm" id="tanggal_job_transaksi" name="tanggal_job_transaksi" autocomplete="off" placeholder="Select date range...">
+                        <input type="text" class="pl-10 w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm" id="tanggal_job_transaksi" autocomplete="off" placeholder="Select date range...">
                     </div>
-                    <input type="hidden" id="start_date_transaksi" name="start_date_transaksi" value="{{ request('start_date_transaksi') }}">
-                    <input type="hidden" id="end_date_transaksi" name="end_date_transaksi" value="{{ request('end_date_transaksi') }}">
                 </div>
                 
-                <button type="submit" class="px-8 py-2.5 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    Search
-                </button>
+                <div class="w-full md:w-auto mt-4 md:mt-0">
+                    <button @click="startDate = ''; endDate = ''; nomorPolisiFilter = ''; namaCustomerFilter = ''; $('#nomor_polisi_select').val(null).trigger('change'); $('#nama_customer_select').val(null).trigger('change'); $('#tanggal_job_transaksi').val(''); reloadTable()" 
+                            class="w-full md:w-auto px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Reset
+                    </button>
+                </div>
             </div>
-        </form>
+        </div>
 
         @if($mobilDetail)
         <div class="bg-white dark:bg-slate-800 border-l-4 border-indigo-500 rounded-2xl shadow-sm mb-8 overflow-hidden">
@@ -569,45 +564,45 @@
     </style>
 
     <script>
-        $(document).ready(function() {
-            var grandTotal = {{ $grandTotals['grandTotal'] }};
-            var hargaTotal = {{ $grandTotals['hargaTotal'] }};
-            var hargaPajak = {{ $grandTotals['hargaPajak'] }};
+        function transaksiPage() {
+            return {
+                nomorPolisiFilter: '{{ $nomor_polisi ?? "" }}',
+                namaCustomerFilter: '{{ $nama_customer ?? "" }}',
+                startDate: '{{ request("start_date_transaksi") ?? "" }}',
+                endDate: '{{ request("end_date_transaksi") ?? "" }}',
+                table: null,
 
-            var customerDetail = '';
-            @if (isset($nama_customer) && $nama_customer)
-                customerDetail += 'Customer: {{ $nama_customer }}\n';
-            @endif
-            @if (isset($nomor_polisi) && $nomor_polisi)
-                customerDetail += 'Nomor Polisi: {{ $nomor_polisi }}\n';
-            @endif
+                initTable() {
+                    const self = this;
+                    
+                    var grandTotal = {{ $grandTotals['grandTotal'] }};
+                    var hargaTotal = {{ $grandTotals['hargaTotal'] }};
+                    var hargaPajak = {{ $grandTotals['hargaPajak'] }};
 
-            // Initialize DataTable with server-side processing
-            var table = $('#transaksiTable').DataTable({
-                "processing": true,
-                "serverSide": true,
-                ajax: {
-                    url: "{{ route('maintenance.vehicle.transactions.data') }}",
-                    "data": function(d) {
-                        d.nama_customer = "{{ $nama_customer }}";
-                        d.nomor_polisi = "{{ $nomor_polisi }}";
-                        d.start_date_transaksi = "{{ request('start_date_transaksi') }}";
-                        d.end_date_transaksi = "{{ request('end_date_transaksi') }}";
-                    },
-                    dataSrc: function(json) {
-                        // Update KPI cards from AJAX response
-                        if (json.grandTotals) {
-                        if (json.grandTotals) {
-                            $('#kpi-cost').text('Rp ' + json.grandTotals.grandTotal.toLocaleString('id-ID'));
-                            $('#kpi-tax').text('Rp ' + json.grandTotals.hargaPajak.toLocaleString('id-ID'));
-                        }
-                        }
-                        return json.data;
-                    }
-                },
-                "columns": [{
-                        "data": "nomor_job"
-                    },
+                    // Initialize DataTable with server-side processing
+                    this.table = $('#transaksiTable').DataTable({
+                        "processing": true,
+                        "serverSide": true,
+                        ajax: {
+                            url: "{{ route('maintenance.vehicle.transactions.data') }}",
+                            "data": function(d) {
+                                d.nama_customer = self.namaCustomerFilter;
+                                d.nomor_polisi = self.nomorPolisiFilter;
+                                d.start_date_transaksi = self.startDate;
+                                d.end_date_transaksi = self.endDate;
+                            },
+                            dataSrc: function(json) {
+                                // Update KPI cards from AJAX response
+                                if (json.grandTotals) {
+                                    $('#kpi-cost').text('Rp ' + json.grandTotals.grandTotal.toLocaleString('id-ID'));
+                                    $('#kpi-tax').text('Rp ' + json.grandTotals.hargaPajak.toLocaleString('id-ID'));
+                                }
+                                return json.data;
+                            }
+                        },
+                        "columns": [{
+                                "data": "nomor_job"
+                            },
                     {
                         "data": "tanggal_job"
                     },
@@ -682,16 +677,27 @@
             });
 
             table.buttons().container().appendTo('#transaksiTable_wrapper .col-md-6:eq(0)');
+        },
 
-            // Export ALL data functions
+        reloadTable() {
+            if (this.table) {
+                this.table.ajax.reload();
+            }
+        }
+    }
+}
+
+$(document).ready(function() {
+    // Export ALL data functions
             function exportAllToExcel() {
+                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
                 $.ajax({
                     url: "{{ route('maintenance.vehicle.transactions.export') }}",
                     data: {
-                        nama_customer: "{{ $nama_customer }}",
-                        nomor_polisi: "{{ $nomor_polisi }}",
-                        start_date_transaksi: "{{ request('start_date_transaksi') }}",
-                        end_date_transaksi: "{{ request('end_date_transaksi') }}"
+                        nama_customer: alpineData.namaCustomerFilter,
+                        nomor_polisi: alpineData.nomorPolisiFilter,
+                        start_date_transaksi: alpineData.startDate,
+                        end_date_transaksi: alpineData.endDate
                     },
                     success: function(response) {
                         var wb = XLSX.utils.book_new();
@@ -786,13 +792,14 @@
             }
 
             function exportAllToPDF() {
+                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
                 $.ajax({
                     url: "{{ route('maintenance.vehicle.transactions.export') }}",
                     data: {
-                        nama_customer: "{{ $nama_customer }}",
-                        nomor_polisi: "{{ $nomor_polisi }}",
-                        start_date_transaksi: "{{ request('start_date_transaksi') }}",
-                        end_date_transaksi: "{{ request('end_date_transaksi') }}"
+                        nama_customer: alpineData.namaCustomerFilter,
+                        nomor_polisi: alpineData.nomorPolisiFilter,
+                        start_date_transaksi: alpineData.startDate,
+                        end_date_transaksi: alpineData.endDate
                     },
                     success: function(response) {
                         var docDefinition = {
@@ -980,6 +987,10 @@
                     },
                     cache: true
                 }
+            }).on('change', function(e) {
+                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
+                alpineData.nomorPolisiFilter = $(this).val();
+                alpineData.reloadTable();
             });
 
             // Select2 for Customer
@@ -1002,6 +1013,10 @@
                     },
                     cache: true
                 }
+            }).on('change', function(e) {
+                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
+                alpineData.namaCustomerFilter = $(this).val();
+                alpineData.reloadTable();
             });
 
             // Date range picker logic
@@ -1018,16 +1033,19 @@
             @endif
 
             $('#tanggal_job_transaksi').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format(
-                    'DD-MM-YYYY'));
-                $('#start_date_transaksi').val(picker.startDate.format('YYYY-MM-DD'));
-                $('#end_date_transaksi').val(picker.endDate.format('YYYY-MM-DD'));
+                $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
+                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
+                alpineData.startDate = picker.startDate.format('YYYY-MM-DD');
+                alpineData.endDate = picker.endDate.format('YYYY-MM-DD');
+                alpineData.reloadTable();
             });
 
             $('#tanggal_job_transaksi').on('cancel.daterangepicker', function(ev, picker) {
                 $(this).val('');
-                $('#start_date_transaksi').val('');
-                $('#end_date_transaksi').val('');
+                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
+                alpineData.startDate = '';
+                alpineData.endDate = '';
+                alpineData.reloadTable();
             });
         });
     </script>
