@@ -89,7 +89,7 @@ class OdooSyncService
                 if(count($batchRos) < $limit) break;
                 $offset += $limit;
             }
- 
+
             // 3. Fetch Linked Vendor Bills (Costs only, where repair_id is set)
             $billDomain = [['repair_id', '!=', false], ['state', '!=', 'cancel'], ['name', 'like', 'BILLS/']];
             if ($lastSyncUTC) {
@@ -169,8 +169,8 @@ class OdooSyncService
             // Fetch Service Lines
             $roServicesMap = [];
             if (!empty($allRoServiceIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'repair.service', 'read', [$allRoServiceIds], ['fields' => ['name', 'quantity', 'price_unit', 'price_subtotal']]]);
-                if ($res['success']) foreach ($res['result'] as $rs) $roServicesMap[$rs['id']] = $rs;
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'repair.service', 'read', [$allRoServiceIds], ['fields' => ['name', 'quantity', 'price_subtotal']]]);
+                if (!$res['success']) \Log::error("REPAIR SERVICE ERROR: ".json_encode($res)); if ($res['success']) foreach ($res['result'] as $rs) $roServicesMap[$rs['id']] = $rs;
             }
 
             // Fetch Bill Lines
@@ -293,23 +293,31 @@ class OdooSyncService
                 // Sync Detail Lines (Draft from JO)
                 Dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
                 $totalJO = 0;
+                $insertedLineNames = [];
                 
-                // Process Parts (order_line_ids) from roLinesMap
-                foreach ($ro['order_line_ids'] as $lid) {
-                    $ld = $roLinesMap[$lid] ?? null;
-                    if (!$ld) continue;
-
-                    $subtotal = $ld['price_subtotal'];
-                    if ($subtotal == 0 && $ld['price_unit'] > 0) {
-                        $subtotal = $ld['price_unit'] * $ld['quantity'];
+                // Process Services (repair_service_ids) first as they have accurate tax subtotals
+                $roServices = is_array($ro['repair_service_ids']) ? $ro['repair_service_ids'] : [];
+                foreach ($roServices as $lid) {
+                    $ld = $roServicesMap[$lid] ?? null;
+                    if (!$ld) {
+                        \Log::error("RO Service Missing in Map ID: {$lid}");
+                        continue;
                     }
+
+                    $qty = $ld['quantity'] ?? 1;
+                    $subtotal = $ld['price_subtotal'];
+                    $price_unit = $qty > 0 ? ($subtotal / $qty) : $subtotal;
+
+                    $cleanName = mb_substr($this->sanitizeText($ld['name']), 0, 255, 'UTF-8');
+                    $insertedLineNames[] = $cleanName;
+                    \Log::error("Inserting RO Service: {$cleanName} (subtotal: {$subtotal})");
 
                     $totalJO += $subtotal;
                     Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
-                        'deskripsi' => mb_substr($this->sanitizeText($ld['name']), 0, 255, 'UTF-8'),
-                        'jumlah' => $ld['quantity'],
-                        'harga' => $ld['price_unit'],
+                        'deskripsi' => $cleanName,
+                        'jumlah' => $qty,
+                        'harga' => $price_unit,
                         'value' => $subtotal,
                         'discount' => 0,
                         'mnt_grp' => '',
@@ -318,20 +326,24 @@ class OdooSyncService
                     ]);
                 }
 
-                // Process Services (repair_service_ids) from roServicesMap
-                foreach ($ro['repair_service_ids'] as $lid) {
-                    $ld = $roServicesMap[$lid] ?? null;
+                // Process Parts (order_line_ids) from roLinesMap
+                $roLines = is_array($ro['order_line_ids']) ? $ro['order_line_ids'] : [];
+                foreach ($roLines as $lid) {
+                    $ld = $roLinesMap[$lid] ?? null;
                     if (!$ld) continue;
 
+                    $cleanName = mb_substr($this->sanitizeText($ld['name']), 0, 255, 'UTF-8');
+                    if (in_array($cleanName, $insertedLineNames)) continue;
+
                     $subtotal = $ld['price_subtotal'];
-                    if ($subtotal == 0 && $ld['price_unit'] > 0) {
+                    if ($subtotal == 0 && isset($ld['price_unit']) && $ld['price_unit'] > 0) {
                         $subtotal = $ld['price_unit'] * $ld['quantity'];
                     }
 
                     $totalJO += $subtotal;
                     Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
-                        'deskripsi' => mb_substr($this->sanitizeText($ld['name']), 0, 255, 'UTF-8'),
+                        'deskripsi' => $cleanName,
                         'jumlah' => $ld['quantity'],
                         'harga' => $ld['price_unit'],
                         'value' => $subtotal,
