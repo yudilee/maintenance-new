@@ -63,11 +63,11 @@
         </div>
 
         {{-- Status Cards - All clickable --}}
-        <div class="flex flex-wrap gap-2 mb-6">
+        <div class="grid grid-cols-7 gap-2 mb-6">
             {{-- Total Jobs --}}
             <button @click="statusFilter = 'all'; reloadTable()"
                     :class="statusFilter === 'all' ? 'ring-2 ring-indigo-500 border-indigo-300 dark:border-indigo-600' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300'"
-                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group min-w-[110px]">
+                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5 flex items-center gap-1">
                     <div class="w-4 h-4 rounded bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
@@ -80,7 +80,7 @@
             {{-- Confirmed --}}
             <button @click="statusFilter = 'confirmed'; reloadTable()"
                     :class="statusFilter === 'confirmed' ? 'ring-2 ring-blue-500 border-blue-300 dark:border-blue-600' : 'border-slate-200 dark:border-slate-700 hover:border-blue-300'"
-                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group min-w-[110px]">
+                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5 flex items-center gap-1">
                     <div class="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400">
                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -93,7 +93,7 @@
             {{-- Under Repair --}}
             <button @click="statusFilter = 'under_repair'; reloadTable()"
                     :class="statusFilter === 'under_repair' ? 'ring-2 ring-amber-500 border-amber-300 dark:border-amber-600' : 'border-slate-200 dark:border-slate-700 hover:border-amber-300'"
-                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group min-w-[110px]">
+                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5 flex items-center gap-1">
                     <div class="w-4 h-4 rounded bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center text-amber-600 dark:text-amber-400">
                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -106,7 +106,7 @@
             {{-- Draft --}}
             <button @click="statusFilter = 'draft'; reloadTable()"
                     :class="statusFilter === 'draft' ? 'ring-2 ring-purple-500 border-purple-300 dark:border-purple-600' : 'border-slate-200 dark:border-slate-700 hover:border-purple-300'"
-                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group min-w-[110px]">
+                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5 flex items-center gap-1">
                     <div class="w-4 h-4 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center text-purple-600 dark:text-purple-400">
                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -119,7 +119,7 @@
             {{-- Done --}}
             <button @click="statusFilter = 'done'; reloadTable()"
                     :class="statusFilter === 'done' ? 'ring-2 ring-green-500 border-green-300 dark:border-green-600' : 'border-slate-200 dark:border-slate-700 hover:border-green-300'"
-                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group min-w-[110px]">
+                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5 flex items-center gap-1">
                     <div class="w-4 h-4 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -132,7 +132,7 @@
             {{-- On Hold --}}
             <button @click="statusFilter = 'on_hold_repair'; reloadTable()"
                     :class="statusFilter === 'on_hold_repair' ? 'ring-2 ring-orange-500 border-orange-300 dark:border-orange-600' : 'border-slate-200 dark:border-slate-700 hover:border-orange-300'"
-                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group min-w-[110px]">
+                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5 flex items-center gap-1">
                     <div class="w-4 h-4 rounded bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -145,7 +145,7 @@
             {{-- Close --}}
             <button @click="statusFilter = 'close'; reloadTable()"
                     :class="statusFilter === 'close' ? 'ring-2 ring-teal-500 border-teal-300 dark:border-teal-600' : 'border-slate-200 dark:border-slate-700 hover:border-teal-300'"
-                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group min-w-[110px]">
+                    class="bg-white dark:bg-slate-800 border rounded-xl p-2.5 shadow-sm transition-all text-left cursor-pointer group">
                 <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-0.5 flex items-center gap-1">
                     <div class="w-4 h-4 rounded bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center text-teal-600 dark:text-teal-400">
                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path></svg>
