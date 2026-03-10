@@ -79,7 +79,7 @@ class BackupController extends Controller
     {
         try {
             $this->backupService->restore($filename);
-            return redirect()->route('admin.backups.index')->with('success', 'Database restored successfully.');
+            return redirect()->route('admin.backups.index')->with('success', 'Database restoration started in the background. The site will be in maintenance mode for a few minutes.');
         } catch (\Exception $e) {
             Log::error('Backup restore failed: ' . $e->getMessage());
             return redirect()->route('admin.backups.index')->with('error', 'Restore failed: ' . $e->getMessage());
@@ -94,7 +94,7 @@ class BackupController extends Controller
 
         try {
             $this->backupService->restoreFromFile($request->file('backup_file'));
-            return redirect()->route('admin.backups.index')->with('success', 'Database restored from uploaded file successfully.');
+            return redirect()->route('admin.backups.index')->with('success', 'Database restoration started in the background. The site will be in maintenance mode for a few minutes.');
         } catch (\Exception $e) {
             Log::error('Restore from file failed: ' . $e->getMessage());
             return redirect()->route('admin.backups.index')->with('error', 'Restore failed: ' . $e->getMessage());

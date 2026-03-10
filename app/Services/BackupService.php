@@ -105,14 +105,7 @@ class BackupService
         $tempPath = Storage::disk($this->disk)->path('temp_restore_' . time() . '.sql.gz');
         $file->move(dirname($tempPath), basename($tempPath));
 
-        try {
-            $this->restoreFromPath($tempPath, $file->getClientOriginalName());
-        } finally {
-            // Clean up temp file
-            if (file_exists($tempPath)) {
-                unlink($tempPath);
-            }
-        }
+        $this->restoreFromPath($tempPath, $file->getClientOriginalName(), true);
 
         return true;
     }
@@ -120,40 +113,44 @@ class BackupService
     /**
      * Common restore logic
      */
-    protected function restoreFromPath($path, $filename)
+    protected function restoreFromPath($path, $filename, $deleteAfter = false)
     {
         $config = config('database.connections.mysql');
         
-        // Detect if file is gzipped
-        $isGzipped = str_ends_with(strtolower($filename), '.gz');
+        $artisan = base_path('artisan');
         
+        $cleanupCommand = $deleteAfter ? sprintf('; rm -f %s', escapeshellarg($path)) : '';
+
+        // Wrap command to put app in maintenance mode, run restore, then bring it back up, all in background
         if ($isGzipped) {
             $command = sprintf(
-                'gunzip < %s | mysql --skip-ssl --user=%s --password=%s --host=%s --port=%s %s',
+                '(php %s down --refresh=15 --secret="restore"; gunzip < %s | mysql --skip-ssl --user=%s --password=%s --host=%s --port=%s %s; php %s up%s) > /dev/null 2>&1 &',
+                escapeshellarg($artisan),
                 escapeshellarg($path),
                 escapeshellarg($config['username']),
                 escapeshellarg($config['password']),
                 escapeshellarg($config['host']),
                 escapeshellarg($config['port']),
-                escapeshellarg($config['database'])
+                escapeshellarg($config['database']),
+                escapeshellarg($artisan),
+                $cleanupCommand
             );
         } else {
             $command = sprintf(
-                'mysql --skip-ssl --user=%s --password=%s --host=%s --port=%s %s < %s',
+                '(php %s down --refresh=15 --secret="restore"; mysql --skip-ssl --user=%s --password=%s --host=%s --port=%s %s < %s; php %s up%s) > /dev/null 2>&1 &',
+                escapeshellarg($artisan),
                 escapeshellarg($config['username']),
                 escapeshellarg($config['password']),
                 escapeshellarg($config['host']),
                 escapeshellarg($config['port']),
                 escapeshellarg($config['database']),
-                escapeshellarg($path)
+                escapeshellarg($path),
+                escapeshellarg($artisan),
+                $cleanupCommand
             );
         }
 
-        exec($command, $output, $returnVar);
-
-        if ($returnVar !== 0) {
-            throw new \Exception('Restore failed with exit code ' . $returnVar);
-        }
+        exec($command);
     }
 
     public function delete($filename)
