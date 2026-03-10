@@ -59,4 +59,24 @@ class SearchController extends Controller
         }
         return response()->json($formatted);
     }
+    public function supplier(Request $request)
+    {
+        $search = $request->q;
+        $results = \App\Models\Supplier::select('kode_supplier', 'nama_supplier')
+            ->whereRaw("CONCAT(kode_supplier, ' - ', nama_supplier) LIKE ?", ["%{$search}%"])
+            ->where('kode_supplier', '!=', '0')
+            ->where('kode_supplier', '!=', '')
+            ->orderBy('nama_supplier', 'asc')
+            ->limit(25)
+            ->get();
+
+        $formatted = [];
+        foreach ($results as $row) {
+            $formatted[] = [
+                'id'   => $row->kode_supplier,
+                'text' => $row->kode_supplier . ' - ' . $row->nama_supplier
+            ];
+        }
+        return response()->json($formatted);
+    }
 }

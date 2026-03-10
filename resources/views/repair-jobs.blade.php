@@ -31,6 +31,13 @@
                     </select>
                 </div>
 
+                <div class="w-full md:w-auto flex-grow">
+                    <label for="supplier_select" class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Vendor / Supplier</label>
+                    <select id="supplier_select" x-model="supplierFilter" x-on:change="reloadTable()" class="w-full select2-supplier">
+                        <option></option>
+                    </select>
+                </div>
+
                 <div class="flex-grow flex flex-col md:flex-row gap-4">
                     <div class="flex-1 w-full">
                         <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Tanggal Job</label>
@@ -46,7 +53,7 @@
                 </div>
 
                 <div class="w-full md:w-auto mt-4 md:mt-0">
-                    <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; nomorPolisiFilter = ''; namaCustomerFilter = ''; $('#nomor_polisi_select').val(null).trigger('change'); $('#nama_customer_select').val(null).trigger('change'); $('#tanggal_job_filter').val(''); reloadTable()" 
+                    <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; nomorPolisiFilter = ''; namaCustomerFilter = ''; supplierFilter = ''; $('#nomor_polisi_select').val(null).trigger('change'); $('#nama_customer_select').val(null).trigger('change'); $('#supplier_select').val(null).trigger('change'); $('#tanggal_job_filter').val(''); reloadTable()" 
                             class="w-full md:w-auto px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Reset
@@ -251,6 +258,7 @@ function repairJobsPage() {
         endDate: '',
         nomorPolisiFilter: '',
         namaCustomerFilter: '',
+        supplierFilter: '',
         table: null,
 
         initTable() {
@@ -266,6 +274,7 @@ function repairJobsPage() {
                         d.end_date = self.endDate;
                         d.nomor_polisi = self.nomorPolisiFilter;
                         d.customer = self.namaCustomerFilter;
+                        d.supplier = self.supplierFilter;
                     }
                 },
                 columns: [
@@ -473,6 +482,29 @@ $(document).ready(function() {
         let val = $(this).val();
         let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
         alpineData.namaCustomerFilter = val;
+        alpineData.reloadTable();
+    });
+
+    // Select2 Initialization for Supplier / Vendor
+    $('.select2-supplier').select2({
+        placeholder: "Cari vendor/supplier...",
+        allowClear: true,
+        ajax: {
+            url: "{{ route('maintenance.supplier.search') }}",
+            dataType: 'json',
+            delay: 250,
+            data: function(params) {
+                return { q: params.term, page: params.page };
+            },
+            processResults: function(data, params) {
+                return { results: data };
+            },
+            cache: true
+        }
+    }).on('change', function(e) {
+        let val = $(this).val();
+        let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
+        alpineData.supplierFilter = val;
         alpineData.reloadTable();
     });
 

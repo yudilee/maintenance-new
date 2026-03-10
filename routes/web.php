@@ -43,6 +43,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/search', [\App\Http\Controllers\GlobalSearchController::class, 'search'])->name('search');
         Route::get('/nomor-polisi-search', [\App\Http\Controllers\SearchController::class, 'nomorPolisi'])->name('nomor_polisi.search');
         Route::get('/nama-customer-search', [\App\Http\Controllers\SearchController::class, 'customer'])->name('nama_customer.search');
+        Route::get('/supplier-search', [\App\Http\Controllers\SearchController::class, 'supplier'])->name('supplier.search');
         Route::get('/vehicle-transactions', [\App\Http\Controllers\VehicleTransactionController::class, 'index'])->name('vehicle.transactions');
         Route::get('/vehicle-transactions-data', [\App\Http\Controllers\VehicleTransactionController::class, 'data'])->name('vehicle.transactions.data');
         Route::get('/vehicle-transactions-export', [\App\Http\Controllers\VehicleTransactionController::class, 'export'])->name('vehicle.transactions.export');

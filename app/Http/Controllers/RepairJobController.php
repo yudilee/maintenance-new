@@ -80,6 +80,11 @@ class RepairJobController extends Controller
             });
         }
 
+        // Supplier / Vendor filter
+        if ($request->filled('supplier')) {
+            $query->where('kode_sup', $request->supplier);
+        }
+
         $recordsTotal = $query->count();
 
         // DataTables search
