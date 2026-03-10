@@ -63,7 +63,7 @@
         </div>
 
         {{-- Status Cards - All clickable --}}
-        <div class="grid grid-cols-7 gap-2 mb-6">
+        <div class="grid gap-2 mb-6" style="grid-template-columns: repeat(7, 1fr);">
             {{-- Total Jobs --}}
             <button @click="statusFilter = 'all'; reloadTable()"
                     :class="statusFilter === 'all' ? 'ring-2 ring-indigo-500 border-indigo-300 dark:border-indigo-600' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300'"
