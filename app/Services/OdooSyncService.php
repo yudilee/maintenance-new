@@ -76,7 +76,7 @@ class OdooSyncService
                     'repair.order', 'search_read',
                     [$roDomain],
                     [
-                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids', 'schedule_date', 'repair_end_datetime'],
+                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'vendor_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids', 'schedule_date', 'repair_end_datetime'],
                         'limit' => $limit,
                         'offset' => $offset,
                         'order' => 'create_date asc' // Fetch oldest first so updates replace correctly
@@ -249,10 +249,16 @@ class OdooSyncService
                     ]);
                 }
 
-                // We no longer sync Vendor/Supplier from Repair Order's partner_id here,
-                // because on a repair.order, partner_id is actually the Customer.
-                // The true vendor will be extracted exclusively from Vendor Bills in Step B.
+                // Sync Vendor/Supplier from repair.order's native vendor_id field.
+                // This is the actual Vendor field in Odoo, distinct from partner_id (customer).
                 $supplierId = '0';
+                if (!empty($ro['vendor_id']) && is_array($ro['vendor_id'])) {
+                    $supplierId = 'O-' . $ro['vendor_id'][0];
+                    \App\Models\Supplier::updateOrCreate(
+                        ['kode_supplier' => $supplierId],
+                        ['nama_supplier' => mb_substr($ro['vendor_id'][1], 0, 100, 'UTF-8')]
+                    );
+                }
 
                 // Sync Head
                 $headerData = [
