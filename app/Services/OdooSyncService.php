@@ -237,8 +237,8 @@ class OdooSyncService
                 } else {
                     $mobil = Mobil::create([
                         'nomor_chassis' => $chassisNo,
-                        'nomor_polisi' => substr($plateNo ?? '', 0, 25),
-                        'nopol' => substr($plateNo ?? '', 0, 25),
+                        'nomor_polisi' => mb_substr($plateNo ?? '', 0, 25, 'UTF-8'),
+                        'nopol' => mb_substr($plateNo ?? '', 0, 25, 'UTF-8'),
                         'warna' => '',
                         'tanggal_pembelian' => now()->format('Y-m-d'),
                         'nomor_kk' => '',
@@ -255,7 +255,7 @@ class OdooSyncService
                     $supplierId = 'O-' . $ro['partner_id'][0];
                     \App\Models\Supplier::updateOrCreate(
                         ['kode_supplier' => $supplierId],
-                        ['nama_supplier' => substr($ro['partner_id'][1], 0, 100)]
+                        ['nama_supplier' => mb_substr($ro['partner_id'][1], 0, 100, 'UTF-8')]
                     );
                 }
 
@@ -266,11 +266,11 @@ class OdooSyncService
                     'tanggal_job' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : null,
                     'tanggal_invoice' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : null,
                     'tanggal_close' => $ro['repair_end_datetime'] ? Carbon::parse($ro['repair_end_datetime'])->format('Y-m-d') : null,
-                    'nomor_chassis' => substr($chassisNo, 0, 50),
+                    'nomor_chassis' => mb_substr($chassisNo, 0, 50, 'UTF-8'),
                     'posisi_km' => $ro['km_pickup'] ?? 0,
                     'mtrs' => $ro['km_pickup'] ?? 0,
-                    'keterangan' => substr($this->sanitizeText(strip_tags($ro['compute_job_card_repair_notes'] ?? '')), 0, 255),
-                    'nomor_sv' => substr($ro['service_type'] ?? '', 0, 50),
+                    'keterangan' => mb_substr($this->sanitizeText(strip_tags($ro['compute_job_card_repair_notes'] ?? '')), 0, 255, 'UTF-8'),
+                    'nomor_sv' => mb_substr($ro['service_type'] ?? '', 0, 50, 'UTF-8'),
                     'id_customer' => 0,
                     'sup_invoice' => 0,
                     'pajak' => '0',
@@ -307,7 +307,7 @@ class OdooSyncService
                     $totalJO += $subtotal;
                     Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
-                        'deskripsi' => substr($this->sanitizeText($ld['name']), 0, 255),
+                        'deskripsi' => mb_substr($this->sanitizeText($ld['name']), 0, 255, 'UTF-8'),
                         'jumlah' => $ld['quantity'],
                         'harga' => $ld['price_unit'],
                         'value' => $subtotal,
@@ -331,7 +331,7 @@ class OdooSyncService
                     $totalJO += $subtotal;
                     Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
-                        'deskripsi' => substr($this->sanitizeText($ld['name']), 0, 255),
+                        'deskripsi' => mb_substr($this->sanitizeText($ld['name']), 0, 255, 'UTF-8'),
                         'jumlah' => $ld['quantity'],
                         'harga' => $ld['price_unit'],
                         'value' => $subtotal,
@@ -386,7 +386,7 @@ class OdooSyncService
                     $supplierId = 'O-' . $move['partner_id'][0];
                     \App\Models\Supplier::updateOrCreate(
                         ['kode_supplier' => $supplierId],
-                        ['nama_supplier' => substr($move['partner_id'][1], 0, 100)]
+                        ['nama_supplier' => mb_substr($move['partner_id'][1], 0, 100, 'UTF-8')]
                     );
                 }
 
@@ -400,7 +400,7 @@ class OdooSyncService
 
                         Dtransaksi::create([
                             'nomor_invoice' => $htransaksi->nomor_invoice,
-                            'deskripsi' => substr($line['name'], 0, 255),
+                            'deskripsi' => mb_substr($this->sanitizeText($line['name']), 0, 255, 'UTF-8'),
                             'jumlah' => $line['quantity'],
                             'harga' => $line['price_unit'] ?: ($line['quantity'] ? abs($amt/$line['quantity']) : 0),
                             'value' => $amt,
