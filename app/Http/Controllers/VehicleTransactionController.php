@@ -45,10 +45,20 @@ class VehicleTransactionController extends Controller
         $search = $request->input('search.value', '');
 
         if ($search) {
-            $query->where(function ($q) use ($search) {
+            $mobilChassisList = \App\Models\Mobil::where('nomor_polisi', 'like', "%{$search}%")
+                ->pluck('nomor_chassis')
+                ->filter()
+                ->toArray();
+
+            $query->where(function ($q) use ($search, $mobilChassisList) {
                 $q->where('nomor_job', 'like', "%{$search}%")
                     ->orWhere('posisi_km', 'like', "%{$search}%")
+                    ->orWhere('nomor_chassis', 'like', "%{$search}%")
                     ->orWhere('keterangan', 'like', "%{$search}%");
+                
+                if (!empty($mobilChassisList)) {
+                    $q->orWhereIn('nomor_chassis', $mobilChassisList);
+                }
             });
         }
 
@@ -247,7 +257,7 @@ class VehicleTransactionController extends Controller
 
     private function buildTransactionQuery($nama_customer, $nomor_polisi, $start, $end)
     {
-        $closedStates = ['done', '2binvoiced'];
+        $closedStates = ['done', '2binvoiced', 'close'];
         $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
             ->where(function($q) use ($closedStates) {
                 $q->whereIn('state', $closedStates)
@@ -285,7 +295,7 @@ class VehicleTransactionController extends Controller
 
     private function calculateGrandTotals($nama_customer, $nomor_polisi, $start, $end, $search = null)
     {
-        $closedStates = ['done', '2binvoiced'];
+        $closedStates = ['done', '2binvoiced', 'close'];
         $query = Htransaksi::where(function($q) use ($closedStates) {
             $q->whereIn('state', $closedStates)
               ->orWhereNull('state')
