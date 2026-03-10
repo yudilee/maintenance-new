@@ -63,7 +63,7 @@
         </div>
 
         {{-- Status Cards - All clickable --}}
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-3 mb-8">
             {{-- Total Jobs --}}
             <button @click="statusFilter = 'all'; reloadTable()"
                     :class="statusFilter === 'all' ? 'ring-2 ring-indigo-500 border-indigo-300 dark:border-indigo-600' : 'border-slate-200 dark:border-slate-700 hover:border-indigo-300'"
@@ -127,6 +127,19 @@
                     Done
                 </div>
                 <div class="text-xl font-black text-green-600 dark:text-green-400">{{ number_format($doneJobs) }}</div>
+            </button>
+
+            {{-- On Hold --}}
+            <button @click="statusFilter = 'on_hold_repair'; reloadTable()"
+                    :class="statusFilter === 'on_hold_repair' ? 'ring-2 ring-orange-500 border-orange-300 dark:border-orange-600' : 'border-slate-200 dark:border-slate-700 hover:border-orange-300'"
+                    class="bg-white dark:bg-slate-800 border rounded-2xl p-4 shadow-sm transition-all text-left cursor-pointer group">
+                <div class="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1 flex items-center gap-1.5">
+                    <div class="w-5 h-5 rounded bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center text-orange-600 dark:text-orange-400">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    On Hold
+                </div>
+                <div class="text-xl font-black text-orange-600 dark:text-orange-400">{{ number_format($onHoldJobs) }}</div>
             </button>
 
             {{-- Close --}}
@@ -298,7 +311,9 @@ function repairJobsPage() {
                         className: 'text-center',
                         render: function(data, type, row) {
                             let cls = '';
-                            if (row.is_open) {
+                            if (row.state === 'on_hold_repair') {
+                                cls = 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400';
+                            } else if (row.is_open) {
                                 if (row.state === 'under_repair') cls = 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400';
                                 else if (row.state === 'confirmed') cls = 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400';
                                 else cls = 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400';

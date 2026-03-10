@@ -22,11 +22,12 @@ class RepairJobController extends Controller
         $readyJobs = Htransaksi::where('state', 'draft')->count();
         $doneJobs = Htransaksi::where('state', 'done')->count();
         $toInvoiceJobs = Htransaksi::where('state', 'close')->count();
+        $onHoldJobs = Htransaksi::where('state', 'on_hold_repair')->count();
 
         return view('repair-jobs', compact(
             'totalJobs', 'openJobs', 'closedJobs',
             'confirmedJobs', 'underRepairJobs', 'readyJobs',
-            'doneJobs', 'toInvoiceJobs'
+            'doneJobs', 'toInvoiceJobs', 'onHoldJobs'
         ));
     }
 
