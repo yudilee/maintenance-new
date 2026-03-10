@@ -86,6 +86,8 @@ class OdooSettingController extends Controller
 
     public function syncNow(Request $request)
     {
+        set_time_limit(0); // Prevent PHP from killing the process after 30 seconds
+        
         try {
             if ($request->query('force') == '1') {
                 \App\Models\OdooSetting::first()?->update(['last_sync' => null]);
