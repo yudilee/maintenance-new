@@ -20,7 +20,7 @@ class OdooSyncService
     protected $url;
     protected $db;
     protected $user;
-    protected $password;
+    protected $apiKey;
     protected $uid = null;
 
     public function __construct()
@@ -30,7 +30,7 @@ class OdooSyncService
             $this->url = $this->setting->odoo_url;
             $this->db = $this->setting->database;
             $this->user = $this->setting->user_email;
-            $this->password = $this->setting->api_key;
+            $this->apiKey = $this->setting->api_key;
         }
     }
 
@@ -42,7 +42,7 @@ class OdooSyncService
 
         try {
             // 1. Authenticate with Odoo
-            $authData = $this->odooCall('common', 'authenticate', [$this->db, $this->user, $this->password, (object)[]]);
+            $authData = $this->odooCall('common', 'authenticate', [$this->db, $this->user, $this->apiKey, (object)[]]);
             
             if (!$authData['success'] || empty($authData['result'])) {
                 $errorMsg = $authData['error'] ?? 'Authentication failed';
@@ -72,7 +72,7 @@ class OdooSyncService
             $limit = 500;
             while(true) {
                 $rosData = $this->odooCall('object', 'execute_kw', [
-                    $this->db, $this->uid, $this->password,
+                    $this->db, $this->uid, $this->apiKey,
                     'repair.order', 'search_read',
                     [$roDomain],
                     [
@@ -102,7 +102,7 @@ class OdooSyncService
             $limit = 500;
             while(true) {
                 $movesData = $this->odooCall('object', 'execute_kw', [
-                    $this->db, $this->uid, $this->password,
+                    $this->db, $this->uid, $this->apiKey,
                     'account.move', 'search_read',
                     [$billDomain],
                     [
@@ -155,28 +155,28 @@ class OdooSyncService
             // Fetch Lots (Vehicles)
             $lotsMap = [];
             if (!empty($allLotIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'stock.lot', 'read', [$allLotIds], ['fields' => ['name', 'ref', 'color_id']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'stock.lot', 'read', [$allLotIds], ['fields' => ['name', 'ref', 'color_id']]]);
                 if ($res['success']) foreach ($res['result'] as $l) $lotsMap[$l['id']] = $l;
             }
 
             // Fetch RO Lines
             $roLinesMap = [];
             if (!empty($allRoLineIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'repair.order.line', 'read', [$allRoLineIds], ['fields' => ['name', 'quantity', 'price_unit', 'price_subtotal']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'repair.order.line', 'read', [$allRoLineIds], ['fields' => ['name', 'quantity', 'price_unit', 'price_subtotal']]]);
                 if ($res['success']) foreach ($res['result'] as $rl) $roLinesMap[$rl['id']] = $rl;
             }
 
             // Fetch Service Lines
             $roServicesMap = [];
             if (!empty($allRoServiceIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'repair.service', 'read', [$allRoServiceIds], ['fields' => ['name', 'quantity', 'price_subtotal']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'repair.service', 'read', [$allRoServiceIds], ['fields' => ['name', 'quantity', 'price_subtotal']]]);
                 if (!$res['success']) \Log::error("REPAIR SERVICE ERROR: ".json_encode($res)); if ($res['success']) foreach ($res['result'] as $rs) $roServicesMap[$rs['id']] = $rs;
             }
 
             // Fetch Bill Lines
             $billLinesMap = [];
             if (!empty($allLineIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'account.move.line', 'read', [$allLineIds], ['fields' => ['move_id', 'name', 'quantity', 'price_unit', 'price_subtotal', 'display_type', 'debit', 'credit', 'balance']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'account.move.line', 'read', [$allLineIds], ['fields' => ['move_id', 'name', 'quantity', 'price_unit', 'price_subtotal', 'display_type', 'debit', 'credit', 'balance']]]);
                 if ($res['success']) {
                     foreach ($res['result'] as $bl) {
                         $mId = is_array($bl['move_id']) ? $bl['move_id'][0] : $bl['move_id'];
@@ -188,7 +188,7 @@ class OdooSyncService
             // Fetch RO Linked Moves (Sales Invoices for Revenue Tax)
             $roMovesMap = [];
             if (!empty($allRoMoveIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'account.move', 'read', [$allRoMoveIds], ['fields' => ['amount_tax']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'account.move', 'read', [$allRoMoveIds], ['fields' => ['amount_tax']]]);
                 if ($res['success']) foreach ($res['result'] as $rm) $roMovesMap[$rm['id']] = $rm;
             }
 
@@ -196,12 +196,12 @@ class OdooSyncService
             // Map: repair_order_id => bill data
             $vendorBillsByRo = [];
             if (!empty($allVendorBillIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->password, 'account.move', 'read', [$allVendorBillIds], ['fields' => ['repair_id', 'amount_tax', 'amount_untaxed', 'amount_total', 'state']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'account.move', 'read', [$allVendorBillIds], ['fields' => ['repair_id', 'amount_tax', 'amount_untaxed', 'amount_total', 'state']]]);
+                // Keep the bill with highest amount_total if multiple
                 if ($res['success']) {
                     foreach ($res['result'] as $bill) {
                         $roId = is_array($bill['repair_id']) ? $bill['repair_id'][0] : $bill['repair_id'];
                         if ($roId) {
-                            // Keep the bill with highest amount_total if multiple
                             if (!isset($vendorBillsByRo[$roId]) || $bill['amount_total'] > $vendorBillsByRo[$roId]['amount_total']) {
                                 $vendorBillsByRo[$roId] = $bill;
                             }
