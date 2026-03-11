@@ -7,6 +7,7 @@ use Illuminate\Http\UploadedFile;
 use Carbon\Carbon;
 use App\Models\BackupLog;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class BackupService
 {
@@ -122,10 +123,13 @@ class BackupService
         $cleanupCommand = $deleteAfter ? sprintf('; rm -f %s', escapeshellarg($path)) : '';
 
         // Wrap command to put app in maintenance mode, run restore, then bring it back up, all in background
+        $secret = Str::uuid()->toString();
+
         if ($isGzipped) {
             $command = sprintf(
-                '(php %s down --refresh=15 --secret="restore"; gunzip < %s | mysql --skip-ssl --user=%s --password=%s --host=%s --port=%s %s; php %s up%s) > /dev/null 2>&1 &',
+                '(php %s down --refresh=15 --secret=%s; gunzip < %s | mysql --skip-ssl --user=%s --password=%s --host=%s --port=%s %s; php %s up%s) > /dev/null 2>&1 &',
                 escapeshellarg($artisan),
+                escapeshellarg($secret),
                 escapeshellarg($path),
                 escapeshellarg($config['username']),
                 escapeshellarg($config['password']),
@@ -137,8 +141,9 @@ class BackupService
             );
         } else {
             $command = sprintf(
-                '(php %s down --refresh=15 --secret="restore"; mysql --skip-ssl --user=%s --password=%s --host=%s --port=%s %s < %s; php %s up%s) > /dev/null 2>&1 &',
+                '(php %s down --refresh=15 --secret=%s; mysql --skip-ssl --user=%s --password=%s --host=%s --port=%s %s < %s; php %s up%s) > /dev/null 2>&1 &',
                 escapeshellarg($artisan),
+                escapeshellarg($secret),
                 escapeshellarg($config['username']),
                 escapeshellarg($config['password']),
                 escapeshellarg($config['host']),
