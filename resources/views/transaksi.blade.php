@@ -76,7 +76,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-indigo-300 transition-colors">
                 <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Maintenance History Cost</div>
-                <div id="kpi-cost" class="text-2xl font-black text-rose-600 dark:text-rose-400">Rp {{ number_format($grandTotals['hargaTotal'], 0, ',', '.') }}</div>
+                <div id="kpi-cost" class="text-2xl font-black text-rose-600 dark:text-rose-400">Rp {{ number_format($grandTotals['grandTotal'], 0, ',', '.') }}</div>
             </div>
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-indigo-300 transition-colors">
                 <div class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-1">Total Tax (PPN)</div>

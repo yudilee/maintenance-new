@@ -361,13 +361,15 @@ class OdooSyncService
                 $roHargaTotal = $totalJO;
                 
                 // Prefer vendor bill (most accurate, includes tax)
+                // harga_total stores the UNTAXED amount; harga_pajak stores tax separately
+                // so that grandTotal (harga_total + harga_pajak) = full total without double-counting
                 if (isset($vendorBillsByRo[$roId])) {
                     $roTax = $vendorBillsByRo[$roId]['amount_tax'];
                     $roHargaPart = $vendorBillsByRo[$roId]['amount_untaxed'] ?: $totalJO;
-                    $roHargaTotal = $vendorBillsByRo[$roId]['amount_total'] ?: ($roHargaPart + $roTax);
+                    $roHargaTotal = $roHargaPart; // untaxed only; tax is in harga_pajak
                 } elseif ($roMoveId && isset($roMovesMap[$roMoveId])) {
                     $roTax = $roMovesMap[$roMoveId]['amount_tax'];
-                    $roHargaTotal = $roHargaPart + $roTax;
+                    // roHargaTotal stays as $totalJO (already untaxed from JO lines)
                 }
 
                 $htransaksi->update([
@@ -434,7 +436,7 @@ class OdooSyncService
                     'kode_sup' => $supplierId,
                     'harga_part' => $calculatedTotal,
                     'harga_pajak' => $calculatedTax,
-                    'harga_total' => $move['amount_total'] ?? ($calculatedTotal + $calculatedTax),
+                    'harga_total' => $calculatedTotal, // untaxed only; grandTotal = harga_total + harga_pajak
                     'tanggal_invoice' => $move['invoice_date'] ?: $htransaksi->tanggal_job
                 ]);
             }
