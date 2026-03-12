@@ -156,6 +156,7 @@ class RepairJobController extends Controller
                 'harga_total' => number_format($job->harga_total ?? 0, 0, ',', '.'),
                 'harga_total_raw' => $job->harga_total ?? 0,
                 'harga_pajak' => number_format($job->harga_pajak ?? 0, 0, ',', '.'),
+                'harga_pajak_raw' => $job->harga_pajak ?? 0,
                 'keterangan' => $job->keterangan ?? '-',
                 'tanggal_close' => $job->tanggal_close ? \Carbon\Carbon::parse($job->tanggal_close)->format('d-m-Y') : '-',
                 'posisi_km' => $job->posisi_km ?? 0,

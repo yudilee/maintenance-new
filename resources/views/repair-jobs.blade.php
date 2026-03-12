@@ -350,7 +350,11 @@ function repairJobsPage() {
                         className: 'text-right',
                         render: function(data, type, row) {
                             if (row.is_open) return '<span class="text-slate-400">—</span>';
-                            return '<div class="font-medium text-slate-800 dark:text-slate-200">Rp ' + data + '</div>' +
+                            // Compute grand total = harga_total + harga_pajak
+                            var rawTotal = row.harga_total_raw || 0;
+                            var rawPajak = row.harga_pajak_raw || 0;
+                            var grandTotal = (rawTotal + rawPajak).toLocaleString('id-ID');
+                            return '<div class="font-medium text-slate-800 dark:text-slate-200">Rp ' + grandTotal + '</div>' +
                                    (row.harga_pajak && row.harga_pajak !== '0' ? '<div class="text-xs text-slate-400">Tax: Rp ' + row.harga_pajak + '</div>' : '');
                         }
                     },
