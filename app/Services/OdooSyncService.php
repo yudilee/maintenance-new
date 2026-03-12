@@ -357,17 +357,21 @@ class OdooSyncService
                 $roMoveId = is_array($ro['move_id']) ? $ro['move_id'][0] : $ro['move_id'];
                 $roId = $ro['id'];
                 $roTax = 0;
+                $roHargaPart = $totalJO;
                 $roHargaTotal = $totalJO;
+                
                 // Prefer vendor bill (most accurate, includes tax)
                 if (isset($vendorBillsByRo[$roId])) {
                     $roTax = $vendorBillsByRo[$roId]['amount_tax'];
-                    $roHargaTotal = $vendorBillsByRo[$roId]['amount_untaxed'] ?: $totalJO;
+                    $roHargaPart = $vendorBillsByRo[$roId]['amount_untaxed'] ?: $totalJO;
+                    $roHargaTotal = $vendorBillsByRo[$roId]['amount_total'] ?: ($roHargaPart + $roTax);
                 } elseif ($roMoveId && isset($roMovesMap[$roMoveId])) {
                     $roTax = $roMovesMap[$roMoveId]['amount_tax'];
+                    $roHargaTotal = $roHargaPart + $roTax;
                 }
 
                 $htransaksi->update([
-                    'harga_part' => $roHargaTotal,
+                    'harga_part' => $roHargaPart,
                     'harga_total' => $roHargaTotal,
                     'harga_jual' => $roHargaTotal,
                     'harga_pajak' => $roTax,
