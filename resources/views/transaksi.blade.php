@@ -817,9 +817,7 @@
                                 {
                                     table: {
                                         headerRows: 1,
-                                        widths: [100, 50, 40, 70, 60, 90, 35, 60, 70,
-                                            60, 100
-                                        ],
+                        widths: [100, 55, 45, 75, 130, 35, 60, 70, 60, 110],
                                         body: [
                                             [
                                                 {text: 'Nomor Job', style: 'tableHeader'},
@@ -866,13 +864,11 @@
                                                     fillColor: null
                                                 },
                                                 {
-                                                    text: row.posisi_km || '',
+                                                    text: row.posisi_km !== null && row.posisi_km !== undefined ? String(row.posisi_km) : '',
                                                     fillColor: null
                                                 },
                                                 {
-                                                    text: row
-                                                        .maintenance_service ||
-                                                        '',
+                                                    text: row.maintenance_service || '',
                                                     fillColor: null
                                                 },
                                                 {
@@ -880,7 +876,7 @@
                                                     fillColor: null
                                                 },
                                                 {
-                                                    text: row.jumlah || '',
+                                                    text: row.jumlah !== null && row.jumlah !== undefined ? String(row.jumlah) : '',
                                                     fillColor: null
                                                 },
                                                 {
@@ -902,16 +898,10 @@
                                             ];
                                         })).concat([
                                             [
-                                                '', '', '', '', '', '', '', '', 
-                                                response.hargaTotal ? response
-                                                .hargaTotal.toLocaleString('id-ID') :
-                                                '',
-                                                response.hargaPajak ? response
-                                                .hargaPajak.toLocaleString('id-ID') :
-                                                '',
-                                                'GRAND TOTAL: ' + (response.grandTotal ?
-                                                    response.grandTotal.toLocaleString(
-                                                        'id-ID') : '')
+                                                {text: 'GRAND TOTAL', bold: true, colSpan: 7, alignment: 'right'}, {}, {}, {}, {}, {}, {},
+                                                {text: response.hargaTotal ? response.hargaTotal.toLocaleString('id-ID') : '', bold: true},
+                                                {text: response.hargaPajak ? response.hargaPajak.toLocaleString('id-ID') : '', bold: true},
+                                                {text: response.grandTotal ? response.grandTotal.toLocaleString('id-ID') : '', bold: true}
                                             ]
                                         ])
                                     },
