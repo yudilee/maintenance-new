@@ -685,11 +685,10 @@
     }
 }
 
-$(document).ready(function() {
-    // Export ALL data functions
-            function exportAllToExcel() {
-                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
-                $.ajax({
+// Export ALL data functions (global scope so DataTable button callbacks can access them)
+        function exportAllToExcel() {
+            let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
+            $.ajax({
                     url: "{{ route('maintenance.vehicle.transactions.export') }}",
                     data: {
                         nama_customer: alpineData.namaCustomerFilter,
@@ -800,6 +799,9 @@ $(document).ready(function() {
                         end_date_transaksi: alpineData.endDate
                     },
                     success: function(response) {
+                        var customerDetail = (response.nomor_polisi || response.customer)
+                            ? [(response.nomor_polisi || ''), (response.customer || '')].filter(Boolean).join(' - ')
+                            : 'All Vehicles';
                         var docDefinition = {
                             pageOrientation: 'landscape',
                             pageSize: 'A3',
@@ -963,8 +965,9 @@ $(document).ready(function() {
                         });
                     }
                 });
-            }
+        }
 
+$(document).ready(function() {
             // Select2 for Nomor Polisi
             $('.select2-nomor-polisi').select2({
                 placeholder: 'Cari nomor polisi...',
@@ -1113,4 +1116,6 @@ $(document).ready(function() {
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 @endsection
