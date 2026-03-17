@@ -391,16 +391,19 @@ function repairJobsPage() {
                     emptyTable: 'No repair jobs found',
                     info: 'Showing _START_ to _END_ of _TOTAL_ jobs',
                     lengthMenu: 'Show _MENU_ jobs',
+                    search: '',
+                    searchPlaceholder: "Search..."
                 },
                 dom: '<"flex flex-col md:flex-row items-center justify-between gap-4 mb-3"Bf><"frozen-table-container"rt><"flex flex-col md:flex-row items-center justify-between gap-4 mt-3"ip>',
-                buttons: [
+                            "buttons": [
                     {
                         extend: 'colvis',
-                        text: '<span class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Show/Hide Columns</span>',
+                        className: 'btn-export',
+                        text: '<span class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Columns</span>',
                     }
                 ],
                 drawCallback: function() {
-                    $('#repairJobsTable_filter input').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500 ml-2');
+                    $('#repairJobsTable_filter input').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:ring-2 focus:ring-indigo-500');
                     $('#repairJobsTable_length select').addClass('px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm mx-2');
                 }
             });
@@ -772,28 +775,22 @@ $(document).ready(function() {
                 color: rgb(100 116 139);
             }
             
-    /* DataTables overrides layout for Buttons */
-    .dt-buttons .dt-button {
-        background-color: #ffffff;
-        border: 1px solid #e2e8f0;
-        color: #334155;
-        padding: 0.5rem 1rem;
-        border-radius: 0.75rem;
-        font-weight: 500;
-        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-        transition: all 0.2s;
+    /* Consistent Export Button Styles */
+    .dt-buttons .btn-export {
+        background-color: #64748b !important;
+        border-color: #475569 !important;
+        color: white !important;
+        padding: 0.5rem 1rem !important;
+        border-radius: 0.5rem !important;
+        font-size: 0.875rem !important;
+        margin-right: 0.5rem !important;
+        transition: all 0.2s !important;
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     }
-    .dt-buttons .dt-button:hover {
-        background-color: #f8fafc;
+    .dt-buttons .btn-export:hover {
+        background-color: #475569 !important;
     }
-    .dark .dt-buttons .dt-button {
-        background-color: #1e293b;
-        border-color: #334155;
-        color: #cbd5e1;
-    }
-    .dark .dt-buttons .dt-button:hover {
-        background-color: #334155;
-    }
+
     .dt-button-collection {
         background-color: #ffffff;
         border: 1px solid #e2e8f0;
