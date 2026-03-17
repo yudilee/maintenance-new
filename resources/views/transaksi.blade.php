@@ -693,7 +693,12 @@
                         $('td:eq(0)', row).addClass('sticky-col');
                     }
                 },
-                "dom": '<"#dt-controls-top"Blf>rt<"#dt-controls-bottom"ip>',
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Search...",
+                    "lengthMenu": "_MENU_ entries"
+                },
+                "dom": '<"flex flex-wrap items-center justify-between gap-4 mb-4"B<"flex items-center gap-4"lf>>rt<"flex flex-wrap items-center justify-between gap-4 mt-4"ip>',
                 "buttons": [{
                         extend: 'colvis',
                         className: 'btn-export',
@@ -715,8 +720,6 @@
                     }
                 ]
             });
-
-            table.buttons().container().appendTo('#transaksiTable_wrapper .col-md-6:eq(0)');
         },
 
         reloadTable() {

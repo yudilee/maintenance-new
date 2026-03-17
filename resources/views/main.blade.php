@@ -506,9 +506,10 @@ $(document).ready(function() {
             "scrollX": false,
             "language": {
                 "search": "",
-                "searchPlaceholder": "Search..."
+                "searchPlaceholder": "Search...",
+                "lengthMenu": "_MENU_ entries"
             },
-            "dom": '<"flex flex-col md:flex-row items-center justify-between gap-4 mb-4"Bf>rt<"flex flex-col md:flex-row items-center justify-between gap-4 mt-4"ip>',
+            "dom": '<"flex flex-wrap items-center justify-between gap-4 mb-4"B<"flex items-center gap-4"lf>>rt<"flex flex-wrap items-center justify-between gap-4 mt-4"ip>',
             "buttons": [
                 {
                     extend: 'excelHtml5',

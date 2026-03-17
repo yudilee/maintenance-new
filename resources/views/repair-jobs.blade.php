@@ -390,11 +390,11 @@ function repairJobsPage() {
                     processing: '<div class="flex items-center gap-2 text-indigo-600"><svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Loading...</div>',
                     emptyTable: 'No repair jobs found',
                     info: 'Showing _START_ to _END_ of _TOTAL_ jobs',
-                    lengthMenu: 'Show _MENU_ jobs',
+                    lengthMenu: '_MENU_ entries',
                     search: '',
                     searchPlaceholder: "Search..."
                 },
-                dom: '<"flex flex-col md:flex-row items-center justify-between gap-4 mb-3"Bf><"frozen-table-container"rt><"flex flex-col md:flex-row items-center justify-between gap-4 mt-3"ip>',
+                dom: '<"flex flex-wrap items-center justify-between gap-4 mb-4"B<"flex items-center gap-4"lf>>rt<"flex flex-wrap items-center justify-between gap-4 mt-4"ip>',
                             "buttons": [
                     {
                         extend: 'colvis',
