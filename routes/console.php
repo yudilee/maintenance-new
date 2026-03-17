@@ -12,13 +12,14 @@ Artisan::command('inspire', function () {
 // Odoo Auto-Sync Schedule
 // Wrapped in try-catch to prevent errors during Docker build (when DB doesn't exist)
 try {
-    $scheduleEnabled = Setting::getValue('odoo_schedule_enabled', 'false') === 'true';
-    $scheduleInterval = Setting::getValue('odoo_schedule_interval', 'daily');
-
-    if ($scheduleEnabled) {
+    $odooSetting = \App\Models\OdooSetting::first();
+    
+    if ($odooSetting && $odooSetting->enable_auto_sync) {
+        $interval = $odooSetting->sync_interval ?: 'daily';
+        
         $command = Schedule::command('odoo:sync');
         
-        match ($scheduleInterval) {
+        match ($interval) {
             'hourly' => $command->hourly(),
             'every_2_hours' => $command->everyTwoHours(),
             'every_4_hours' => $command->everyFourHours(),
