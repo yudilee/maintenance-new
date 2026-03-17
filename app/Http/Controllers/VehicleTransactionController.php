@@ -145,7 +145,8 @@ class VehicleTransactionController extends Controller
             'recordsTotal' => $recordsTotal,
             'recordsFiltered' => $recordsFiltered,
             'data' => $data,
-            'grandTotals' => $this->calculateGrandTotals($request->nama_customer, $request->nomor_polisi, $request->start_date_transaksi, $request->end_date_transaksi, $search)
+            'grandTotals' => $this->calculateGrandTotals($request->nama_customer, $request->nomor_polisi, $request->start_date_transaksi, $request->end_date_transaksi, $search),
+            'mobilDetail' => $nomor_polisi ? \App\Models\Mobil::where('nomor_polisi', $nomor_polisi)->first() : null
         ]);
     }
 
@@ -251,7 +252,8 @@ class VehicleTransactionController extends Controller
             'hargaTotal' => $hargaTotal,
             'hargaPajak' => $hargaPajak,
             'customer' => $nama_customer,
-            'nomor_polisi' => $nomor_polisi
+            'nomor_polisi' => $nomor_polisi,
+            'mobilDetail' => $nomor_polisi ? \App\Models\Mobil::where('nomor_polisi', $nomor_polisi)->first() : null
         ]);
     }
 

@@ -39,24 +39,40 @@
                 </div>
 
                 <div class="flex-grow flex flex-col md:flex-row gap-4">
-                    <div class="flex-1 w-full">
-                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Tanggal Job</label>
+                    <div class="flex-1 w-full md:w-32">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">Start Date</label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             </div>
-                            <input type="text" id="tanggal_job_filter"
-                                   class="pl-10 w-full text-sm border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm px-3"
-                                   placeholder="Pilih rentang tanggal...">
+                            <input type="text" id="start_date_filter" x-model="startDateDisplay" readonly
+                                   class="pl-9 w-full text-sm border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2 shadow-sm px-3"
+                                   placeholder="DD-MM-YYYY">
+                        </div>
+                    </div>
+                    <div class="flex-1 w-full md:w-32">
+                        <label class="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 uppercase tracking-wide">End Date</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <input type="text" id="end_date_filter" x-model="endDateDisplay" readonly
+                                   class="pl-9 w-full text-sm border-slate-200 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2 shadow-sm px-3"
+                                   placeholder="DD-MM-YYYY">
                         </div>
                     </div>
                 </div>
 
-                <div class="w-full md:w-auto mt-4 md:mt-0">
-                    <button @click="statusFilter = 'all'; startDate = ''; endDate = ''; nomorPolisiFilter = ''; namaCustomerFilter = ''; supplierFilter = ''; $('#nomor_polisi_select').val(null).trigger('change'); $('#nama_customer_select').val(null).trigger('change'); $('#supplier_select').val(null).trigger('change'); $('#tanggal_job_filter').val(''); reloadTable()" 
-                            class="w-full md:w-auto px-6 py-2.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center gap-2">
+                <div class="w-full md:w-auto mt-4 md:mt-2 flex gap-2">
+                    <button @click="resetFilters()" 
+                            class="px-4 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold uppercase tracking-widest hover:bg-slate-50 dark:hover:bg-slate-700 transition-all shadow-sm flex items-center justify-center gap-2 text-xs">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                         Reset
+                    </button>
+                    <button @click="reloadTable()" 
+                            class="px-6 py-2 bg-indigo-600 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 dark:shadow-none flex items-center justify-center gap-2 text-xs">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        Search
                     </button>
                 </div>
             </div>
@@ -272,6 +288,8 @@ function repairJobsPage() {
         statusFilter: 'all',
         startDate: '',
         endDate: '',
+        startDateDisplay: '',
+        endDateDisplay: '',
         nomorPolisiFilter: '',
         namaCustomerFilter: '',
         supplierFilter: '',
@@ -392,6 +410,23 @@ function repairJobsPage() {
             if (this.table) {
                 this.table.ajax.reload();
             }
+        },
+
+        resetFilters() {
+            this.statusFilter = 'all';
+            this.startDate = '';
+            this.endDate = '';
+            this.startDateDisplay = '';
+            this.endDateDisplay = '';
+            this.nomorPolisiFilter = '';
+            this.namaCustomerFilter = '';
+            this.supplierFilter = '';
+            $('#nomor_polisi_select').val(null).trigger('change');
+            $('#nama_customer_select').val(null).trigger('change');
+            $('#supplier_select').val(null).trigger('change');
+            $('#start_date_filter').val('');
+            $('#end_date_filter').val('');
+            this.reloadTable();
         }
     };
 }
@@ -476,11 +511,9 @@ $(document).ready(function() {
             cache: true
         }
     }).on('change', function(e) {
-        // AlpineJS integration
         let val = $(this).val();
         let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
         alpineData.nomorPolisiFilter = val;
-        alpineData.reloadTable();
     });
 
     // Select2 Initialization for Customer
@@ -500,11 +533,9 @@ $(document).ready(function() {
             cache: true
         }
     }).on('change', function(e) {
-        // AlpineJS integration
         let val = $(this).val();
         let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
         alpineData.namaCustomerFilter = val;
-        alpineData.reloadTable();
     });
 
     // Select2 Initialization for Supplier / Vendor
@@ -527,36 +558,59 @@ $(document).ready(function() {
         let val = $(this).val();
         let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
         alpineData.supplierFilter = val;
-        alpineData.reloadTable();
     });
 
-    // Date range picker logic
-    $('#tanggal_job_filter').daterangepicker({
+    // Split date pickers
+    $('#start_date_filter').daterangepicker({
+        singleDatePicker: true,
         autoUpdateInput: false,
+        showDropdowns: true,
         locale: {
             cancelLabel: 'Clear',
             format: 'DD-MM-YYYY'
         }
-    });
-
-    $('#tanggal_job_filter').on('apply.daterangepicker', function(ev, picker) {
-        $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
-        
-        // AlpineJS integration
+    }, function(start) {
         let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
-        alpineData.startDate = picker.startDate.format('YYYY-MM-DD');
-        alpineData.endDate = picker.endDate.format('YYYY-MM-DD');
-        alpineData.reloadTable();
+        alpineData.startDate = start.format('YYYY-MM-DD');
+        alpineData.startDateDisplay = start.format('DD-MM-YYYY');
     });
 
-    $('#tanggal_job_filter').on('cancel.daterangepicker', function(ev, picker) {
+    $('#end_date_filter').daterangepicker({
+        singleDatePicker: true,
+        autoUpdateInput: false,
+        showDropdowns: true,
+        locale: {
+            cancelLabel: 'Clear',
+            format: 'DD-MM-YYYY'
+        }
+    }, function(start) {
+        let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
+        alpineData.endDate = start.format('YYYY-MM-DD');
+        alpineData.endDateDisplay = start.format('DD-MM-YYYY');
+    });
+
+    $('#start_date_filter, #end_date_filter').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('DD-MM-YYYY'));
+        let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
+        if (ev.target.id === 'start_date_filter') {
+            alpineData.startDate = picker.startDate.format('YYYY-MM-DD');
+            alpineData.startDateDisplay = picker.startDate.format('DD-MM-YYYY');
+        } else {
+            alpineData.endDate = picker.startDate.format('YYYY-MM-DD');
+            alpineData.endDateDisplay = picker.startDate.format('DD-MM-YYYY');
+        }
+    });
+
+    $('#start_date_filter, #end_date_filter').on('cancel.daterangepicker', function(ev, picker) {
         $(this).val('');
-        
-        // AlpineJS integration
         let alpineData = Alpine.$data(document.querySelector('[x-data="repairJobsPage()"]'));
-        alpineData.startDate = '';
-        alpineData.endDate = '';
-        alpineData.reloadTable();
+        if (ev.target.id === 'start_date_filter') {
+            alpineData.startDate = '';
+            alpineData.startDateDisplay = '';
+        } else {
+            alpineData.endDate = '';
+            alpineData.endDateDisplay = '';
+        }
     });
 });
 </script>

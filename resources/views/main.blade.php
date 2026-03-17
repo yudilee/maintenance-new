@@ -8,95 +8,206 @@
     </div>
 
     <div class="p-6">
-        <form action="{{ route('maintenance.dashboard') }}" method="GET" class="max-w-4xl">
-            <!-- Plate Number -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nomor Polisi</label>
-                <select class="w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm select2-plate" id="nomor_polisi" name="nomor_polisi">
-                    <option></option>
-                    @if (request('nomor_polisi'))
-                        <option value="{{ request('nomor_polisi') }}" selected>{{ request('nomor_polisi') }}</option>
-                    @endif
-                </select>
-            </div>
-
-            <!-- Customer -->
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Nama Customer</label>
-                <select class="w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm select2-customer" id="nama_customer" name="nama_customer">
-                    <option></option>
-                    @if (request('nama_customer'))
-                        @php
-                            $cust = \App\Models\customer::where('kode_customer', request('nama_customer'))->first();
-                        @endphp
-                        <option value="{{ request('nama_customer') }}" selected>
-                            {{ $cust ? $cust->kode_customer . ' - ' . $cust->nama_customer : request('nama_customer') }}
-                        </option>
-                    @endif
-                </select>
-            </div>
-
-            <!-- Date -->
-            <div class="mb-8">
-                <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Tanggal Job</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 md:p-6 mb-6">
+            <form action="{{ route('maintenance.dashboard') }}" method="GET" id="filterForm">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <!-- Plate Number -->
+                    <div>
+                        <label for="nomor_polisi" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Nomor Polisi</label>
+                        <select class="w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm select2-plate" id="nomor_polisi" name="nomor_polisi">
+                            <option></option>
+                            @if (request('nomor_polisi'))
+                                <option value="{{ request('nomor_polisi') }}" selected>{{ request('nomor_polisi') }}</option>
+                            @endif
+                        </select>
                     </div>
-                    <input type="text" class="pl-10 w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5 shadow-sm" id="tanggal_job_transaksi" autocomplete="off" placeholder="Pilih rentang tanggal">
-                </div>
-                <input type="hidden" id="start_date_transaksi" name="start_date_transaksi" value="{{ request('start_date_transaksi') }}">
-                <input type="hidden" id="end_date_transaksi" name="end_date_transaksi" value="{{ request('end_date_transaksi') }}">
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">Contoh: <b>01-01-2025 - 31-12-2025</b> (format: hari-bulan-tahun)</p>
-            </div>
 
-            <div class="flex justify-end">
-                <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-md shadow-indigo-200 dark:shadow-none flex items-center justify-center gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                    Search
-                </button>
-            </div>
-        </form>
+                    <!-- Customer -->
+                    <div>
+                        <label for="nama_customer" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Nama Customer</label>
+                        <select class="w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors shadow-sm select2-customer" id="nama_customer" name="nama_customer">
+                            <option></option>
+                            @if (request('nama_customer'))
+                                @php
+                                    $cust = \App\Models\customer::where('kode_customer', request('nama_customer'))->first();
+                                @endphp
+                                <option value="{{ request('nama_customer') }}" selected>
+                                    {{ $cust ? $cust->kode_customer . ' - ' . $cust->nama_customer : request('nama_customer') }}
+                                </option>
+                            @endif
+                        </select>
+                    </div>
+
+                    <!-- Start Date -->
+                    <div>
+                        <label for="start_date_display" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Start Date</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <input type="text" class="pl-9 w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors h-10 shadow-sm" id="start_date_display" autocomplete="off" placeholder="DD-MM-YYYY" value="{{ request('start_date_transaksi') ? \Carbon\Carbon::parse(request('start_date_transaksi'))->format('d-m-Y') : '' }}">
+                        </div>
+                        <input type="hidden" id="start_date_transaksi" name="start_date_transaksi" value="{{ request('start_date_transaksi') }}">
+                    </div>
+
+                    <!-- End Date -->
+                    <div>
+                        <label for="end_date_display" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">End Date</label>
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            </div>
+                            <input type="text" class="pl-9 w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors h-10 shadow-sm" id="end_date_display" autocomplete="off" placeholder="DD-MM-YYYY" value="{{ request('end_date_transaksi') ? \Carbon\Carbon::parse(request('end_date_transaksi'))->format('d-m-Y') : '' }}">
+                        </div>
+                        <input type="hidden" id="end_date_transaksi" name="end_date_transaksi" value="{{ request('end_date_transaksi') }}">
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" id="btnReset" 
+                            class="h-[40px] px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-xl font-bold uppercase tracking-wider text-sm transition-colors flex items-center gap-2 whitespace-nowrap shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                        Reset
+                    </button>
+                    <button type="submit" class="h-[40px] px-8 bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 rounded-xl font-bold uppercase tracking-wider text-sm transition-all flex items-center gap-2 whitespace-nowrap shadow-md hover:shadow-indigo-200 dark:hover:shadow-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        Search
+                    </button>
+                </div>
+            </form>
+        </div>
 
         @if(isset($vehicleResults) && $vehicleResults->count() > 0)
             <div class="mt-8 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
                 <div class="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center bg-slate-50 dark:bg-slate-800/50">
                     <h3 class="text-lg font-bold text-slate-800 dark:text-slate-100">Daftar Mobil: <span class="text-indigo-600 dark:text-indigo-400">{{ request('nama_customer') ? (\App\Models\customer::where('kode_customer', request('nama_customer'))->value('nama_customer') ?? request('nama_customer')) : 'Semua Customer / Kendaraan' }}</span></h3>
                 </div>
-                <div class="p-6 overflow-x-auto">
-                    <table id="vehicleListTable" class="w-full text-sm text-left whitespace-nowrap">
-                        <thead class="text-xs text-slate-500 uppercase bg-slate-50 dark:bg-slate-900/50 dark:text-slate-400">
-                            <tr>
-                                <th class="px-4 py-3 font-bold">Nomor Polisi</th>
-                                <th class="px-4 py-3 font-bold">Nomor Chassis</th>
-                                <th class="px-4 py-3 font-bold">Model</th>
-                                <th class="px-4 py-3 font-bold whitespace-normal">Tahun Pembuatan</th>
-                                <th class="px-4 py-3 font-bold">Warna</th>
-                                <th class="px-4 py-3 font-bold">Nomor Mesin</th>
-                                <th class="px-4 py-3 font-bold whitespace-normal">Tanggal Pembelian</th>
-                                <th class="px-4 py-3 font-bold">Kode Supplier</th>
-                                <th class="px-4 py-3 font-bold text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                <div class="p-6">
+                    <style>
+                        /* Frozen Table styles */
+                        .frozen-table-container {
+                            max-height: calc(100vh - 460px);
+                            min-height: 300px;
+                            overflow: auto;
+                            position: relative;
+                            border: 1px solid rgb(226 232 240);
+                            border-radius: 0.75rem;
+                        }
+                        .dark .frozen-table-container {
+                            border-color: rgb(30 41 59);
+                        }
+                        .frozen-table {
+                            border-collapse: separate;
+                            border-spacing: 0;
+                            width: 100%;
+                        }
+                        .frozen-table thead {
+                            position: sticky;
+                            top: 0;
+                            z-index: 20;
+                        }
+                        .frozen-table thead th {
+                            background: rgb(248 250 252);
+                            color: rgb(100 116 139);
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                            text-transform: uppercase;
+                            letter-spacing: 0.05em;
+                            padding: 0.75rem 1rem;
+                            border-bottom: 1px solid rgb(226 232 240);
+                            white-space: nowrap;
+                        }
+                        .dark .frozen-table thead th {
+                            background: rgb(2 6 23);
+                            color: rgb(148 163 184);
+                            border-bottom-color: rgb(30 41 59);
+                        }
+                        .frozen-table th.sticky-col,
+                        .frozen-table td.sticky-col {
+                            position: sticky;
+                            left: 0;
+                            z-index: 10;
+                        }
+                        .frozen-table thead th.sticky-col {
+                            z-index: 30;
+                            background: rgb(248 250 252);
+                        }
+                        .dark .frozen-table thead th.sticky-col {
+                            background: rgb(2 6 23);
+                        }
+                        .frozen-table tbody td.sticky-col {
+                            background: rgb(255 255 255);
+                        }
+                        .dark .frozen-table tbody td.sticky-col {
+                            background: rgb(15 23 42);
+                        }
+                        .frozen-table tbody tr:hover td.sticky-col {
+                            background: rgb(248 250 252 / 0.8);
+                        }
+                        .dark .frozen-table tbody tr:hover td.sticky-col {
+                            background: rgb(30 41 59 / 0.8);
+                        }
+                        .frozen-table th.sticky-col::after,
+                        .frozen-table td.sticky-col::after {
+                            content: '';
+                            position: absolute;
+                            top: 0; right: -8px; bottom: 0;
+                            width: 8px;
+                            background: linear-gradient(to right, rgba(0,0,0,0.06), transparent);
+                            pointer-events: none;
+                        }
+                        .frozen-table tbody td {
+                            padding: 0.625rem 1rem;
+                            font-size: 0.8125rem;
+                            color: rgb(51 65 85);
+                            border-bottom: 1px solid rgb(241 245 249);
+                            vertical-align: middle;
+                        }
+                        .dark .frozen-table tbody td {
+                            color: rgb(203 213 225);
+                            border-bottom-color: rgb(30 41 59);
+                        }
+                    </style>
+                    <div class="frozen-table-container">
+                        <table id="vehicleListTable" class="frozen-table" style="min-width: 1400px;">
+                            <thead>
+                                <tr>
+                                    <th class="sticky-col">Nomor Polisi</th>
+                                    <th>Nomor Chassis</th>
+                                    <th>Model</th>
+                                    <th>Tahun</th>
+                                    <th>Warna</th>
+                                    <th>Nomor Mesin</th>
+                                    <th>Beli</th>
+                                    <th>Supplier</th>
+                                    <th class="text-rose-600 dark:text-rose-400">Last Tgl</th>
+                                    <th class="text-rose-600 dark:text-rose-400">Last KM</th>
+                                    <th class="text-rose-600 dark:text-rose-400">Total Cost</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                             @foreach($vehicleResults as $v)
                             <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                                <td class="px-4 py-3 font-medium text-slate-900 dark:text-white">{{ $v->nomor_polisi ?: '-' }}</td>
-                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->nomor_chassis ?: '-' }}</td>
-                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->model ?: '-' }}</td>
-                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->tahun_pembuatan ?: '-' }}</td>
-                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->warna ?: '-' }}</td>
-                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->nomor_mesin ?: '-' }}</td>
-                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->tanggal_pembelian ?: '-' }}</td>
-                                <td class="px-4 py-3 text-slate-600 dark:text-slate-300">{{ $v->kode_sup ?: '-' }}</td>
-                                <td class="px-4 py-3 text-center">
+                                <td class="sticky-col font-bold text-slate-900 dark:text-white">{{ $v->nomor_polisi ?: '-' }}</td>
+                                <td>{{ $v->nomor_chassis ?: '-' }}</td>
+                                <td>{{ $v->model ?: '-' }}</td>
+                                <td>{{ $v->tahun_pembuatan ?: '-' }}</td>
+                                <td>{{ $v->warna ?: '-' }}</td>
+                                <td>{{ $v->nomor_mesin ?: '-' }}</td>
+                                <td>{{ $v->tanggal_pembelian ?: '-' }}</td>
+                                <td>{{ $v->kode_sup ?: '-' }}</td>
+                                <td class="text-rose-600 dark:text-rose-400 font-bold">{{ $v->last_job_date ?: '-' }}</td>
+                                <td class="text-rose-600 dark:text-rose-400 font-bold">{{ $v->last_job_km ? number_format($v->last_job_km, 0, ',', '.') : '-' }}</td>
+                                <td class="text-rose-600 dark:text-rose-400 font-black">Rp {{ number_format($v->total_cost, 0, ',', '.') }}</td>
+                                <td class="text-center">
                                     <a href="{{ route('maintenance.vehicle.transactions', [
                                         'nama_customer' => request('nama_customer'),
                                         'nomor_polisi' => $v->nomor_polisi,
                                         'start_date_transaksi' => request('start_date_transaksi'),
                                         'end_date_transaksi' => request('end_date_transaksi')
                                     ]) }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 transition-colors shadow-sm">
-                                        Lihat Transaksi
+                                        Lihat
                                     </a>
                                 </td>
                             </tr>
@@ -336,30 +447,63 @@ $(document).ready(function() {
         }
     });
 
-    $('#tanggal_job_transaksi').daterangepicker({
+    // Start Date Picker
+    $('#start_date_display').daterangepicker({
+        singleDatePicker: true,
         autoUpdateInput: false,
+        showDropdowns: true,
         locale: {
             cancelLabel: 'Clear',
             format: 'DD-MM-YYYY'
         }
     });
 
-    $('#tanggal_job_transaksi').on('apply.daterangepicker', function(ev, picker) {
-        $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
-        $('#start_date_transaksi').val(picker.startDate.format('YYYY-MM-DD'));
-        $('#end_date_transaksi').val(picker.endDate.format('YYYY-MM-DD'));
+    // End Date Picker
+    $('#end_date_display').daterangepicker({
+        singleDatePicker: true,
+        autoUpdateInput: false,
+        showDropdowns: true,
+        locale: {
+            cancelLabel: 'Clear',
+            format: 'DD-MM-YYYY'
+        }
     });
 
-    $('#tanggal_job_transaksi').on('cancel.daterangepicker', function(ev, picker) {
+    $('#start_date_display, #end_date_display').on('apply.daterangepicker', function(ev, picker) {
+        $(this).val(picker.startDate.format('DD-MM-YYYY'));
+        if (ev.target.id === 'start_date_display') {
+            $('#start_date_transaksi').val(picker.startDate.format('YYYY-MM-DD'));
+        } else {
+            $('#end_date_transaksi').val(picker.startDate.format('YYYY-MM-DD'));
+        }
+    });
+
+    $('#start_date_display, #end_date_display').on('cancel.daterangepicker', function(ev, picker) {
         $(this).val('');
+        if (ev.target.id === 'start_date_display') {
+            $('#start_date_transaksi').val('');
+        } else {
+            $('#end_date_transaksi').val('');
+        }
+    });
+
+    // Reset button
+    $('#btnReset').on('click', function() {
+        $('#nomor_polisi').val(null).trigger('change');
+        $('#nama_customer').val(null).trigger('change');
+        $('#start_date_display').val('');
         $('#start_date_transaksi').val('');
+        $('#end_date_display').val('');
         $('#end_date_transaksi').val('');
+        $('#filterForm').submit();
     });
 
     if ($('#vehicleListTable').length > 0) {
         $('#vehicleListTable').DataTable({
             "pageLength": 10,
             "lengthMenu": [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
+            "autoWidth": false,
+            "scrollX": false,
             "language": {
                 "search": "",
                 "searchPlaceholder": "Search..."

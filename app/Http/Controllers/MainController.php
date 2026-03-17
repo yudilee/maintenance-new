@@ -11,15 +11,19 @@ class MainController extends Controller
 {
     public function index(Request $request)
     {
-        $vehicleResults = collect();
-        $mobilDetail = null;
-
         // If a specific vehicle is selected, skip the directory and go straight to its transactions
         if ($request->filled('nomor_polisi')) {
             return redirect()->route('maintenance.vehicle.transactions', $request->all());
         }
 
-        // If no specific vehicle is selected, process other filters
+        // If no specific vehicle is selected, check for other filters
+        if (!$request->filled('nama_customer') && !$request->filled('start_date_transaksi') && !$request->filled('end_date_transaksi')) {
+            // Default: redirect to transactions (New default)
+            return redirect()->route('maintenance.vehicle.transactions');
+        }
+
+        $vehicleResults = collect();
+        $mobilDetail = null;
         $hasFilters = false;
         $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
 
@@ -43,11 +47,53 @@ class MainController extends Controller
         }
 
         if ($hasFilters) {
-            // Extract distinct vehicle IDs first using SQL instead of loading all htransaksi rows into RAM
+            $customerID = null;
+            if ($request->filled('nama_customer')) {
+                $customerID = Customer::where('kode_customer', $request->nama_customer)->value('id');
+            }
+
+            // Extract distinct vehicle IDs
             $vehicleIds = $htransaksiQuery->select('nomor_chassis')->distinct()->pluck('nomor_chassis');
             
-            // Fetch the vehicles matching those IDs
-            $vehicleResults = Mobil::whereIn('nomor_chassis', $vehicleIds)->get()->unique('nomor_chassis')->values();
+            // Fetch the vehicles matching those IDs with maintenance summary data
+            $vehicleResults = Mobil::whereIn('nomor_chassis', $vehicleIds)
+                ->get()
+                ->unique('nomor_chassis')
+                ->values()
+                ->map(function ($vehicle) use ($request, $customerID) {
+                    $baseQuery = Htransaksi::where('nomor_chassis', $vehicle->nomor_chassis);
+                    
+                    if ($customerID) {
+                        $baseQuery->where('id_customer', $customerID);
+                    }
+
+                    $closedStates = ['done', '2binvoiced', 'close'];
+                    $baseQuery->where(function($q) use ($closedStates) {
+                        $q->whereIn('state', $closedStates)
+                          ->orWhereNull('state')
+                          ->orWhere('state', '');
+                    });
+
+                    // For Total Cost and Last Job, respect date filters if provided
+                    $filteredQuery = clone $baseQuery;
+                    if ($request->filled('start_date_transaksi')) {
+                        $filteredQuery->where('tanggal_job', '>=', $request->start_date_transaksi);
+                    }
+                    if ($request->filled('end_date_transaksi')) {
+                        $filteredQuery->where('tanggal_job', '<=', $request->end_date_transaksi);
+                    }
+
+                    $totalCost = (clone $filteredQuery)->selectRaw('SUM(COALESCE(harga_total, 0) + COALESCE(harga_pajak, 0)) as total')->value('total');
+                    $lastJob = (clone $filteredQuery)->orderBy('tanggal_job', 'DESC')
+                        ->orderBy('id', 'DESC')
+                        ->first();
+
+                    $vehicle->last_job_date = $lastJob ? $lastJob->tanggal_job : '-';
+                    $vehicle->last_job_km = $lastJob ? $lastJob->posisi_km : '-';
+                    $vehicle->total_cost = $totalCost ?? 0;
+
+                    return $vehicle;
+                });
         }
 
         return view('main', compact('vehicleResults', 'mobilDetail'));

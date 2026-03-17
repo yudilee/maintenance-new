@@ -6,8 +6,12 @@
         <div>
             <h1 class="text-2xl font-bold text-slate-800 dark:text-slate-100">
                 Maintenance History
-                <span class="text-sm font-normal text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-lg ml-3">
-                    {{ $nomor_polisi ? $nomor_polisi . ' - ' : '' }}{{ $nama_customer ? $nama_customer : 'All Vehicles' }}
+                <span x-show="nomorPolisiFilter || namaCustomerFilter" class="text-sm font-normal text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-lg ml-3">
+                    <span x-text="nomorPolisiFilter ? nomorPolisiFilter + ' - ' : ''"></span>
+                    <span x-text="namaCustomerFilter ? namaCustomerFilter : 'All Vehicles'"></span>
+                </span>
+                <span x-show="!nomorPolisiFilter && !namaCustomerFilter" class="text-sm font-normal text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 px-3 py-1 rounded-lg ml-3">
+                    All Vehicles
                 </span>
             </h1>
             <p class="text-slate-500 dark:text-slate-400 text-sm mt-1">Operational Cost Report</p>
@@ -15,63 +19,78 @@
     </div>
 
     <div class="p-6">
-        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 md:p-6 mb-6 flex flex-col md:flex-row gap-4">
-            <div class="flex-1">
-                <label for="nomor_polisi_select" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Nomor Polisi</label>
-                <select id="nomor_polisi_select" x-model="nomorPolisiFilter" x-on:change="reloadTable()" class="w-full select2-nomor-polisi">
-                    <option></option>
-                </select>
-            </div>
+        <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-4 md:p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label for="nomor_polisi_select" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Nomor Polisi</label>
+                    <select id="nomor_polisi_select" x-model="nomorPolisiFilter" class="w-full select2-nomor-polisi">
+                        <option></option>
+                    </select>
+                </div>
 
-            <div class="flex-1">
-                <label for="nama_customer_select" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Nama Customer</label>
-                <select id="nama_customer_select" x-model="namaCustomerFilter" x-on:change="reloadTable()" class="w-full select2-customer">
-                    <option></option>
-                </select>
-            </div>
-            
-            <div class="flex-1">
-                <label for="tanggal_job_transaksi" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Tanggal Job</label>
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                <div>
+                    <label for="nama_customer_select" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Nama Customer</label>
+                    <select id="nama_customer_select" x-model="namaCustomerFilter" class="w-full select2-customer">
+                        <option></option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="start_date_transaksi" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">Start Date</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <input type="text" x-model="startDateDisplay" class="pl-9 w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors h-10 shadow-sm date-picker" id="start_date_transaksi" autocomplete="off" placeholder="DD-MM-YYYY">
                     </div>
-                    <input type="text" class="pl-9 w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors h-10 shadow-sm" id="tanggal_job_transaksi" autocomplete="off" placeholder="Select date range...">
+                </div>
+
+                <div>
+                    <label for="end_date_transaksi" class="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 uppercase tracking-wider">End Date</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <input type="text" x-model="endDateDisplay" class="pl-9 w-full text-sm border-slate-200 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors h-10 shadow-sm date-picker" id="end_date_transaksi" autocomplete="off" placeholder="DD-MM-YYYY">
+                    </div>
                 </div>
             </div>
-            
-            <div class="flex items-end">
-                <button @click="startDate = ''; endDate = ''; nomorPolisiFilter = ''; namaCustomerFilter = ''; $('#nomor_polisi_select').val(null).trigger('change'); $('#nama_customer_select').val(null).trigger('change'); $('#tanggal_job_transaksi').val(''); reloadTable()" 
+
+            <div class="flex justify-end gap-3">
+                <button @click="resetFilters()" 
                         class="h-[40px] px-6 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-600 rounded-xl font-bold uppercase tracking-wider text-sm transition-colors flex items-center gap-2 whitespace-nowrap shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Reset
                 </button>
+                <button @click="reloadTable()" 
+                        class="h-[40px] px-8 bg-indigo-600 hover:bg-indigo-700 text-white border border-indigo-600 rounded-xl font-bold uppercase tracking-wider text-sm transition-all flex items-center gap-2 whitespace-nowrap shadow-md hover:shadow-indigo-200 dark:hover:shadow-none">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    Search
+                </button>
             </div>
         </div>
 
-        @if($mobilDetail)
-        <div class="bg-white dark:bg-slate-800 border-l-4 border-indigo-500 rounded-2xl shadow-sm mb-8 overflow-hidden">
+        <div x-show="mobilDetail" x-cloak class="bg-white dark:bg-slate-800 border-l-4 border-indigo-500 rounded-2xl shadow-sm mb-8 overflow-hidden">
             <div class="bg-slate-50 dark:bg-slate-800/80 px-5 py-3 border-b border-slate-100 dark:border-slate-700">
                 <h3 class="font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wider text-sm">Detail Mobil</h3>
             </div>
             <div class="p-5 grid grid-cols-1 md:grid-cols-3 gap-6 text-sm">
                 <div class="space-y-3">
-                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Polisi:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->nomor_polisi ?: '-' }}</span></div>
-                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Tahun Pembuatan:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->tahun_pembuatan ?: '-' }}</span></div>
-                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Tanggal Pembelian:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->tanggal_pembelian ?: '-' }}</span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Polisi:</span> <span x-text="mobilDetail?.nomor_polisi || '-'" class="font-bold text-slate-800 dark:text-slate-200 md:ml-2"></span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Tahun Pembuatan:</span> <span x-text="mobilDetail?.tahun_pembuatan || '-'" class="font-bold text-slate-800 dark:text-slate-200 md:ml-2"></span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Tanggal Pembelian:</span> <span x-text="mobilDetail?.tanggal_pembelian || '-'" class="font-bold text-slate-800 dark:text-slate-200 md:ml-2"></span></div>
                 </div>
                 <div class="space-y-3">
-                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Chassis:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->nomor_chassis ?: '-' }}</span></div>
-                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Warna:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->warna ?: '-' }}</span></div>
-                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Kode Supplier:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->kode_sup ?: '-' }}</span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Chassis:</span> <span x-text="mobilDetail?.nomor_chassis || '-'" class="font-bold text-slate-800 dark:text-slate-200 md:ml-2"></span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Warna:</span> <span x-text="mobilDetail?.warna || '-'" class="font-bold text-slate-800 dark:text-slate-200 md:ml-2"></span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Kode Supplier:</span> <span x-text="mobilDetail?.kode_sup || '-'" class="font-bold text-slate-800 dark:text-slate-200 md:ml-2"></span></div>
                 </div>
                 <div class="space-y-3">
-                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Model:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->model ?: '-' }}</span></div>
-                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Mesin:</span> <span class="font-bold text-slate-800 dark:text-slate-200 md:ml-2">{{ $mobilDetail->nomor_mesin ?: '-' }}</span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Model:</span> <span x-text="mobilDetail?.model || '-'" class="font-bold text-slate-800 dark:text-slate-200 md:ml-2"></span></div>
+                    <div class="flex justify-between md:block"><span class="text-slate-500 font-medium">Nomor Mesin:</span> <span x-text="mobilDetail?.nomor_mesin || '-'" class="font-bold text-slate-800 dark:text-slate-200 md:ml-2"></span></div>
                 </div>
             </div>
         </div>
-        @endif
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-8">
             <div class="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm hover:border-indigo-300 transition-colors">
@@ -85,6 +104,7 @@
         </div>
 
         <style>
+            [x-cloak] { display: none !important; }
             /* Frozen Table - matching total_stock pattern */
             .frozen-table-container {
                 max-height: calc(100vh - 460px);
@@ -568,6 +588,9 @@
                 namaCustomerFilter: '{{ $nama_customer ?? "" }}',
                 startDate: '{{ request("start_date_transaksi") ?? "" }}',
                 endDate: '{{ request("end_date_transaksi") ?? "" }}',
+                startDateDisplay: '{{ request("start_date_transaksi") ? \Carbon\Carbon::parse(request("start_date_transaksi"))->format("d-m-Y") : "" }}',
+                endDateDisplay: '{{ request("end_date_transaksi") ? \Carbon\Carbon::parse(request("end_date_transaksi"))->format("d-m-Y") : "" }}',
+                mobilDetail: @json($mobilDetail),
                 table: null,
 
                 initTable() {
@@ -595,6 +618,8 @@
                                     $('#kpi-cost').text('Rp ' + json.grandTotals.grandTotal.toLocaleString('id-ID'));
                                     $('#kpi-tax').text('Rp ' + json.grandTotals.hargaPajak.toLocaleString('id-ID'));
                                 }
+                                // Update mobilDetail from AJAX response
+                                self.mobilDetail = json.mobilDetail;
                                 return json.data;
                             }
                         },
@@ -678,9 +703,33 @@
         },
 
         reloadTable() {
+            // If searching by customer ONLY (no vehicle selected), redirect to the vehicle list view
+            if (this.namaCustomerFilter && !this.nomorPolisiFilter) {
+                let url = new URL("{{ route('maintenance.dashboard') }}", window.location.origin);
+                url.searchParams.append('nama_customer', this.namaCustomerFilter);
+                if (this.startDate) url.searchParams.append('start_date_transaksi', this.startDate);
+                if (this.endDate) url.searchParams.append('end_date_transaksi', this.endDate);
+                window.location.href = url.href;
+                return;
+            }
+
             if (this.table) {
                 this.table.ajax.reload();
             }
+        },
+
+        resetFilters() {
+            this.startDate = '';
+            this.endDate = '';
+            this.startDateDisplay = '';
+            this.endDateDisplay = '';
+            this.nomorPolisiFilter = '';
+            this.namaCustomerFilter = '';
+            $('.select2-nomor-polisi').val(null).trigger('change');
+            $('.select2-customer').val(null).trigger('change');
+            $('#start_date_transaksi').val('');
+            $('#end_date_transaksi').val('');
+            this.reloadTable();
         }
     }
 }
@@ -802,34 +851,71 @@
                         var customerDetail = (response.nomor_polisi || response.customer)
                             ? [(response.nomor_polisi || ''), (response.customer || '')].filter(Boolean).join(' - ')
                             : 'All Vehicles';
+
+                        var headerContent = [];
+                        if (response.mobilDetail) {
+                            headerContent.push({
+                                text: response.mobilDetail.nomor_polisi || 'Maintenance History',
+                                style: 'header',
+                                margin: [0, 0, 0, 10]
+                            });
+
+                            headerContent.push({
+                                table: {
+                                    widths: ['*', '*', '*'],
+                                    body: [
+                                        [
+                                            { text: [{ text: 'Nomor Polisi: ', bold: true }, response.mobilDetail.nomor_polisi || '-'], border: [0, 0, 0, 0] },
+                                            { text: [{ text: 'Nomor Chassis: ', bold: true }, response.mobilDetail.nomor_chassis || '-'], border: [0, 0, 0, 0] },
+                                            { text: [{ text: 'Model: ', bold: true }, response.mobilDetail.model || '-'], border: [0, 0, 0, 0] }
+                                        ],
+                                        [
+                                            { text: [{ text: 'Tahun Pembuatan: ', bold: true }, response.mobilDetail.tahun_pembuatan || '-'], border: [0, 0, 0, 0] },
+                                            { text: [{ text: 'Warna: ', bold: true }, response.mobilDetail.warna || '-'], border: [0, 0, 0, 0] },
+                                            { text: [{ text: 'Nomor Mesin: ', bold: true }, response.mobilDetail.nomor_mesin || '-'], border: [0, 0, 0, 0] }
+                                        ],
+                                        [
+                                            { text: [{ text: 'Tanggal Pembelian: ', bold: true }, response.mobilDetail.tanggal_pembelian || '-'], border: [0, 0, 0, 0] },
+                                            { text: [{ text: 'Kode Supplier: ', bold: true }, response.mobilDetail.kode_sup || '-'], border: [0, 0, 0, 0] },
+                                            { text: '', border: [0, 0, 0, 0] }
+                                        ]
+                                    ]
+                                },
+                                margin: [0, 0, 0, 15],
+                                fontSize: 9
+                            });
+                        } else {
+                            headerContent.push({
+                                text: 'Data Report Transaksi',
+                                style: 'header',
+                                margin: [0, 0, 0, 4]
+                            });
+                            headerContent.push({
+                                text: customerDetail,
+                                margin: [0, 0, 0, 10]
+                            });
+                        }
+
                         var docDefinition = {
                             pageOrientation: 'landscape',
-                            pageSize: 'A3',
-                            pageMargins: [8, 25, 8, 25],
-                            content: [{
-                                    text: 'Data Report Transaksi',
-                                    style: 'header'
-                                },
-                                {
-                                    text: customerDetail,
-                                    margin: [0, 0, 0, 8]
-                                },
-                                {
+                            pageSize: 'A4',
+                            pageMargins: [20, 20, 20, 20],
+                            content: headerContent.concat([{
                                     table: {
                                         headerRows: 1,
-                        widths: [100, 55, 45, 75, 130, 35, 60, 70, 60, 110],
+                                        widths: [85, 45, 35, 60, 110, 25, 60, 70, 55, 180],
                                         body: [
                                             [
                                                 {text: 'Nomor Job', style: 'tableHeader'},
                                                 {text: 'Tgl Job', style: 'tableHeader'},
                                                 {text: 'Pos KM', style: 'tableHeader'},
-                                                {text: 'Maintenance/Service', style: 'tableHeader'},
+                                                {text: 'Service', style: 'tableHeader'},
                                                 {text: 'Deskripsi', style: 'tableHeader'},
-                                                {text: 'Jumlah', style: 'tableHeader'},
+                                                {text: 'Qty', style: 'tableHeader'},
                                                 {text: 'Harga', style: 'tableHeader'},
-                                                {text: 'Harga Total', style: 'tableHeader'},
-                                                {text: 'Harga Pajak', style: 'tableHeader'},
-                                                {text: 'Keterangan', style: 'tableHeader'}
+                                                {text: 'Total', style: 'tableHeader'},
+                                                {text: 'Tax', style: 'tableHeader'},
+                                                {text: 'Ket', style: 'tableHeader'}
                                             ]
                                         ].concat(response.data.map(function(row) {
                                             // Format values to match view display
@@ -918,7 +1004,7 @@
                                         }
                                     }
                                 }
-                            ],
+                            ]),
                             styles: {
                                 header: {
                                     fontSize: 15,
@@ -981,7 +1067,6 @@ $(document).ready(function() {
             }).on('change', function(e) {
                 let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
                 alpineData.nomorPolisiFilter = $(this).val();
-                alpineData.reloadTable();
             });
 
             // Select2 for Customer
@@ -1007,36 +1092,59 @@ $(document).ready(function() {
             }).on('change', function(e) {
                 let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
                 alpineData.namaCustomerFilter = $(this).val();
-                alpineData.reloadTable();
             });
 
-            // Date range picker logic
-            $('#tanggal_job_transaksi').daterangepicker({
+            // Split date pickers
+            $('#start_date_transaksi').daterangepicker({
+                singleDatePicker: true,
                 autoUpdateInput: false,
+                showDropdowns: true,
                 locale: {
                     cancelLabel: 'Clear',
                     format: 'DD-MM-YYYY'
                 }
-            });
-
-            @if(request('start_date_transaksi') && request('end_date_transaksi'))
-                $('#tanggal_job_transaksi').val("{{ \Carbon\Carbon::parse(request('start_date_transaksi'))->format('d-m-Y') }} - {{ \Carbon\Carbon::parse(request('end_date_transaksi'))->format('d-m-Y') }}");
-            @endif
-
-            $('#tanggal_job_transaksi').on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('DD-MM-YYYY') + ' - ' + picker.endDate.format('DD-MM-YYYY'));
+            }, function(start) {
                 let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
-                alpineData.startDate = picker.startDate.format('YYYY-MM-DD');
-                alpineData.endDate = picker.endDate.format('YYYY-MM-DD');
-                alpineData.reloadTable();
+                alpineData.startDate = start.format('YYYY-MM-DD');
+                alpineData.startDateDisplay = start.format('DD-MM-YYYY');
             });
 
-            $('#tanggal_job_transaksi').on('cancel.daterangepicker', function(ev, picker) {
+            $('#end_date_transaksi').daterangepicker({
+                singleDatePicker: true,
+                autoUpdateInput: false,
+                showDropdowns: true,
+                locale: {
+                    cancelLabel: 'Clear',
+                    format: 'DD-MM-YYYY'
+                }
+            }, function(start) {
+                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
+                alpineData.endDate = start.format('YYYY-MM-DD');
+                alpineData.endDateDisplay = start.format('DD-MM-YYYY');
+            });
+
+            $('#start_date_transaksi, #end_date_transaksi').on('apply.daterangepicker', function(ev, picker) {
+                $(this).val(picker.startDate.format('DD-MM-YYYY'));
+                let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
+                if (ev.target.id === 'start_date_transaksi') {
+                    alpineData.startDate = picker.startDate.format('YYYY-MM-DD');
+                    alpineData.startDateDisplay = picker.startDate.format('DD-MM-YYYY');
+                } else {
+                    alpineData.endDate = picker.startDate.format('YYYY-MM-DD');
+                    alpineData.endDateDisplay = picker.startDate.format('DD-MM-YYYY');
+                }
+            });
+
+            $('#start_date_transaksi, #end_date_transaksi').on('cancel.daterangepicker', function(ev, picker) {
                 $(this).val('');
                 let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
-                alpineData.startDate = '';
-                alpineData.endDate = '';
-                alpineData.reloadTable();
+                if (ev.target.id === 'start_date_transaksi') {
+                    alpineData.startDate = '';
+                    alpineData.startDateDisplay = '';
+                } else {
+                    alpineData.endDate = '';
+                    alpineData.endDateDisplay = '';
+                }
             });
         });
     </script>
