@@ -89,7 +89,7 @@ class OdooSettingController extends Controller
         set_time_limit(0); // Prevent PHP from killing the process after 30 seconds
         
         try {
-            if ($request->get('force') == '1') {
+            if ($request->get('force') == '1' || $request->get('isFullSync') == '1') {
                 $setting = \App\Models\OdooSetting::first();
                 if ($setting) {
                     $setting->update(['last_sync' => null]);

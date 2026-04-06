@@ -58,11 +58,11 @@
                                 <svg x-show="isTesting" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 <span>Test Connection</span>
                             </button>
-                            <button type="button" @click="syncNow(false)" :disabled="isSyncing" class="px-5 py-2.5 bg-indigo-600 text-white border border-indigo-700 rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 dark:shadow-none flex items-center gap-2">
+                            <button type="button" @click="performOdooSync(false)" :disabled="isSyncing" class="px-5 py-2.5 bg-indigo-600 text-white border border-indigo-700 rounded-xl font-medium hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 dark:shadow-none flex items-center gap-2">
                                 <svg x-show="isSyncing && !isForceSyncing" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 <span>Sync Now</span>
                             </button>
-                            <button type="button" @click="forceFullSync" :disabled="isSyncing" class="px-5 py-2.5 bg-rose-600 text-white border border-rose-700 rounded-xl font-medium hover:bg-rose-700 transition-colors shadow-sm shadow-rose-200 dark:shadow-none flex items-center gap-2" title="Clear last sync date and fetch everything from Odoo">
+                            <button type="button" @click="triggerFullOdooSync" :disabled="isSyncing" class="px-5 py-2.5 bg-rose-600 text-white border border-rose-700 rounded-xl font-medium hover:bg-rose-700 transition-colors shadow-sm shadow-rose-200 dark:shadow-none flex items-center gap-2" title="Clear last sync date and fetch everything from Odoo">
                                 <svg x-show="isSyncing && isForceSyncing" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
                                 <span>Force Full Sync</span>
                             </button>
@@ -239,19 +239,19 @@
                 });
             },
             
-            syncNow(force = false) {
+            performOdooSync(isFullSync = false) {
                 this.isSyncing = true;
-                if (force) this.isForceSyncing = true;
+                if (isFullSync) this.isForceSyncing = true;
                 this.syncResult = null;
                 
-                console.log('Starting sync, force=' + force);
+                console.log('X-SYNC-START: isFullSync=' + isFullSync);
                 
                 $.ajax({
                     url: "{{ route('maintenance.odoo.sync_now', [], false) }}",
                     type: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",
-                        force: force ? 1 : 0
+                        isFullSync: isFullSync ? 1 : 0
                     },
                     success: (response) => {
                         this.syncResult = response;
@@ -271,10 +271,10 @@
                     }
                 });
             },
-            forceFullSync() {
+            triggerFullOdooSync() {
                 if(confirm("Are you sure you want to force a FULL sync? This will fetch all data from Odoo and might take several minutes.")) {
-                    console.log('User confirmed FULL sync. Calling syncNow(true)...');
-                    this.syncNow(true);
+                    console.log('X-CONFIRM: Triggering full sync...');
+                    this.performOdooSync(true);
                 }
             }
 
