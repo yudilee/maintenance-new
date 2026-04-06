@@ -210,15 +210,14 @@
                 this.isTesting = true;
                 
                 $.ajax({
-                    url: "{{ route('maintenance.odoo.test_connection') }}",
-                    type: "POST",
-                    data: {
                         _token: "{{ csrf_token() }}",
                         odoo_url: $('#odoo_url').val(),
                         database: $('#database').val(),
                         user_email: $('#user_email').val(),
                         api_key: $('#api_key').val()
                     },
+                    url: "{{ route('maintenance.odoo.test_connection', [], false) }}",
+                    type: "POST",
                     success: (response) => {
                         Toast.fire({
                             icon: response.success ? 'success' : 'error',
@@ -244,7 +243,7 @@
                 if (force) this.isForceSyncing = true;
                 this.syncResult = null;
                 try {
-                    let url = "{{ route('maintenance.odoo.sync_now') }}";
+                    let url = "{{ route('maintenance.odoo.sync_now', [], false) }}";
                     if (force) url += "?force=1";
                     const response = await fetch(url, {
                         method: 'POST',
