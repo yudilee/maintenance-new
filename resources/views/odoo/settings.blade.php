@@ -271,8 +271,9 @@
                     }
                 });
             },
-            async forceFullSync() {
+            forceFullSync() {
                 if(confirm("Are you sure you want to force a FULL sync? This will fetch all data from Odoo and might take several minutes.")) {
+                    console.log('User confirmed FULL sync. Calling syncNow(true)...');
                     this.syncNow(true);
                 }
             }
