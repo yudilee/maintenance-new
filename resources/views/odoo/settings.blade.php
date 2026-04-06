@@ -210,14 +210,15 @@
                 this.isTesting = true;
                 
                 $.ajax({
+                    url: "{{ route('maintenance.odoo.test_connection', [], false) }}",
+                    type: "POST",
+                    data: {
                         _token: "{{ csrf_token() }}",
                         odoo_url: $('#odoo_url').val(),
                         database: $('#database').val(),
                         user_email: $('#user_email').val(),
                         api_key: $('#api_key').val()
                     },
-                    url: "{{ route('maintenance.odoo.test_connection', [], false) }}",
-                    type: "POST",
                     success: (response) => {
                         Toast.fire({
                             icon: response.success ? 'success' : 'error',
