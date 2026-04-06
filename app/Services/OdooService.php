@@ -323,9 +323,9 @@ class OdooService
 
             $lotId = $lotIds[0];
 
-            // 2. Search all repair orders for this lot
+            // 2. Search recent repair orders for this lot (starting from Dec 8, 2025)
             $repairIds = $this->execute('repair.order', 'search', [
-                [['lot_id', '=', $lotId]]
+                [['lot_id', '=', $lotId], ['create_date', '>=', '2025-12-08 00:00:00']]
             ]);
 
             if (empty($repairIds)) {
