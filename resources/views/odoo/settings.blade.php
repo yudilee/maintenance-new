@@ -239,28 +239,37 @@
                 });
             },
             
-            async syncNow(force = false) {
+            syncNow(force = false) {
                 this.isSyncing = true;
                 if (force) this.isForceSyncing = true;
                 this.syncResult = null;
-                try {
-                    let url = "{{ route('maintenance.odoo.sync_now', [], false) }}";
-                    if (force) url += "?force=1";
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
-                    });
-                    this.syncResult = await response.json();
-                    if (this.syncResult.success) {
-                        // Switch to history tab after a short delay so user sees the result
-                        setTimeout(() => { this.tab = 'history'; }, 2000);
+                
+                console.log('Starting sync, force=' + force);
+                
+                $.ajax({
+                    url: "{{ route('maintenance.odoo.sync_now', [], false) }}",
+                    type: "POST",
+                    data: {
+                        _token: "{{ csrf_token() }}",
+                        force: force ? 1 : 0
+                    },
+                    success: (response) => {
+                        this.syncResult = response;
+                        if (response.success) {
+                            setTimeout(() => { this.tab = 'history'; }, 2000);
+                        }
+                    },
+                    error: (xhr) => {
+                        this.syncResult = { 
+                            success: false, 
+                            message: 'Sync Error: ' + (xhr.responseJSON?.message || xhr.statusText || 'Unknown error') 
+                        };
+                    },
+                    complete: () => {
+                        this.isSyncing = false;
+                        this.isForceSyncing = false;
                     }
-                } catch (e) {
-                    this.syncResult = { success: false, message: 'Error: ' + e.message };
-                } finally {
-                    this.isSyncing = false;
-                    this.isForceSyncing = false;
-                }
+                });
             },
             async forceFullSync() {
                 if(confirm("Are you sure you want to force a FULL sync? This will fetch all data from Odoo and might take several minutes.")) {
