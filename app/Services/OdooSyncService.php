@@ -228,6 +228,12 @@ class OdooSyncService
                     if (!$plateNo || preg_match('/^\d+$/', $plateNo)) $plateNo = $lot['ref'];
                 }
 
+                $jobDate = $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : null;
+                if ($jobDate && $jobDate < '2025-12-08') {
+                    Log::info('Skipping JO due to date < 2025-12-08: ' . ($ro['name'] ?? 'unknown') . ' (' . $jobDate . ')');
+                    continue;
+                }
+
                 if (!$chassisNo) continue;
 
                 // Sync Vehicle
