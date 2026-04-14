@@ -84,7 +84,15 @@ class MainController extends Controller
                     }
 
                     $totalCost = (clone $filteredQuery)->selectRaw('SUM(COALESCE(harga_total, 0) + COALESCE(harga_pajak, 0)) as total')->value('total');
-                    $lastJob = (clone $filteredQuery)->orderBy('tanggal_job', 'DESC')
+                    
+                    // Fetch the absolute last job of the vehicle ignoring date and customer filters
+                    $lastJob = Htransaksi::where('nomor_chassis', $vehicle->nomor_chassis)
+                        ->where(function($q) use ($closedStates) {
+                            $q->whereIn('state', $closedStates)
+                              ->orWhereNull('state')
+                              ->orWhere('state', '');
+                        })
+                        ->orderBy('tanggal_job', 'DESC')
                         ->orderBy('id', 'DESC')
                         ->first();
 

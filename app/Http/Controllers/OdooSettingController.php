@@ -89,7 +89,8 @@ class OdooSettingController extends Controller
         set_time_limit(0); // Prevent PHP from killing the process after 30 seconds
         
         try {
-            if ($request->get('force') == '1' || $request->get('isFullSync') == '1') {
+            $isFullSync = $request->get('force') == '1' || $request->get('isFullSync') == '1';
+            if ($isFullSync) {
                 $setting = \App\Models\OdooSetting::first();
                 if ($setting) {
                     $setting->update(['last_sync' => null]);
@@ -97,7 +98,7 @@ class OdooSettingController extends Controller
                 }
             }
             $service = new OdooSyncService();
-            $result  = $service->sync('Manual');
+            $result  = $service->sync('Manual', null, $isFullSync);
             $message = mb_convert_encoding($result['message'] ?? 'Sync complete.', 'UTF-8', 'UTF-8');
             return response()->json([
                 'success' => $result['success'],

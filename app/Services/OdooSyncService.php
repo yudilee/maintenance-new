@@ -34,7 +34,7 @@ class OdooSyncService
         }
     }
 
-    public function sync($sourceType = 'Manual', $targetJo = null)
+    public function sync($sourceType = 'Manual', $targetJo = null, $isFullSync = false)
     {
         if (!$this->setting) {
             return ['success' => false, 'message' => 'Odoo settings not configured.'];
