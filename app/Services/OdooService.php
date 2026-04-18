@@ -33,11 +33,23 @@ class OdooService
 
     public function __construct()
     {
-        $config = Setting::getOdooConfig();
-        $this->url = rtrim($config['url'] ?? '', '/');
-        $this->db = $config['db'] ?? '';
-        $this->user = $config['user'] ?? '';
-        $this->password = $config['password'] ?? '';
+        // Read from OdooSetting (the actual settings UI table),
+        // falling back to the legacy Setting key-value store if needed.
+        $odooSetting = \App\Models\OdooSetting::first();
+
+        if ($odooSetting) {
+            $this->url      = rtrim($odooSetting->odoo_url ?? '', '/');
+            $this->db       = $odooSetting->database ?? '';
+            $this->user     = $odooSetting->user_email ?? '';
+            $this->password = $odooSetting->api_key ?? '';
+        } else {
+            // Legacy fallback
+            $config = Setting::getOdooConfig();
+            $this->url      = rtrim($config['url'] ?? '', '/');
+            $this->db       = $config['db'] ?? '';
+            $this->user     = $config['user'] ?? '';
+            $this->password = $config['password'] ?? '';
+        }
     }
 
     /**

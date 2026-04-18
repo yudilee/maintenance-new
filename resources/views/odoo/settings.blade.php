@@ -112,9 +112,12 @@
                             <div>
                                 <label class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1" for="sync_interval">Interval</label>
                                 <select id="sync_interval" name="sync_interval" class="w-full text-sm border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 rounded-xl focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors py-2.5">
+                                    <option value="hourly" {{ ($setting?->sync_interval ?? '') == 'hourly' ? 'selected' : '' }}>Every Hour</option>
+                                    <option value="every_2_hours" {{ ($setting?->sync_interval ?? '') == 'every_2_hours' ? 'selected' : '' }}>Every 2 Hours</option>
+                                    <option value="every_4_hours" {{ ($setting?->sync_interval ?? '') == 'every_4_hours' ? 'selected' : '' }}>Every 4 Hours</option>
+                                    <option value="every_6_hours" {{ ($setting?->sync_interval ?? '') == 'every_6_hours' ? 'selected' : '' }}>Every 6 Hours</option>
+                                    <option value="every_12_hours" {{ ($setting?->sync_interval ?? '') == 'every_12_hours' ? 'selected' : '' }}>Every 12 Hours</option>
                                     <option value="daily" {{ ($setting?->sync_interval ?? '') == 'daily' ? 'selected' : '' }}>Daily (Midnight)</option>
-                                    <option value="hourly" {{ ($setting?->sync_interval ?? '') == 'hourly' ? 'selected' : '' }}>Hourly</option>
-                                    <option value="weekly" {{ ($setting?->sync_interval ?? '') == 'weekly' ? 'selected' : '' }}>Weekly</option>
                                 </select>
                             </div>
 
