@@ -198,8 +198,8 @@
                                 <td>{{ $v->tanggal_pembelian ?: '-' }}</td>
                                 <td>{{ $v->kode_sup ?: '-' }}</td>
                                 <td class="text-rose-600 dark:text-rose-400 font-bold">{{ $v->last_job_date ?: '-' }}</td>
-                                <td class="text-rose-600 dark:text-rose-400 font-bold">{{ $v->last_job_km ? number_format($v->last_job_km, 0, ',', '.') : '-' }}</td>
-                                <td class="text-rose-600 dark:text-rose-400 font-black">Rp {{ number_format($v->total_cost, 0, ',', '.') }}</td>
+                                <td class="text-rose-600 dark:text-rose-400 font-bold">{{ is_numeric($v->last_job_km) ? number_format((float)$v->last_job_km, 0, ',', '.') : ($v->last_job_km ?: '-') }}</td>
+                                <td class="text-rose-600 dark:text-rose-400 font-black">Rp {{ number_format((float)$v->total_cost, 0, ',', '.') }}</td>
                                 <td class="text-center">
                                     <a href="{{ route('maintenance.vehicle.transactions', [
                                         'nama_customer' => request('nama_customer'),

@@ -266,6 +266,35 @@ class OdooSyncService
                     );
                 }
 
+                // Sync Customer from repair.order's partner_id field.
+                $customerId = 0;
+                if (!empty($ro['partner_id']) && is_array($ro['partner_id'])) {
+                    $partnerNameRaw = $ro['partner_id'][1];
+                    $kodeCustomer = '';
+                    $namaCustomer = trim($partnerNameRaw);
+
+                    if (preg_match('/^\[(.*?)\]\s*(.*)$/', $partnerNameRaw, $matches)) {
+                        $kodeCustomer = trim($matches[1]);
+                        $namaCustomer = trim($matches[2]);
+                    }
+
+                    $customer = null;
+                    if ($kodeCustomer) {
+                        $customer = \App\Models\Customer::where('kode_customer', $kodeCustomer)->first();
+                    }
+                    if (!$customer && $namaCustomer) {
+                        $customer = \App\Models\Customer::where('nama_customer', $namaCustomer)->first();
+                    }
+
+                    if (!$customer) {
+                        $customer = \App\Models\Customer::create([
+                            'kode_customer' => $kodeCustomer ?: 'O-' . $ro['partner_id'][0],
+                            'nama_customer' => mb_substr($namaCustomer, 0, 100, 'UTF-8')
+                        ]);
+                    }
+                    $customerId = $customer->id;
+                }
+
                 // Sync Head
                 $headerData = [
                     'nomor_job' => $jobNo,
@@ -278,7 +307,7 @@ class OdooSyncService
                     'mtrs' => $ro['km_pickup'] ?? 0,
                     'keterangan' => mb_substr($this->sanitizeText(strip_tags($ro['compute_job_card_repair_notes'] ?? '')), 0, 255, 'UTF-8'),
                     'nomor_sv' => mb_substr($ro['service_type'] ?? '', 0, 50, 'UTF-8'),
-                    'id_customer' => 0,
+                    'id_customer' => $customerId,
                     'sup_invoice' => 0,
                     'pajak' => '0',
                     'kode_sup' => $supplierId,
@@ -463,7 +492,9 @@ class OdooSyncService
     private function odooCall($service, $method, $args)
     {
         try {
-            $response = Http::post("{$this->url}/jsonrpc", [
+            $response = Http::when(app()->environment('local'), function ($request) {
+                return $request->withoutVerifying();
+            })->post("{$this->url}/jsonrpc", [
                 'jsonrpc' => '2.0',
                 'method' => 'call',
                 'params' => [

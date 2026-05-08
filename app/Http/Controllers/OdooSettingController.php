@@ -55,7 +55,9 @@ class OdooSettingController extends Controller
         try {
             // Odoo XML-RPC authentication test endpoint equivalent via JSON-RPC
             // We'll send a basic JSON-RPC authentication request to Odoo's common endpoint
-            $response = Http::post("{$url}/jsonrpc", [
+            $response = Http::when(app()->environment('local'), function ($request) {
+                return $request->withoutVerifying();
+            })->post("{$url}/jsonrpc", [
                 'jsonrpc' => '2.0',
                 'method' => 'call',
                 'params' => [

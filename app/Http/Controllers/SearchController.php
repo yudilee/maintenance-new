@@ -43,9 +43,15 @@ class SearchController extends Controller
     public function customer(Request $request)
     {
         $search = $request->q;
-        $results = \App\Models\Customer::select('kode_customer', 'nama_customer')
-            ->whereRaw("CONCAT(kode_customer, ' - ', nama_customer) LIKE ?", ["%{$search}%"])
-            ->groupBy('kode_customer', 'nama_customer')
+        $results = \App\Models\Customer::select('kode_customer', 'nama_customer');
+        
+        if (config('database.default') === 'sqlite') {
+            $results->whereRaw("kode_customer || ' - ' || nama_customer LIKE ?", ["%{$search}%"]);
+        } else {
+            $results->whereRaw("CONCAT(kode_customer, ' - ', nama_customer) LIKE ?", ["%{$search}%"]);
+        }
+
+        $results = $results->groupBy('kode_customer', 'nama_customer')
             ->orderBy('nama_customer', 'asc')
             ->limit(20)
             ->get();
@@ -62,9 +68,15 @@ class SearchController extends Controller
     public function supplier(Request $request)
     {
         $search = $request->q;
-        $results = \App\Models\Supplier::select('kode_supplier', 'nama_supplier')
-            ->whereRaw("CONCAT(kode_supplier, ' - ', nama_supplier) LIKE ?", ["%{$search}%"])
-            ->where('kode_supplier', '!=', '0')
+        $results = \App\Models\Supplier::select('kode_supplier', 'nama_supplier');
+
+        if (config('database.default') === 'sqlite') {
+            $results->whereRaw("kode_supplier || ' - ' || nama_supplier LIKE ?", ["%{$search}%"]);
+        } else {
+            $results->whereRaw("CONCAT(kode_supplier, ' - ', nama_supplier) LIKE ?", ["%{$search}%"]);
+        }
+
+        $results = $results->where('kode_supplier', '!=', '0')
             ->where('kode_supplier', '!=', '')
             ->orderBy('nama_supplier', 'asc')
             ->limit(25)
