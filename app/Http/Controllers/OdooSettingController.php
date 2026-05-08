@@ -88,32 +88,60 @@ class OdooSettingController extends Controller
 
     public function syncNow(Request $request)
     {
-        set_time_limit(0); // Prevent PHP from killing the process after 30 seconds
+        set_time_limit(0); 
         
         try {
-            $isFullSync = $request->get('force') == '1' || $request->get('isFullSync') == '1';
-            if ($isFullSync) {
+            $isFullSync = $request->get('isFullSync') == '1';
+            $offset = (int) $request->get('offset', 0);
+            $phase = $request->get('phase', 'all');
+            
+            if ($isFullSync && $offset === 0 && $phase === 'all') {
                 $setting = \App\Models\OdooSetting::first();
                 if ($setting) {
                     $setting->update(['last_sync' => null]);
-                    $setting->refresh();
                 }
             }
+
             $service = new OdooSyncService();
-            $result  = $service->sync('Manual', null, $isFullSync);
-            $message = mb_convert_encoding($result['message'] ?? 'Sync complete.', 'UTF-8', 'UTF-8');
+            $result  = $service->sync('Manual', null, $isFullSync, $phase, $offset, 500);
+            
             return response()->json([
                 'success' => $result['success'],
-                'message' => $message,
+                'message' => $result['message'],
                 'items'   => $result['items'] ?? 0,
-            ], $result['success'] ? 200 : 500, [], JSON_INVALID_UTF8_SUBSTITUTE);
+                'hasMore' => $result['hasMore'] ?? false,
+                'nextOffset' => $result['nextOffset'] ?? 0,
+                'phase' => $result['phase'] ?? $phase
+            ]);
         } catch (\Throwable $e) {
-            $message = mb_convert_encoding($e->getMessage(), 'UTF-8', 'UTF-8');
             return response()->json([
                 'success' => false,
-                'message' => 'Sync error: ' . $message,
-            ], 500, [], JSON_INVALID_UTF8_SUBSTITUTE);
+                'message' => 'Sync error: ' . $e->getMessage(),
+            ], 500);
         }
+    }
+
+    public function getSyncCounts(Request $request)
+    {
+        $isFullSync = $request->get('isFullSync') == '1';
+        
+        if ($isFullSync) {
+            // Temporarily ignore last_sync for count
+            $setting = \App\Models\OdooSetting::first();
+            $originalLastSync = $setting->last_sync;
+            $setting->update(['last_sync' => null]);
+            
+            $service = new OdooSyncService();
+            $stats = $service->getSyncStats();
+            
+            // Restore last_sync (it will be nullified again when sync actually starts)
+            $setting->update(['last_sync' => $originalLastSync]);
+        } else {
+            $service = new OdooSyncService();
+            $stats = $service->getSyncStats();
+        }
+
+        return response()->json($stats);
     }
 
 

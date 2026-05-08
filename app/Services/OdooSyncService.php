@@ -34,7 +34,7 @@ class OdooSyncService
         }
     }
 
-    public function sync($sourceType = 'Manual', $targetJo = null, $isFullSync = false)
+    public function sync($sourceType = 'Manual', $targetJo = null, $isFullSync = false, $phase = 'all', $offset = 0, $limit = 500)
     {
         if (!$this->setting) {
             return ['success' => false, 'message' => 'Odoo settings not configured.'];
@@ -55,22 +55,20 @@ class OdooSyncService
 
             $ros = [];
             $moves = [];
+            $hasMore = false;
+            $nextOffset = $offset;
 
-            // 2. Fetch Repair Orders (Job Orders) in Batches
-            $roDomain = [];
-            if ($targetJo) {
-                $roDomain[] = ['name', '=', $targetJo];
-            } elseif ($lastSyncUTC) {
-                // If it synced previously, only grab things modified since then
-                $roDomain[] = ['write_date', '>=', $lastSyncUTC];
-            } else {
-                // If first time syncing, pull EVERYTHING created since Dec 8 2025
-                $roDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
-            }
+            // 2. Fetch Repair Orders (Job Orders)
+            if ($phase === 'all' || $phase === 'ro') {
+                $roDomain = [];
+                if ($targetJo) {
+                    $roDomain[] = ['name', '=', $targetJo];
+                } elseif ($lastSyncUTC) {
+                    $roDomain[] = ['write_date', '>=', $lastSyncUTC];
+                } else {
+                    $roDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
+                }
 
-            $offset = 0;
-            $limit = 500;
-            while(true) {
                 $rosData = $this->odooCall('object', 'execute_kw', [
                     $this->db, $this->uid, $this->apiKey,
                     'repair.order', 'search_read',
@@ -79,28 +77,27 @@ class OdooSyncService
                         'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'vendor_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids', 'schedule_date', 'repair_end_datetime'],
                         'limit' => $limit,
                         'offset' => $offset,
-                        'order' => 'create_date asc' // Fetch oldest first so updates replace correctly
+                        'order' => 'create_date asc'
                     ]
                 ]);
-                $batchRos = $rosData['result'] ?? [];
-                if(empty($batchRos)) break;
+                $ros = $rosData['result'] ?? [];
                 
-                $ros = array_merge($ros, $batchRos);
-                if(count($batchRos) < $limit) break;
-                $offset += $limit;
+                if (count($ros) === $limit) {
+                    $hasMore = true;
+                    $nextOffset = $offset + $limit;
+                }
             }
 
-            // 3. Fetch Linked Vendor Bills (Costs only, where repair_id is set)
-            $billDomain = [['repair_id', '!=', false], ['state', '!=', 'cancel'], ['name', 'like', 'BILLS/']];
-            if ($lastSyncUTC) {
-                $billDomain[] = ['write_date', '>=', $lastSyncUTC];
-            } else {
-                $billDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
-            }
+            // 3. Fetch Linked Vendor Bills (only if RO phase is done or phase is 'move')
+            if (($phase === 'all' && !$hasMore) || $phase === 'move') {
+                $moveOffset = ($phase === 'move') ? $offset : 0;
+                $billDomain = [['repair_id', '!=', false], ['state', '!=', 'cancel'], ['name', 'like', 'BILLS/']];
+                if ($lastSyncUTC) {
+                    $billDomain[] = ['write_date', '>=', $lastSyncUTC];
+                } else {
+                    $billDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
+                }
 
-            $offset = 0;
-            $limit = 500;
-            while(true) {
                 $movesData = $this->odooCall('object', 'execute_kw', [
                     $this->db, $this->uid, $this->apiKey,
                     'account.move', 'search_read',
@@ -108,23 +105,35 @@ class OdooSyncService
                     [
                         'fields' => ['name', 'partner_id', 'invoice_date', 'ref', 'line_ids', 'state', 'repair_id', 'create_date', 'amount_tax', 'amount_untaxed'], 
                         'limit' => $limit,
-                        'offset' => $offset,
+                        'offset' => $moveOffset,
                         'order' => 'create_date asc'
                     ]
                 ]);
                 
-                $batchMoves = $movesData['result'] ?? [];
-                if(empty($batchMoves)) break;
+                $moves = $movesData['result'] ?? [];
                 
-                $moves = array_merge($moves, $batchMoves);
-                if(count($batchMoves) < $limit) break;
-                $offset += $limit;
+                if (count($moves) === $limit) {
+                    $hasMore = true;
+                    $nextOffset = $moveOffset + $limit;
+                    $phase = 'move';
+                } else {
+                    $hasMore = false;
+                    $nextOffset = 0;
+                }
             }
             
             if (empty($ros) && empty($moves)) {
-                $this->setting->update(['last_sync' => now()]);
-                $this->logHistory($sourceType, 'Success', 0, 'No new records to sync.');
-                return ['success' => true, 'message' => 'Everything up to date.', 'items' => 0];
+                if (!$hasMore && $phase !== 'ro') {
+                    $this->setting->update(['last_sync' => now()]);
+                }
+                return [
+                    'success' => true, 
+                    'message' => 'No more records.', 
+                    'items' => 0, 
+                    'hasMore' => false, 
+                    'nextOffset' => 0,
+                    'phase' => $phase
+                ];
             }
 
             // --- Pre-fetch Related Data in Batch ---
@@ -477,9 +486,21 @@ class OdooSyncService
             }
 
             DB::commit();
-            $this->setting->update(['last_sync' => now()]);
-            $this->logHistory($sourceType, 'Success', $itemsSynced, "Processed $itemsSynced JOs and matched Bills.");
-            return ['success' => true, 'message' => "Synced $itemsSynced items successfully.", 'items' => $itemsSynced];
+            
+            // Only update last_sync when completely finished
+            if (!$hasMore && ($phase === 'move' || $phase === 'all')) {
+                $this->setting->update(['last_sync' => now()]);
+            }
+
+            $this->logHistory($sourceType, 'Success', $itemsSynced, "Batch processed: $itemsSynced items.");
+            return [
+                'success' => true, 
+                'message' => "Synced $itemsSynced items successfully.", 
+                'items' => $itemsSynced,
+                'hasMore' => $hasMore,
+                'nextOffset' => $nextOffset,
+                'phase' => $phase
+            ];
 
         } catch (\Exception $e) {
             DB::rollBack();
@@ -487,6 +508,43 @@ class OdooSyncService
             $this->logHistory($sourceType, 'Failed', 0, 'Exception: ' . $e->getMessage() . " line " . $e->getLine());
             return ['success' => false, 'message' => "Error: " . $e->getMessage()];
         }
+    }
+
+    public function getSyncStats($targetJo = null)
+    {
+        if (!$this->setting) return ['success' => false];
+
+        $authData = $this->odooCall('common', 'authenticate', [$this->db, $this->user, $this->apiKey, (object)[]]);
+        if (!$authData['success']) return ['success' => false];
+        $uid = $authData['result'];
+
+        $lastSyncUTC = $this->setting->last_sync ? Carbon::parse($this->setting->last_sync)->setTimezone('UTC')->format('Y-m-d H:i:s') : null;
+
+        $roDomain = [];
+        if ($targetJo) {
+            $roDomain[] = ['name', '=', $targetJo];
+        } elseif ($lastSyncUTC) {
+            $roDomain[] = ['write_date', '>=', $lastSyncUTC];
+        } else {
+            $roDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
+        }
+
+        $billDomain = [['repair_id', '!=', false], ['state', '!=', 'cancel'], ['name', 'like', 'BILLS/']];
+        if ($lastSyncUTC) {
+            $billDomain[] = ['write_date', '>=', $lastSyncUTC];
+        } else {
+            $billDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
+        }
+
+        $roCount = $this->odooCall('object', 'execute_kw', [$this->db, $uid, $this->apiKey, 'repair.order', 'search_count', [$roDomain]]);
+        $billCount = $this->odooCall('object', 'execute_kw', [$this->db, $uid, $this->apiKey, 'account.move', 'search_count', [$billDomain]]);
+
+        return [
+            'success' => true,
+            'ro_count' => $roCount['result'] ?? 0,
+            'bill_count' => $billCount['result'] ?? 0,
+            'total' => ($roCount['result'] ?? 0) + ($billCount['result'] ?? 0)
+        ];
     }
 
     private function odooCall($service, $method, $args)

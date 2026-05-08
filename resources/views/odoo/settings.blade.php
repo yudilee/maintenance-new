@@ -68,15 +68,29 @@
                             </button>
                         </div>
 
+                        <!-- Progress Bar (Visible only when syncing) -->
+                        <div x-show="isSyncing" x-transition class="mt-6 space-y-2">
+                            <div class="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                                <span x-text="syncStatusMessage"></span>
+                                <span x-text="progressPercent + '%'"></span>
+                            </div>
+                            <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5 overflow-hidden">
+                                <div class="bg-indigo-600 h-2.5 transition-all duration-500 ease-out" :style="'width: ' + progressPercent + '%'"></div>
+                            </div>
+                            <div class="text-right text-[10px] text-slate-400 dark:text-slate-500 italic">
+                                <span x-text="processedItems"></span> / <span x-text="totalItems"></span> records processed
+                            </div>
+                        </div>
+
                         <!-- Sync Result -->
-                        <div x-show="syncResult" x-transition class="mt-4">
+                        <div x-show="syncResult && !isSyncing" x-transition class="mt-4">
                             <div :class="syncResult?.success ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400' : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400'"
                                  class="p-4 rounded-xl border flex items-start gap-3">
                                 <svg x-show="syncResult?.success" class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <svg x-show="!syncResult?.success" class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                 <div>
                                     <span x-text="syncResult?.message"></span>
-                                    <span x-show="syncResult?.items" class="font-semibold" x-text="' — ' + syncResult?.items + ' records processed'"></span>
+                                    <span x-show="syncResult?.items" class="font-semibold" x-text="' — ' + syncResult?.items + ' records processed total'"></span>
                                     <span x-show="syncResult?.success" class="block text-xs mt-1 opacity-75">Switching to Import History tab...</span>
                                 </div>
                             </div>
@@ -208,6 +222,12 @@
             isSyncing: false,
             isForceSyncing: false,
             syncResult: null,
+            
+            // Progress Bar Data
+            totalItems: 0,
+            processedItems: 0,
+            progressPercent: 0,
+            syncStatusMessage: 'Preparing sync...',
 
             testConnection() {
                 this.isTesting = true;
@@ -242,53 +262,91 @@
                 });
             },
             
-            performOdooSync(isFullSync = false) {
-                console.log('X-START: performOdooSync called, isFullSync=' + isFullSync);
+            async performOdooSync(isFullSync = false) {
                 this.isSyncing = true;
                 if (isFullSync) this.isForceSyncing = true;
                 this.syncResult = null;
+                this.processedItems = 0;
+                this.progressPercent = 0;
+                this.syncStatusMessage = 'Calculating records in Odoo...';
                 
-                $.ajax({
+                try {
+                    // Step 1: Get total counts
+                    const countResponse = await $.ajax({
+                        url: "{{ route('maintenance.odoo.sync_counts', [], false) }}",
+                        type: "GET",
+                        data: { isFullSync: isFullSync ? 1 : 0 }
+                    });
+                    
+                    if (!countResponse.success) throw new Error('Failed to fetch Odoo record counts.');
+                    
+                    this.totalItems = countResponse.total || 1; // avoid divide by zero
+                    if (this.totalItems === 0) {
+                        this.progressPercent = 100;
+                        this.syncStatusMessage = 'Nothing to sync.';
+                        this.syncResult = { success: true, message: 'Your data is already up to date.', items: 0 };
+                        this.isSyncing = false;
+                        this.isForceSyncing = false;
+                        return;
+                    }
+
+                    // Step 2: Start recursive batch syncing
+                    await this.syncBatch(isFullSync, 0, 'all', 0);
+                    
+                } catch (err) {
+                    console.error('Sync Error:', err);
+                    this.syncResult = { success: false, message: 'Sync failed: ' + err.message };
+                    this.isSyncing = false;
+                    this.isForceSyncing = false;
+                }
+            },
+
+            async syncBatch(isFullSync, offset, phase, itemsSoFar) {
+                this.syncStatusMessage = `Processing ${phase === 'ro' ? 'Job Orders' : (phase === 'move' ? 'Bills' : 'records')}...`;
+                
+                const response = await $.ajax({
                     url: "{{ route('maintenance.odoo.sync_now', [], false) }}",
                     type: "POST",
                     data: {
                         _token: "{{ csrf_token() }}",
-                        isFullSync: isFullSync ? 1 : 0
-                    },
-                    success: (response) => {
-                        console.log('X-SUCCESS: Sync finished', response);
-                        this.syncResult = response;
-                        if (response.success) {
-                            setTimeout(() => { this.tab = 'history'; }, 2000);
-                        }
-                    },
-                    error: (xhr) => {
-                        console.error('X-ERROR: Sync failed', xhr);
-                        this.syncResult = { 
-                            success: false, 
-                            message: 'Sync Error: ' + (xhr.responseJSON?.message || xhr.statusText || 'Unknown error') 
-                        };
-                    },
-                    complete: () => {
-                        this.isSyncing = false;
-                        this.isForceSyncing = false;
+                        isFullSync: isFullSync ? 1 : 0,
+                        offset: offset,
+                        phase: phase
                     }
                 });
+
+                if (!response.success) throw new Error(response.message);
+
+                const newlyProcessed = itemsSoFar + response.items;
+                this.processedItems = newlyProcessed;
+                this.progressPercent = Math.min(Math.round((newlyProcessed / this.totalItems) * 100), 99);
+
+                if (response.hasMore) {
+                    // Continue to next batch
+                    await this.syncBatch(isFullSync, response.nextOffset, response.phase, newlyProcessed);
+                } else {
+                    // All done!
+                    this.progressPercent = 100;
+                    this.syncStatusMessage = 'Sync completed successfully!';
+                    this.syncResult = { success: true, message: 'Synchronization finished successfully.', items: newlyProcessed };
+                    this.isSyncing = false;
+                    this.isForceSyncing = false;
+                    setTimeout(() => { this.tab = 'history'; }, 2000);
+                }
             },
+
             triggerFullOdooSync() {
-                console.log('X-CLICK: triggerFullOdooSync clicked');
                 Swal.fire({
                     title: 'Force Full Sync?',
-                    text: 'This will fetch all data from Odoo and might take several minutes.',
+                    text: 'This will re-fetch all history from Odoo. This is much safer now and won\'t time out!',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#e11d48', // rose-600
-                    cancelButtonColor: '#475569', // slate-600
+                    confirmButtonColor: '#e11d48',
+                    cancelButtonColor: '#475569',
                     confirmButtonText: 'Yes, proceed!',
                     cancelButtonText: 'Cancel'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        console.log('X-CONFIRM: User confirmed (Swal). Triggering full sync...');
                         this.performOdooSync(true);
                     }
                 });
