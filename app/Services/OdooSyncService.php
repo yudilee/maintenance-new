@@ -74,7 +74,7 @@ class OdooSyncService
                     'repair.order', 'search_read',
                     [$roDomain],
                     [
-                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'vendor_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids', 'schedule_date', 'repair_end_datetime'],
+                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'km_return', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'vendor_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids', 'schedule_date', 'repair_end_datetime'],
                         'limit' => $limit,
                         'offset' => $offset,
                         'order' => 'create_date asc'
@@ -312,8 +312,8 @@ class OdooSyncService
                     'tanggal_invoice' => $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : null,
                     'tanggal_close' => $ro['repair_end_datetime'] ? Carbon::parse($ro['repair_end_datetime'])->format('Y-m-d') : null,
                     'nomor_chassis' => mb_substr($chassisNo, 0, 50, 'UTF-8'),
-                    'posisi_km' => $ro['km_pickup'] ?? 0,
-                    'mtrs' => $ro['km_pickup'] ?? 0,
+                    'posisi_km' => $ro['km_return'] ?: ($ro['km_pickup'] ?? 0),
+                    'mtrs' => $ro['km_return'] ?: ($ro['km_pickup'] ?? 0),
                     'keterangan' => mb_substr($this->sanitizeText(strip_tags($ro['compute_job_card_repair_notes'] ?? '')), 0, 255, 'UTF-8'),
                     'nomor_sv' => mb_substr($ro['service_type'] ?? '', 0, 50, 'UTF-8'),
                     'id_customer' => $customerId,
