@@ -281,7 +281,7 @@ class OdooService
 
             $fields = [
                 'name', 'state', 'schedule_date', 'service_type',
-                'vendor_id', 'km_pickup', 'estimation_end_date', 'lot_id',
+                'vendor_id', 'km_pickup', 'km_return', 'estimation_end_date', 'lot_id',
             ];
 
             $repairs = $this->execute('repair.order', 'read', [$repairIds, $fields]);
@@ -303,7 +303,7 @@ class OdooService
                     'repair_schedule_date' => $repair['schedule_date'] ? substr($repair['schedule_date'], 0, 10) : null,
                     'repair_service_type' => $repair['service_type'] ?? '',
                     'repair_vendor' => is_array($repair['vendor_id']) ? $repair['vendor_id'][1] : ($repair['vendor_id'] ?? ''),
-                    'repair_odometer' => $repair['km_pickup'] ?? null,
+                    'repair_odometer' => $repair['km_return'] ?: ($repair['km_pickup'] ?? null),
                     'repair_estimation_end' => $repair['estimation_end_date'] ? substr($repair['estimation_end_date'], 0, 10) : null,
                 ];
             }
@@ -346,7 +346,7 @@ class OdooService
 
             $fields = [
                 'name', 'state', 'schedule_date', 'service_type',
-                'vendor_id', 'km_pickup', 'estimation_end_date',
+                'vendor_id', 'km_pickup', 'km_return', 'estimation_end_date',
                 'repair_end_datetime', 'create_date',
             ];
 
@@ -360,7 +360,7 @@ class OdooService
                     'schedule_date' => $repair['schedule_date'] ? substr($repair['schedule_date'], 0, 10) : null,
                     'service_type' => $repair['service_type'] ?? '',
                     'vendor' => is_array($repair['vendor_id']) ? $repair['vendor_id'][1] : ($repair['vendor_id'] ?? ''),
-                    'km_pickup' => $repair['km_pickup'] ?? null,
+                    'km_pickup' => $repair['km_return'] ?: ($repair['km_pickup'] ?? null),
                     'estimation_end_date' => $repair['estimation_end_date'] ? substr($repair['estimation_end_date'], 0, 10) : null,
                     'repair_end_datetime' => $repair['repair_end_datetime'] ? substr($repair['repair_end_datetime'], 0, 10) : null,
                     'create_date' => $repair['create_date'] ? substr($repair['create_date'], 0, 10) : null,
