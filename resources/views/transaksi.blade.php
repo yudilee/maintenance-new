@@ -392,6 +392,7 @@
                 <thead>
                     <tr>
                         <th class="sticky-col" style="min-width:200px;">Nomor Job</th>
+                        <th style="min-width:100px;">No Polisi</th>
                         <th style="min-width:100px;">Tanggal Job</th>
                         <th style="min-width:80px;">Posisi KM</th>
                         <th style="min-width:140px;">Maintenance/Service</th>
@@ -641,6 +642,9 @@
                                 "data": "nomor_job"
                             },
                     {
+                        "data": "nomor_polisi"
+                    },
+                    {
                         "data": "tanggal_job"
                     },
                     {
@@ -768,7 +772,7 @@
                     success: function(response) {
                         var wb = XLSX.utils.book_new();
                         var wsData = [
-                            ['Nomor Job', 'Tanggal Job', 'Posisi KM',
+                            ['Nomor Job', 'No Polisi', 'Tanggal Job', 'Posisi KM',
                                 'Maintenance/Service',
                                 'Deskripsi',
                                 'Jumlah', 'Harga', 'Harga Total', 'Harga Pajak', 'Keterangan'
@@ -791,6 +795,7 @@
 
                             wsData.push([
                                 row.nomor_job,
+                                row.nomor_polisi || '',
                                 row.tanggal_job,
                                 row.posisi_km,
                                 row.maintenance_service || '',
@@ -816,6 +821,9 @@
                         ws['!cols'] = [{
                                 wch: 30
                             }, // Nomor Job
+                            {
+                                wch: 15
+                            }, // No Polisi
                             {
                                 wch: 12
                             }, // Tanggal Job
@@ -923,10 +931,11 @@
                             content: headerContent.concat([{
                                     table: {
                                         headerRows: 1,
-                                        widths: [85, 45, 35, 60, 110, 25, 60, 70, 55, 180],
+                                        widths: [85, 45, 45, 35, 60, 110, 25, 60, 70, 55, 180],
                                         body: [
                                             [
                                                 {text: 'Nomor Job', style: 'tableHeader'},
+                                                {text: 'No Polisi', style: 'tableHeader'},
                                                 {text: 'Tgl Job', style: 'tableHeader'},
                                                 {text: 'Pos KM', style: 'tableHeader'},
                                                 {text: 'Service', style: 'tableHeader'},
@@ -963,6 +972,10 @@
 
                                             return [{
                                                     text: row.nomor_job || '',
+                                                    fillColor: null
+                                                },
+                                                {
+                                                    text: row.nomor_polisi || '',
                                                     fillColor: null
                                                 },
                                                 {
