@@ -156,8 +156,24 @@ class VehicleTransactionController extends Controller
         $nomor_polisi = $request->nomor_polisi;
         $start = $request->start_date_transaksi;
         $end = $request->end_date_transaksi;
+        $format = $request->query('format', 'json');
 
         $query = $this->buildTransactionQuery($nama_customer, $nomor_polisi, $start, $end);
+
+        if ($format === 'xlsx' || $format === 'csv') {
+            try {
+                $exportClass = new \App\Exports\VehicleTransactionsExport($query);
+                $ext = $format === 'xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV;
+                return \Maatwebsite\Excel\Facades\Excel::download($exportClass, "Transactions.{$format}", $ext);
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error("Excel Export Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+                return response()->json(['error' => 'Export failed. Check logs.'], 500);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error("Excel Export Throwable: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+                return response()->json(['error' => 'Export fatal error. Check logs.'], 500);
+            }
+        }
+
         $results = $query->get();
 
         // Calculate totals for export

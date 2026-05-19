@@ -709,10 +709,17 @@
                         text: '<span class="flex items-center gap-2"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>Columns</span>'
                     },
                     {
-                        text: '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Excel</span>',
+                        text: '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Export XLSX</span>',
                         className: 'btn-export',
                         action: function(e, dt, button, config) {
-                            exportAllToExcel();
+                            exportAllToXLSX();
+                        }
+                    },
+                    {
+                        text: '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Export CSV</span>',
+                        className: 'btn-export',
+                        action: function(e, dt, button, config) {
+                            exportAllToCSV();
                         }
                     },
                     {
@@ -759,111 +766,22 @@
 }
 
 // Export ALL data functions (global scope so DataTable button callbacks can access them)
-        function exportAllToExcel() {
+        function triggerExport(format) {
             let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
-            $.ajax({
-                    url: "{{ route('maintenance.vehicle.transactions.export') }}",
-                    data: {
-                        nama_customer: alpineData.namaCustomerFilter,
-                        nomor_polisi: alpineData.nomorPolisiFilter,
-                        start_date_transaksi: alpineData.startDate,
-                        end_date_transaksi: alpineData.endDate
-                    },
-                    success: function(response) {
-                        var wb = XLSX.utils.book_new();
-                        var wsData = [
-                            ['Nomor Job', 'No Polisi', 'Tanggal Job', 'Posisi KM',
-                                'Maintenance/Service',
-                                'Deskripsi',
-                                'Jumlah', 'Harga', 'Harga Total', 'Harga Pajak', 'Keterangan'
-                            ]
-                        ];
+            let url = new URL("{{ route('maintenance.vehicle.transactions.export') }}", window.location.origin);
+            
+            if (alpineData.namaCustomerFilter) url.searchParams.append('nama_customer', alpineData.namaCustomerFilter);
+            if (alpineData.nomorPolisiFilter) url.searchParams.append('nomor_polisi', alpineData.nomorPolisiFilter);
+            if (alpineData.startDate) url.searchParams.append('start_date_transaksi', alpineData.startDate);
+            if (alpineData.endDate) url.searchParams.append('end_date_transaksi', alpineData.endDate);
+            
+            url.searchParams.append('format', format);
+            
+            window.location.href = url.href;
+        }
 
-                        response.data.forEach(function(row) {
-                            // Format values to match view display
-                            var hargaFormatted = row.harga === '-' ? '-' : (typeof row.harga ===
-                                'number' ? row.harga.toLocaleString('id-ID') : row.harga);
-                            var hargaTotalFormatted = row.harga_total === '' ? '' : (typeof row
-                                .harga_total === 'number' ? row.harga_total.toLocaleString(
-                                    'id-ID') : row.harga_total);
-                            if (row.workshop_harent) {
-                                hargaTotalFormatted += ' - ' + row.workshop_harent;
-                            }
-                            var hargaPajakFormatted = row.harga_pajak === '' ? '' : (typeof row
-                                .harga_pajak === 'number' ? row.harga_pajak.toLocaleString(
-                                    'id-ID') : row.harga_pajak);
-
-                            wsData.push([
-                                row.nomor_job,
-                                row.nomor_polisi || '',
-                                row.tanggal_job,
-                                row.posisi_km,
-                                row.maintenance_service || '',
-                                row.deskripsi,
-                                row.jumlah,
-                                hargaFormatted,
-                                hargaTotalFormatted,
-                                hargaPajakFormatted,
-                                row.keterangan
-                            ]);
-                        });
-
-                        wsData.push(['', '', '', '', '', '', '', '', response.hargaTotal
-                            .toLocaleString(
-                                'id-ID'), response
-                            .hargaPajak.toLocaleString('id-ID'), 'GRAND TOTAL: ' + response
-                            .grandTotal.toLocaleString('id-ID')
-                        ]);
-
-                        var ws = XLSX.utils.aoa_to_sheet(wsData);
-
-                        // Set column widths to match view
-                        ws['!cols'] = [{
-                                wch: 30
-                            }, // Nomor Job
-                            {
-                                wch: 15
-                            }, // No Polisi
-                            {
-                                wch: 12
-                            }, // Tanggal Job
-                            {
-                                wch: 10
-                            }, // Posisi KM
-                            {
-                                wch: 20
-                            }, // Maintenance/Service
-                            {
-                                wch: 40
-                            }, // Deskripsi
-                            {
-                                wch: 10
-                            }, // Jumlah
-                            {
-                                wch: 15
-                            }, // Harga
-                            {
-                                wch: 15
-                            }, // Harga Total
-                            {
-                                wch: 15
-                            }, // Harga Pajak
-                            {
-                                wch: 30
-                            } // Keterangan
-                        ];
-
-                        XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-                        XLSX.writeFile(wb, "transaksi_" + response.customer + ".xlsx");
-                    },
-                    error: function() {
-                        Toast.fire({
-                            icon: 'error',
-                            title: 'Error exporting data. Please try again.'
-                        });
-                    }
-                });
-            }
+        function exportAllToXLSX() { triggerExport('xlsx'); }
+        function exportAllToCSV() { triggerExport('csv'); }
 
             function exportAllToPDF() {
                 let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
@@ -1018,9 +936,10 @@
                                         })).concat([
                                             [
                                                 {text: 'GRAND TOTAL', bold: true, colSpan: 7, alignment: 'right'}, {}, {}, {}, {}, {}, {},
+                                                {text: ''},
                                                 {text: response.hargaTotal ? response.hargaTotal.toLocaleString('id-ID') : '', bold: true},
                                                 {text: response.hargaPajak ? response.hargaPajak.toLocaleString('id-ID') : '', bold: true},
-                                                {text: response.grandTotal ? response.grandTotal.toLocaleString('id-ID') : '', bold: true}
+                                                {text: response.grandTotal ? 'Grand Total: ' + response.grandTotal.toLocaleString('id-ID') : '', bold: true}
                                             ]
                                         ])
                                     },
