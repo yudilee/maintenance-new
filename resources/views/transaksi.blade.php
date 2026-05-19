@@ -983,8 +983,15 @@
                                 color: '#334155'
                             }
                         };
-                        pdfMake.createPdf(docDefinition).download('transaksi_' + response.customer +
-                            '.pdf');
+                        var pdfFileName = 'history_maintenance_';
+                        if (response.nomor_polisi) {
+                            pdfFileName += response.nomor_polisi;
+                        } else if (response.customer) {
+                            pdfFileName += response.customer;
+                        } else {
+                            pdfFileName += 'all_vehicles';
+                        }
+                        pdfMake.createPdf(docDefinition).download(pdfFileName + '.pdf');
                     },
                     error: function() {
                         Toast.fire({
