@@ -849,7 +849,7 @@
                             content: headerContent.concat([{
                                     table: {
                                         headerRows: 1,
-                                        widths: [85, 45, 45, 35, 60, 110, 25, 60, 70, 55, 180],
+                                        widths: [80, 45, 45, 35, 45, 100, 20, 50, 80, 45, '*'],
                                         body: [
                                             [
                                                 {text: 'Nomor Job', style: 'tableHeader'},
