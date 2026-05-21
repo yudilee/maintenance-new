@@ -393,9 +393,11 @@
                     <tr>
                         <th class="sticky-col" style="min-width:200px;">Nomor Job</th>
                         <th style="min-width:100px;">No Polisi</th>
+                        <th style="min-width:80px;">Tipe</th>
                         <th style="min-width:100px;">Tanggal Job</th>
                         <th style="min-width:80px;">Posisi KM</th>
                         <th style="min-width:140px;">Maintenance/Service</th>
+                        <th style="min-width:150px;">Product</th>
                         <th style="min-width:200px;">Deskripsi</th>
                         <th style="min-width:60px;">Jumlah</th>
                         <th style="min-width:100px;">Harga</th>
@@ -645,6 +647,9 @@
                         "data": "nomor_polisi"
                     },
                     {
+                        "data": "tipe"
+                    },
+                    {
                         "data": "tanggal_job"
                     },
                     {
@@ -652,6 +657,9 @@
                     },
                     {
                         "data": "maintenance_service"
+                    },
+                    {
+                        "data": "product"
                     },
                     {
                         "data": "deskripsi"
@@ -716,6 +724,13 @@
                         }
                     },
                     {
+                        text: '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Export with Tanggal Update Spareparts</span>',
+                        className: 'btn-export',
+                        action: function(e, dt, button, config) {
+                            exportAllToXLSXWithTanggalUpdate();
+                        }
+                    },
+                    {
                         text: '<span class="flex items-center gap-1"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Export CSV</span>',
                         className: 'btn-export',
                         action: function(e, dt, button, config) {
@@ -766,7 +781,7 @@
 }
 
 // Export ALL data functions (global scope so DataTable button callbacks can access them)
-        function triggerExport(format) {
+        function triggerExport(format, withTanggalUpdate = false) {
             let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
             let url = new URL("{{ route('maintenance.vehicle.transactions.export') }}", window.location.origin);
             
@@ -776,12 +791,16 @@
             if (alpineData.endDate) url.searchParams.append('end_date_transaksi', alpineData.endDate);
             
             url.searchParams.append('format', format);
+            if (withTanggalUpdate) {
+                url.searchParams.append('tanggal_update', '1');
+            }
             
             window.location.href = url.href;
         }
 
-        function exportAllToXLSX() { triggerExport('xlsx'); }
-        function exportAllToCSV() { triggerExport('csv'); }
+        function exportAllToXLSX() { triggerExport('xlsx', false); }
+        function exportAllToXLSXWithTanggalUpdate() { triggerExport('xlsx', true); }
+        function exportAllToCSV() { triggerExport('csv', false); }
 
             function exportAllToPDF() {
                 let alpineData = Alpine.$data(document.querySelector('[x-data="transaksiPage()"]'));
@@ -849,14 +868,16 @@
                             content: headerContent.concat([{
                                     table: {
                                         headerRows: 1,
-                                        widths: [80, 45, 45, 35, 45, 100, 20, 50, 80, 45, '*'],
+                                        widths: [80, 45, 40, 45, 35, 45, 70, 80, 20, 50, 80, 45, '*'],
                                         body: [
                                             [
                                                 {text: 'Nomor Job', style: 'tableHeader'},
                                                 {text: 'No Polisi', style: 'tableHeader'},
+                                                {text: 'Tipe', style: 'tableHeader'},
                                                 {text: 'Tgl Job', style: 'tableHeader'},
                                                 {text: 'Pos KM', style: 'tableHeader'},
                                                 {text: 'Service', style: 'tableHeader'},
+                                                {text: 'Product', style: 'tableHeader'},
                                                 {text: 'Deskripsi', style: 'tableHeader'},
                                                 {text: 'Qty', style: 'tableHeader'},
                                                 {text: 'Harga', style: 'tableHeader'},
@@ -897,6 +918,10 @@
                                                     fillColor: null
                                                 },
                                                 {
+                                                    text: row.tipe || '',
+                                                    fillColor: null
+                                                },
+                                                {
                                                     text: row.tanggal_job || '',
                                                     fillColor: null
                                                 },
@@ -906,6 +931,10 @@
                                                 },
                                                 {
                                                     text: row.maintenance_service || '',
+                                                    fillColor: null
+                                                },
+                                                {
+                                                    text: row.product || '',
                                                     fillColor: null
                                                 },
                                                 {
@@ -935,7 +964,7 @@
                                             ];
                                         })).concat([
                                             [
-                                                {text: 'GRAND TOTAL', bold: true, colSpan: 7, alignment: 'right'}, {}, {}, {}, {}, {}, {},
+                                                {text: 'GRAND TOTAL', bold: true, colSpan: 9, alignment: 'right'}, {}, {}, {}, {}, {}, {}, {}, {},
                                                 {text: ''},
                                                 {text: response.hargaTotal ? response.hargaTotal.toLocaleString('id-ID') : '', bold: true},
                                                 {text: response.hargaPajak ? response.hargaPajak.toLocaleString('id-ID') : '', bold: true},

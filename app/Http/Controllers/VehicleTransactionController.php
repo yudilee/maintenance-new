@@ -82,9 +82,12 @@ class VehicleTransactionController extends Controller
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
+                    'tipe' => $transaction->is_internal ? 'Internal' : 'External',
                     'maintenance_service' => $maintenanceService,
                     'workshop_harent' => $workshopHarent,
+                    'product' => $details->first()->product ?? '',
                     'deskripsi' => $details->first()->deskripsi ?? '-',
+                    'tanggal_part_keluar' => $details->first()->tanggal_part_keluar ? \Carbon\Carbon::parse($details->first()->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
                     'jumlah' => $details->first()->jumlah ?? '-',
                     'harga' => number_format($details->first()->harga ?? 0, 0, ',', '.'),
                     'harga_total' => ($transaction->harga_total ?? 0) != 0 ? number_format($transaction->harga_total, 0, ',', '.') : '-',
@@ -103,9 +106,12 @@ class VehicleTransactionController extends Controller
                         'posisi_km' => '',
                         'nomor_chassis' => '',
                         'nomor_polisi' => '',
+                        'tipe' => '',
                         'maintenance_service' => '',
                         'workshop_harent' => '',
+                        'product' => $detail->product ?? '',
                         'deskripsi' => $detail->deskripsi ?? '-',
+                        'tanggal_part_keluar' => $detail->tanggal_part_keluar ? \Carbon\Carbon::parse($detail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
                         'jumlah' => $isTaxLine ? '' : ($detail->jumlah ?? '-'),
                         'harga' => $isTaxLine ? '' : number_format($detail->harga ?? 0, 0, ',', '.'),
                         'harga_total' => '',
@@ -126,9 +132,12 @@ class VehicleTransactionController extends Controller
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
+                    'tipe' => $transaction->is_internal ? 'Internal' : 'External',
                     'maintenance_service' => $maintenanceService,
                     'workshop_harent' => $workshopHarent,
+                    'product' => '',
                     'deskripsi' => '-',
+                    'tanggal_part_keluar' => '',
                     'jumlah' => '-',
                     'harga' => '-',
                     'harga_total' => number_format($transaction->harga_total ?? 0, 0, ',', '.'),
@@ -162,9 +171,11 @@ class VehicleTransactionController extends Controller
 
         if ($format === 'xlsx' || $format === 'csv') {
             try {
-                $exportClass = new \App\Exports\VehicleTransactionsExport($query);
+                $withTanggalUpdate = $request->query('tanggal_update') === '1';
+                $exportClass = new \App\Exports\VehicleTransactionsExport($query, $withTanggalUpdate);
                 $ext = $format === 'xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV;
-                return \Maatwebsite\Excel\Facades\Excel::download($exportClass, "Transactions.{$format}", $ext);
+                $filename = $withTanggalUpdate ? "Transactions_With_Tanggal_Update.{$format}" : "Transactions.{$format}";
+                return \Maatwebsite\Excel\Facades\Excel::download($exportClass, $filename, $ext);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Excel Export Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
                 return response()->json(['error' => 'Export failed. Check logs.'], 500);
@@ -210,9 +221,12 @@ class VehicleTransactionController extends Controller
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
+                    'tipe' => $transaction->is_internal ? 'Internal' : 'External',
                     'workshop_harent' => $workshopHarent,
                     'maintenance_service' => $maintenanceService,
+                    'product' => $details->first()->product ?? '',
                     'deskripsi' => $details->first()->deskripsi ?? '-',
+                    'tanggal_part_keluar' => $details->first()->tanggal_part_keluar ? \Carbon\Carbon::parse($details->first()->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
                     'jumlah' => $details->first()->jumlah ?? '-',
                     'harga' => $details->first()->harga ?? 0,
                     'harga_total' => $transaction->harga_total ?? 0,
@@ -229,9 +243,13 @@ class VehicleTransactionController extends Controller
                         'tanggal_job' => '',
                         'posisi_km' => '',
                         'nomor_chassis' => '',
+                        'nomor_polisi' => '',
+                        'tipe' => '',
                         'workshop_harent' => '',
                         'maintenance_service' => '',
+                        'product' => $detail->product ?? '',
                         'deskripsi' => $detail->deskripsi ?? '-',
+                        'tanggal_part_keluar' => $detail->tanggal_part_keluar ? \Carbon\Carbon::parse($detail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
                         'jumlah' => $detail->jumlah ?? '-',
                         'harga' => $detail->harga ?? 0,
                         'harga_total' => '',
@@ -248,9 +266,12 @@ class VehicleTransactionController extends Controller
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
+                    'tipe' => $transaction->is_internal ? 'Internal' : 'External',
                     'workshop_harent' => $workshopHarent,
                     'maintenance_service' => $maintenanceService,
+                    'product' => '',
                     'deskripsi' => '-',
+                    'tanggal_part_keluar' => '',
                     'jumlah' => '-',
                     'harga' => '-',
                     'harga_total' => $transaction->harga_total ?? 0,
