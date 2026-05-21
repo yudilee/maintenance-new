@@ -171,9 +171,11 @@ class VehicleTransactionController extends Controller
 
         if ($format === 'xlsx' || $format === 'csv') {
             try {
-                $exportClass = new \App\Exports\VehicleTransactionsExport($query);
+                $withTanggalUpdate = $request->query('tanggal_update') === '1';
+                $exportClass = new \App\Exports\VehicleTransactionsExport($query, $withTanggalUpdate);
                 $ext = $format === 'xlsx' ? \Maatwebsite\Excel\Excel::XLSX : \Maatwebsite\Excel\Excel::CSV;
-                return \Maatwebsite\Excel\Facades\Excel::download($exportClass, "Transactions.{$format}", $ext);
+                $filename = $withTanggalUpdate ? "Transactions_With_Tanggal_Update.{$format}" : "Transactions.{$format}";
+                return \Maatwebsite\Excel\Facades\Excel::download($exportClass, $filename, $ext);
             } catch (\Exception $e) {
                 \Illuminate\Support\Facades\Log::error("Excel Export Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
                 return response()->json(['error' => 'Export failed. Check logs.'], 500);

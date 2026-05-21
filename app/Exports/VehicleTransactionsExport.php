@@ -9,15 +9,17 @@ use Carbon\Carbon;
 class VehicleTransactionsExport implements FromCollection, WithHeadings
 {
     protected $query;
+    protected $includeTanggalUpdate;
 
-    public function __construct($query)
+    public function __construct($query, $includeTanggalUpdate = false)
     {
         $this->query = $query;
+        $this->includeTanggalUpdate = $includeTanggalUpdate;
     }
 
     public function headings(): array
     {
-        return [
+        $headings = [
             'Nomor Job',
             'Tanggal Job',
             'Posisi KM',
@@ -28,14 +30,20 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
             'Maintenance/Service',
             'Product',
             'Deskripsi',
-            'Tanggal Update',
+        ];
+
+        if ($this->includeTanggalUpdate) {
+            $headings[] = 'Tanggal Update';
+        }
+
+        return array_merge($headings, [
             'Jumlah',
             'Harga',
             'Harga Total',
             'Harga Pajak',
             'Keterangan',
             'Tanggal Close'
-        ];
+        ]);
     }
 
     public function collection()
@@ -69,7 +77,7 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
             if ($details->count() > 0) {
                 // First line
                 $firstDetail = $details->first();
-                $exportData[] = [
+                $row = [
                     $nomorJobFull,
                     Carbon::parse($transaction->tanggal_job)->format('d-m-Y'),
                     $transaction->posisi_km,
@@ -80,19 +88,27 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
                     $maintenanceService,
                     $firstDetail->product ?? '',
                     $firstDetail->deskripsi ?? '-',
-                    $firstDetail->tanggal_part_keluar ? Carbon::parse($firstDetail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
+                ];
+
+                if ($this->includeTanggalUpdate) {
+                    $row[] = $firstDetail->tanggal_part_keluar ? Carbon::parse($firstDetail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '';
+                }
+
+                $row = array_merge($row, [
                     $firstDetail->jumlah ?? '-',
                     $firstDetail->harga ?? 0,
                     $transaction->harga_total ?? 0,
                     $transaction->harga_pajak ?? 0,
                     $firstDetail->keterangan ?? ($transaction->keterangan ?? '-'),
                     Carbon::parse($transaction->tanggal_close)->format('d-m-Y')
-                ];
+                ]);
+
+                $exportData[] = $row;
 
                 // Subsequent lines
                 foreach ($details->skip(1) as $detail) {
                     $isTaxLine = ($detail->note === 'tax');
-                    $exportData[] = [
+                    $row = [
                         '', // nomor_job
                         '', // tanggal_job
                         '', // posisi_km
@@ -103,17 +119,25 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
                         '', // maintenance_service
                         $detail->product ?? '', // product
                         $detail->deskripsi ?? '-',
-                        $detail->tanggal_part_keluar ? Carbon::parse($detail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
+                    ];
+
+                    if ($this->includeTanggalUpdate) {
+                        $row[] = $detail->tanggal_part_keluar ? Carbon::parse($detail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '';
+                    }
+
+                    $row = array_merge($row, [
                         $isTaxLine ? '' : ($detail->jumlah ?? '-'),
                         $isTaxLine ? '' : ($detail->harga ?? 0),
                         '', // harga_total
                         $isTaxLine ? ($detail->value ?? 0) : '', // harga_pajak (tax line goes here)
                         '', // keterangan
                         Carbon::parse($transaction->tanggal_close)->format('d-m-Y')
-                    ];
+                    ]);
+
+                    $exportData[] = $row;
                 }
             } else {
-                $exportData[] = [
+                $row = [
                     $nomorJobFull,
                     Carbon::parse($transaction->tanggal_job)->format('d-m-Y'),
                     $transaction->posisi_km,
@@ -124,25 +148,35 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
                     $maintenanceService,
                     '', // product
                     '-', // deskripsi
-                    '', // tanggal_part_keluar
+                ];
+
+                if ($this->includeTanggalUpdate) {
+                    $row[] = '';
+                }
+
+                $row = array_merge($row, [
                     '-', // jumlah
                     '-', // harga
                     $transaction->harga_total ?? 0,
                     $transaction->harga_pajak ?? 0,
                     $transaction->keterangan ?? '-',
                     Carbon::parse($transaction->tanggal_close)->format('d-m-Y')
-                ];
+                ]);
+
+                $exportData[] = $row;
             }
         }
 
         // Add Grand Total Row
-        $exportData[] = [
-            '', '', '', '', '', '', '', '', '', '', '', '', '',
+        $numPadding = $this->includeTanggalUpdate ? 13 : 12;
+        $grandTotalRow = array_fill(0, $numPadding, '');
+        $grandTotalRow = array_merge($grandTotalRow, [
             (float) $hargaTotal, 
             (float) $hargaPajak, 
             'GRAND TOTAL: ' . (float) $grandTotal,
             ''
-        ];
+        ]);
+        $exportData[] = $grandTotalRow;
 
         return collect($exportData);
     }
