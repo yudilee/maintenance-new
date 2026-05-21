@@ -23,9 +23,12 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
             'Posisi KM',
             'Nomor Chassis',
             'Nomor Polisi',
+            'Tipe',
             'Workshop Harent',
             'Maintenance/Service',
+            'Product',
             'Deskripsi',
+            'Tanggal Update',
             'Jumlah',
             'Harga',
             'Harga Total',
@@ -49,6 +52,8 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
             $hargaTotal += $transaction->harga_total ?? 0;
             $hargaPajak += $transaction->harga_pajak ?? 0;
 
+            $tipe = $transaction->is_internal ? 'Internal' : 'External';
+
             $details = $transaction->dtransaksi;
 
             $nomorJobFull = $transaction->nomor_job . ' - ' .
@@ -70,9 +75,12 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
                     $transaction->posisi_km,
                     $transaction->mobil->nomor_chassis ?? '-',
                     $transaction->mobil->nomor_polisi ?? '-',
+                    $tipe,
                     $workshopHarent,
                     $maintenanceService,
+                    $firstDetail->product ?? '',
                     $firstDetail->deskripsi ?? '-',
+                    $firstDetail->tanggal_part_keluar ? Carbon::parse($firstDetail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
                     $firstDetail->jumlah ?? '-',
                     $firstDetail->harga ?? 0,
                     $transaction->harga_total ?? 0,
@@ -90,9 +98,12 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
                         '', // posisi_km
                         '', // nomor_chassis
                         '', // nomor_polisi
+                        '', // tipe
                         '', // workshop_harent
                         '', // maintenance_service
+                        $detail->product ?? '', // product
                         $detail->deskripsi ?? '-',
+                        $detail->tanggal_part_keluar ? Carbon::parse($detail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
                         $isTaxLine ? '' : ($detail->jumlah ?? '-'),
                         $isTaxLine ? '' : ($detail->harga ?? 0),
                         '', // harga_total
@@ -108,9 +119,12 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
                     $transaction->posisi_km,
                     $transaction->mobil->nomor_chassis ?? '-',
                     $transaction->mobil->nomor_polisi ?? '-',
+                    $tipe,
                     $workshopHarent,
                     $maintenanceService,
+                    '', // product
                     '-', // deskripsi
+                    '', // tanggal_part_keluar
                     '-', // jumlah
                     '-', // harga
                     $transaction->harga_total ?? 0,
@@ -123,7 +137,7 @@ class VehicleTransactionsExport implements FromCollection, WithHeadings
 
         // Add Grand Total Row
         $exportData[] = [
-            '', '', '', '', '', '', '', '', '', '', 
+            '', '', '', '', '', '', '', '', '', '', '', '', '',
             (float) $hargaTotal, 
             (float) $hargaPajak, 
             'GRAND TOTAL: ' . (float) $grandTotal,

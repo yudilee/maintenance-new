@@ -393,10 +393,13 @@
                     <tr>
                         <th class="sticky-col" style="min-width:200px;">Nomor Job</th>
                         <th style="min-width:100px;">No Polisi</th>
+                        <th style="min-width:80px;">Tipe</th>
                         <th style="min-width:100px;">Tanggal Job</th>
                         <th style="min-width:80px;">Posisi KM</th>
                         <th style="min-width:140px;">Maintenance/Service</th>
+                        <th style="min-width:150px;">Product</th>
                         <th style="min-width:200px;">Deskripsi</th>
+                        <th style="min-width:140px;">Tanggal Update</th>
                         <th style="min-width:60px;">Jumlah</th>
                         <th style="min-width:100px;">Harga</th>
                         <th style="min-width:110px;">Harga Total</th>
@@ -645,6 +648,9 @@
                         "data": "nomor_polisi"
                     },
                     {
+                        "data": "tipe"
+                    },
+                    {
                         "data": "tanggal_job"
                     },
                     {
@@ -654,7 +660,13 @@
                         "data": "maintenance_service"
                     },
                     {
+                        "data": "product"
+                    },
+                    {
                         "data": "deskripsi"
+                    },
+                    {
+                        "data": "tanggal_part_keluar"
                     },
                     {
                         "data": "jumlah"
@@ -849,15 +861,18 @@
                             content: headerContent.concat([{
                                     table: {
                                         headerRows: 1,
-                                        widths: [80, 45, 45, 35, 45, 100, 20, 50, 80, 45, '*'],
+                                        widths: [80, 45, 40, 45, 35, 45, 70, 80, 80, 20, 50, 80, 45, '*'],
                                         body: [
                                             [
                                                 {text: 'Nomor Job', style: 'tableHeader'},
                                                 {text: 'No Polisi', style: 'tableHeader'},
+                                                {text: 'Tipe', style: 'tableHeader'},
                                                 {text: 'Tgl Job', style: 'tableHeader'},
                                                 {text: 'Pos KM', style: 'tableHeader'},
                                                 {text: 'Service', style: 'tableHeader'},
+                                                {text: 'Product', style: 'tableHeader'},
                                                 {text: 'Deskripsi', style: 'tableHeader'},
+                                                {text: 'Tgl Update', style: 'tableHeader'},
                                                 {text: 'Qty', style: 'tableHeader'},
                                                 {text: 'Harga', style: 'tableHeader'},
                                                 {text: 'Total', style: 'tableHeader'},
@@ -897,6 +912,10 @@
                                                     fillColor: null
                                                 },
                                                 {
+                                                    text: row.tipe || '',
+                                                    fillColor: null
+                                                },
+                                                {
                                                     text: row.tanggal_job || '',
                                                     fillColor: null
                                                 },
@@ -909,7 +928,15 @@
                                                     fillColor: null
                                                 },
                                                 {
+                                                    text: row.product || '',
+                                                    fillColor: null
+                                                },
+                                                {
                                                     text: row.deskripsi || '',
+                                                    fillColor: null
+                                                },
+                                                {
+                                                    text: row.tanggal_part_keluar || '',
                                                     fillColor: null
                                                 },
                                                 {
@@ -935,7 +962,7 @@
                                             ];
                                         })).concat([
                                             [
-                                                {text: 'GRAND TOTAL', bold: true, colSpan: 7, alignment: 'right'}, {}, {}, {}, {}, {}, {},
+                                                {text: 'GRAND TOTAL', bold: true, colSpan: 10, alignment: 'right'}, {}, {}, {}, {}, {}, {}, {}, {}, {},
                                                 {text: ''},
                                                 {text: response.hargaTotal ? response.hargaTotal.toLocaleString('id-ID') : '', bold: true},
                                                 {text: response.hargaPajak ? response.hargaPajak.toLocaleString('id-ID') : '', bold: true},

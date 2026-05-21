@@ -39,6 +39,7 @@ class Htransaksi extends Model
         'nomor_sv',
         'tanggal_close',
         'state',
+        'is_internal',
     ];
 
     public function getNomorChassisAttribute($value)

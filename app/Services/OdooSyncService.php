@@ -62,7 +62,11 @@ class OdooSyncService
             if ($phase === 'all' || $phase === 'ro') {
                 $roDomain = [];
                 if ($targetJo) {
-                    $roDomain[] = ['name', '=', $targetJo];
+                    if (is_array($targetJo)) {
+                        $roDomain[] = ['name', 'in', $targetJo];
+                    } else {
+                        $roDomain[] = ['name', '=', $targetJo];
+                    }
                 } elseif ($lastSyncUTC) {
                     $roDomain[] = ['write_date', '>=', $lastSyncUTC];
                 } else {
@@ -74,7 +78,7 @@ class OdooSyncService
                     'repair.order', 'search_read',
                     [$roDomain],
                     [
-                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'km_return', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'vendor_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids', 'schedule_date', 'repair_end_datetime'],
+                        'fields' => ['name', 'lot_id', 'lot_vehicle_ref', 'service_type', 'km_pickup', 'km_return', 'compute_job_card_repair_notes', 'product_model_type_combined', 'partner_id', 'vendor_id', 'order_line_ids', 'repair_service_ids', 'state', 'create_date', 'move_id', 'vendor_bill_ids', 'schedule_date', 'repair_end_datetime', 'is_internal_repair'],
                         'limit' => $limit,
                         'offset' => $offset,
                         'order' => 'create_date asc'
@@ -92,7 +96,10 @@ class OdooSyncService
             if (($phase === 'all' && !$hasMore) || $phase === 'move') {
                 $moveOffset = ($phase === 'move') ? $offset : 0;
                 $billDomain = [['repair_id', '!=', false], ['state', '!=', 'cancel'], ['name', 'like', 'BILLS/']];
-                if ($lastSyncUTC) {
+                if ($targetJo) {
+                    $targetJoNames = is_array($targetJo) ? $targetJo : [$targetJo];
+                    $billDomain[] = ['repair_id.name', 'in', $targetJoNames];
+                } elseif ($lastSyncUTC) {
                     $billDomain[] = ['write_date', '>=', $lastSyncUTC];
                 } else {
                     $billDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
@@ -171,21 +178,35 @@ class OdooSyncService
             // Fetch RO Lines
             $roLinesMap = [];
             if (!empty($allRoLineIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'repair.order.line', 'read', [$allRoLineIds], ['fields' => ['name', 'quantity', 'price_unit', 'price_subtotal']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'repair.order.line', 'read', [$allRoLineIds], ['fields' => ['name', 'quantity', 'price_unit', 'price_subtotal', 'product_template_id', 'stock_move_id']]]);
                 if ($res['success']) foreach ($res['result'] as $rl) $roLinesMap[$rl['id']] = $rl;
+            }
+
+            // Fetch Stock Moves linked to RO Lines
+            $stockMovesMap = [];
+            $allStockMoveIds = [];
+            foreach ($roLinesMap as $rl) {
+                if (!empty($rl['stock_move_id']) && is_array($rl['stock_move_id'])) {
+                    $allStockMoveIds[] = $rl['stock_move_id'][0];
+                }
+            }
+            $allStockMoveIds = array_values(array_unique($allStockMoveIds));
+            if (!empty($allStockMoveIds)) {
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'stock.move', 'read', [$allStockMoveIds], ['fields' => ['date']]]);
+                if ($res['success']) foreach ($res['result'] as $sm) $stockMovesMap[$sm['id']] = $sm;
             }
 
             // Fetch Service Lines
             $roServicesMap = [];
             if (!empty($allRoServiceIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'repair.service', 'read', [$allRoServiceIds], ['fields' => ['name', 'quantity', 'price_subtotal']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'repair.service', 'read', [$allRoServiceIds], ['fields' => ['name', 'quantity', 'price_subtotal', 'product_id']]]);
                 if (!$res['success']) \Log::error("REPAIR SERVICE ERROR: ".json_encode($res)); if ($res['success']) foreach ($res['result'] as $rs) $roServicesMap[$rs['id']] = $rs;
             }
 
             // Fetch Bill Lines
             $billLinesMap = [];
             if (!empty($allLineIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'account.move.line', 'read', [$allLineIds], ['fields' => ['move_id', 'name', 'quantity', 'price_unit', 'price_subtotal', 'display_type', 'debit', 'credit', 'balance']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'account.move.line', 'read', [$allLineIds], ['fields' => ['move_id', 'name', 'quantity', 'price_unit', 'price_subtotal', 'display_type', 'debit', 'credit', 'balance', 'product_id']]]);
                 if ($res['success']) {
                     foreach ($res['result'] as $bl) {
                         $mId = is_array($bl['move_id']) ? $bl['move_id'][0] : $bl['move_id'];
@@ -331,6 +352,7 @@ class OdooSyncService
                     'harga_jual' => 0,
                     'harga_pajak_jual' => 0,
                     'state' => $ro['state'] ?? null,
+                    'is_internal' => !empty($ro['is_internal_repair']) ? 1 : 0,
                 ];
 
                 $htransaksi = Htransaksi::updateOrCreate(['nomor_job' => $jobNo], $headerData);
@@ -361,11 +383,13 @@ class OdooSyncService
                     Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
                         'deskripsi' => $cleanName,
+                        'tanggal_part_keluar' => null,
                         'jumlah' => $qty,
                         'harga' => $price_unit,
                         'value' => $subtotal,
                         'discount' => 0,
                         'mnt_grp' => '',
+                        'product' => is_array($ld['product_id'] ?? null) ? ($ld['product_id'][1] ?? '') : '',
                         'lbr_grp' => '',
                         'note' => ''
                     ]);
@@ -378,6 +402,15 @@ class OdooSyncService
                     if (!$ld) continue;
 
                     $cleanName = mb_substr($this->sanitizeText($ld['name']), 0, 255, 'UTF-8');
+                    if (!empty($ro['is_internal_repair']) && !empty($ld['product_template_id']) && is_array($ld['product_template_id'])) {
+                        $templateName = $ld['product_template_id'][1] ?? '';
+                        if (preg_match('/^(\[[^\]]+\])/', $templateName, $matches)) {
+                            $partCode = $matches[1];
+                            if (strpos($cleanName, $partCode) !== 0) {
+                                $cleanName = mb_substr($partCode . ' ' . $cleanName, 0, 255, 'UTF-8');
+                            }
+                        }
+                    }
                     if (in_array($cleanName, $insertedLineNames)) continue;
 
                     $subtotal = $ld['price_subtotal'];
@@ -385,15 +418,27 @@ class OdooSyncService
                         $subtotal = $ld['price_unit'] * $ld['quantity'];
                     }
 
+                    $tanggalKeluar = null;
+                    if (!empty($ld['stock_move_id']) && is_array($ld['stock_move_id'])) {
+                        $smId = $ld['stock_move_id'][0];
+                        if (isset($stockMovesMap[$smId]) && !empty($stockMovesMap[$smId]['date'])) {
+                            $tanggalKeluar = \Carbon\Carbon::parse($stockMovesMap[$smId]['date'], 'UTC')
+                                ->setTimezone('Asia/Jakarta')
+                                ->format('Y-m-d H:i:s');
+                        }
+                    }
+
                     $totalJO += $subtotal;
                     Dtransaksi::create([
                         'nomor_invoice' => $htransaksi->nomor_invoice,
                         'deskripsi' => $cleanName,
+                        'tanggal_part_keluar' => $tanggalKeluar,
                         'jumlah' => $ld['quantity'],
                         'harga' => $ld['price_unit'],
                         'value' => $subtotal,
                         'discount' => 0,
                         'mnt_grp' => '',
+                        'product' => is_array($ld['product_template_id'] ?? null) ? ($ld['product_template_id'][1] ?? '') : '',
                         'lbr_grp' => '',
                         'note' => ''
                     ]);
@@ -460,15 +505,27 @@ class OdooSyncService
                         if (in_array($line['display_type'], ['payment_term', 'tax'])) continue;
 
                         $amt = $line['price_subtotal'];
+                        $cleanName = mb_substr($this->sanitizeText($line['name']), 0, 255, 'UTF-8');
+                        if ($htransaksi->is_internal && !empty($line['product_id']) && is_array($line['product_id'])) {
+                            $productName = $line['product_id'][1] ?? '';
+                            if (preg_match('/^(\[[^\]]+\])/', $productName, $matches)) {
+                                $partCode = $matches[1];
+                                if (strpos($cleanName, $partCode) !== 0) {
+                                    $cleanName = mb_substr($partCode . ' ' . $cleanName, 0, 255, 'UTF-8');
+                                }
+                            }
+                        }
 
                         Dtransaksi::create([
                             'nomor_invoice' => $htransaksi->nomor_invoice,
-                            'deskripsi' => mb_substr($this->sanitizeText($line['name']), 0, 255, 'UTF-8'),
+                            'deskripsi' => $cleanName,
+                            'tanggal_part_keluar' => null,
                             'jumlah' => $line['quantity'],
                             'harga' => $line['price_unit'] ?: ($line['quantity'] ? abs($amt/$line['quantity']) : 0),
                             'value' => $amt,
                             'discount' => 0,
                             'mnt_grp' => '',
+                            'product' => is_array($line['product_id'] ?? null) ? ($line['product_id'][1] ?? '') : '',
                             'lbr_grp' => '',
                             'note' => $line['display_type'] ?? ''
                         ]);
@@ -545,6 +602,71 @@ class OdooSyncService
             'bill_count' => $billCount['result'] ?? 0,
             'total' => ($roCount['result'] ?? 0) + ($billCount['result'] ?? 0)
         ];
+    }
+
+    public function backfillIsInternal($startDate = '2025-12-08 00:00:00')
+    {
+        if (!$this->setting) {
+            return ['success' => false, 'message' => 'Odoo settings not configured.'];
+        }
+
+        try {
+            // 1. Authenticate with Odoo
+            $authData = $this->odooCall('common', 'authenticate', [$this->db, $this->user, $this->apiKey, (object)[]]);
+            
+            if (!$authData['success'] || empty($authData['result'])) {
+                $errorMsg = $authData['error'] ?? 'Authentication failed';
+                return ['success' => false, 'message' => "Odoo Auth Failed: $errorMsg"];
+            }
+
+            $this->uid = $authData['result'];
+
+            $offset = 0;
+            $limit = 1000;
+            $updatedCount = 0;
+
+            do {
+                $roDomain = [['create_date', '>=', $startDate]];
+                
+                $rosData = $this->odooCall('object', 'execute_kw', [
+                    $this->db, $this->uid, $this->apiKey,
+                    'repair.order', 'search_read',
+                    [$roDomain],
+                    [
+                        'fields' => ['name', 'is_internal_repair'],
+                        'limit' => $limit,
+                        'offset' => $offset,
+                        'order' => 'create_date asc'
+                    ]
+                ]);
+
+                $ros = $rosData['result'] ?? [];
+                if (empty($ros)) {
+                    break;
+                }
+
+                foreach ($ros as $ro) {
+                    $jobNo = $ro['name'];
+                    $isInternal = !empty($ro['is_internal_repair']) ? 1 : 0;
+
+                    $affected = DB::table('htransaksi')
+                        ->where('nomor_job', $jobNo)
+                        ->update(['is_internal' => $isInternal]);
+
+                    if ($affected > 0) {
+                        $updatedCount++;
+                    }
+                }
+
+                $offset += $limit;
+            } while (count($ros) === $limit);
+
+            return ['success' => true, 'message' => "Backfill completed. Updated $updatedCount records."];
+
+        } catch (\Exception $e) {
+            Log::error('Odoo Backfill Error: ' . $e->getMessage());
+            return ['success' => false, 'message' => "Error: " . $e->getMessage()];
+        }
     }
 
     private function odooCall($service, $method, $args)
