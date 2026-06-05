@@ -38,3 +38,4 @@ fix_*.php
 fix_*.py
 customers.json
 scratch/
+database/seeders/AdminUserSeeder.php
