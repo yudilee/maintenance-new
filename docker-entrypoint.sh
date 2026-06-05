@@ -15,9 +15,6 @@ fi
 echo "Running migrations..."
 php artisan migrate --force
 
-# Seed Admin User
-echo "Seeding Admin User..."
-php artisan db:seed --class=AdminUserSeeder --force
 
 # Fix Permissions for Logs and Cache
 echo "Fixing storage permissions..."
