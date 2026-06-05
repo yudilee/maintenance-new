@@ -29,3 +29,12 @@ odoo_debug_output.json
 *.pdf
 LotSerial*
 Odoo Repair Order*
+
+# Custom untracked files
+*.sql
+test_*.php
+Test*.php
+fix_*.php
+fix_*.py
+customers.json
+scratch/
