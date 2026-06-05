@@ -171,7 +171,7 @@ class OdooSyncService
             // Fetch Lots (Vehicles)
             $lotsMap = [];
             if (!empty($allLotIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'stock.lot', 'read', [$allLotIds], ['fields' => ['name', 'ref', 'color_id']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'stock.lot', 'read', [$allLotIds], ['fields' => ['name', 'ref', 'color_id', 'purchase_date', 'vehicle_year', 'engine_number']]]);
                 if ($res['success']) foreach ($res['result'] as $l) $lotsMap[$l['id']] = $l;
             }
 
@@ -252,10 +252,19 @@ class OdooSyncService
                 $orderLotId = is_array($ro['lot_id']) ? $ro['lot_id'][0] : null;
                 $plateNo = is_array($ro['lot_id']) ? $ro['lot_id'][1] : null;
 
+                $purchaseDate = null;
+                $vehicleYear = null;
+                $engineNumber = null;
+                $warna = '';
+
                 if ($orderLotId && isset($lotsMap[$orderLotId])) {
                     $lot = $lotsMap[$orderLotId];
                     if (!$chassisNo) $chassisNo = $lot['name'];
                     if (!$plateNo || preg_match('/^\d+$/', $plateNo)) $plateNo = $lot['ref'];
+                    if (!empty($lot['purchase_date'])) $purchaseDate = $lot['purchase_date'];
+                    if (!empty($lot['vehicle_year'])) $vehicleYear = $lot['vehicle_year'];
+                    if (!empty($lot['engine_number'])) $engineNumber = $lot['engine_number'];
+                    if (!empty($lot['color_id']) && is_array($lot['color_id'])) $warna = $lot['color_id'][1];
                 }
 
                 $jobDate = $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : null;
@@ -269,18 +278,34 @@ class OdooSyncService
                 // Sync Vehicle
                 $mobil = Mobil::where('nomor_chassis', $chassisNo)->first();
                 if ($mobil) {
-                    $mobil->update(['nomor_polisi' => $plateNo ?: $mobil->nomor_polisi]);
+                    $updateData = ['nomor_polisi' => $plateNo ?: $mobil->nomor_polisi];
+                    
+                    // Update vehicle details if we got them from Odoo
+                    if ($purchaseDate) {
+                        $updateData['tanggal_pembelian'] = $purchaseDate;
+                    }
+                    if ($vehicleYear) {
+                        $updateData['tahun_pembuatan'] = $vehicleYear;
+                    }
+                    if ($engineNumber) {
+                        $updateData['nomor_mesin'] = $engineNumber;
+                    }
+                    if ($warna) {
+                        $updateData['warna'] = $warna;
+                    }
+                    
+                    $mobil->update($updateData);
                 } else {
                     $mobil = Mobil::create([
                         'nomor_chassis' => $chassisNo,
                         'nomor_polisi' => mb_substr($plateNo ?? '', 0, 25, 'UTF-8'),
                         'nopol' => mb_substr($plateNo ?? '', 0, 25, 'UTF-8'),
-                        'warna' => '',
-                        'tanggal_pembelian' => now()->format('Y-m-d'),
+                        'warna' => $warna ?: '',
+                        'tanggal_pembelian' => $purchaseDate ?: now()->format('Y-m-d'),
                         'nomor_kk' => '',
                         'model' => '',
-                        'tahun_pembuatan' => now()->format('Y'),
-                        'nomor_mesin' => '',
+                        'tahun_pembuatan' => $vehicleYear ?: now()->format('Y'),
+                        'nomor_mesin' => $engineNumber ?: '',
                         'kode_sup' => '',
                     ]);
                 }
