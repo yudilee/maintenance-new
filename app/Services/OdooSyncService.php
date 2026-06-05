@@ -572,6 +572,27 @@ class OdooSyncService
             // Only update last_sync when completely finished
             if (!$hasMore && ($phase === 'move' || $phase === 'all')) {
                 $this->setting->update(['last_sync' => now()]);
+                
+                // Sync ALL vehicles (stock.lot) from Odoo to fix purchase_date for
+                // vehicles without any repair orders. Run in batches until complete.
+                $vehicleOffset = 0;
+                $vehicleLimit = 500;
+                $vehicleTotal = 0;
+                do {
+                    $vehicleResult = $this->syncVehicles($sourceType, $vehicleOffset, $vehicleLimit);
+                    if ($vehicleResult['success']) {
+                        $vehicleTotal += $vehicleResult['items'] ?? 0;
+                        $vehicleHasMore = $vehicleResult['hasMore'] ?? false;
+                        $vehicleOffset = $vehicleResult['nextOffset'] ?? ($vehicleOffset + $vehicleLimit);
+                    } else {
+                        Log::warning('Vehicle sync batch failed: ' . ($vehicleResult['message'] ?? 'Unknown error'));
+                        break;
+                    }
+                } while ($vehicleHasMore);
+                
+                if ($vehicleTotal > 0) {
+                    Log::info("Vehicle sync completed: {$vehicleTotal} vehicles processed.");
+                }
             }
 
             $this->logHistory($sourceType, 'Success', $itemsSynced, "Batch processed: $itemsSynced items.");
@@ -690,6 +711,118 @@ class OdooSyncService
 
         } catch (\Exception $e) {
             Log::error('Odoo Backfill Error: ' . $e->getMessage());
+            return ['success' => false, 'message' => "Error: " . $e->getMessage()];
+        }
+    }
+
+    public function syncVehicles($sourceType = 'Manual', $offset = 0, $limit = 500)
+    {
+        if (!$this->setting) {
+            return ['success' => false, 'message' => 'Odoo settings not configured.'];
+        }
+
+        try {
+            // 1. Authenticate with Odoo
+            $authData = $this->odooCall('common', 'authenticate', [$this->db, $this->user, $this->apiKey, (object)[]]);
+            
+            if (!$authData['success'] || empty($authData['result'])) {
+                $errorMsg = $authData['error'] ?? 'Authentication failed';
+                $this->logHistory($sourceType, 'Failed', 0, "Auth Error: " . $errorMsg);
+                return ['success' => false, 'message' => "Odoo Auth Failed: $errorMsg"];
+            }
+
+            $this->uid = $authData['result'];
+
+            // 2. Fetch ALL stock.lot records with ref (chassis) and purchase_date
+            $domain = [['ref', '!=', false], ['purchase_date', '!=', false]];
+            
+            $lotsData = $this->odooCall('object', 'execute_kw', [
+                $this->db, $this->uid, $this->apiKey,
+                'stock.lot', 'search_read',
+                [$domain],
+                [
+                    'fields' => ['name', 'ref', 'color_id', 'purchase_date', 'vehicle_year', 'engine_number'],
+                    'limit' => $limit,
+                    'offset' => $offset,
+                    'order' => 'create_date asc'
+                ]
+            ]);
+
+            $lots = $lotsData['result'] ?? [];
+            $hasMore = count($lots) === $limit;
+            $nextOffset = $hasMore ? $offset + $limit : 0;
+
+            if (empty($lots)) {
+                return [
+                    'success' => true,
+                    'message' => 'No vehicle records found.',
+                    'items' => 0,
+                    'hasMore' => false,
+                    'nextOffset' => 0
+                ];
+            }
+
+            $itemsSynced = 0;
+
+            foreach ($lots as $lot) {
+                try {
+                    $chassisNo = $lot['ref'] ?? null;
+                    $plateNo = $lot['name'] ?? '';
+                    $purchaseDate = $lot['purchase_date'] ?? null;
+                    $vehicleYear = $lot['vehicle_year'] ?? null;
+                    $engineNumber = $lot['engine_number'] ?? null;
+                    $warna = '';
+
+                    if (!empty($lot['color_id']) && is_array($lot['color_id'])) {
+                        $warna = $lot['color_id'][1];
+                    }
+
+                    if (!$chassisNo) continue;
+
+                    // Format nopol: "B -1382-HZK"
+                    $nopol = '';
+                    if ($plateNo) {
+                        // Try to format plate number with dashes
+                        if (preg_match('/^([A-Z]+)\s*(\d+)\s*([A-Z]+)$/', $plateNo, $m)) {
+                            $nopol = $m[1] . ' -' . $m[2] . '-' . $m[3];
+                        } else {
+                            $nopol = $plateNo;
+                        }
+                    }
+
+                    Mobil::updateOrCreate(
+                        ['nomor_chassis' => $chassisNo],
+                        [
+                            'nomor_polisi' => mb_substr($plateNo, 0, 25, 'UTF-8'),
+                            'nopol' => mb_substr($nopol ?: $plateNo, 0, 25, 'UTF-8'),
+                            'warna' => $warna ?: '',
+                            'tanggal_pembelian' => $purchaseDate,
+                            'tahun_pembuatan' => $vehicleYear ?: now()->format('Y'),
+                            'nomor_mesin' => $engineNumber ?: '',
+                            'nomor_kk' => '',
+                            'model' => '',
+                            'kode_sup' => '',
+                        ]
+                    );
+
+                    $itemsSynced++;
+                } catch (\Exception $lotEx) {
+                    \Log::warning('SyncVehicles: Skipping lot ' . ($lot['id'] ?? 'unknown') . ' - ' . $lotEx->getMessage());
+                }
+            }
+
+            $this->logHistory($sourceType, 'Success', $itemsSynced, "Vehicles batch processed: $itemsSynced items (offset: $offset).");
+            return [
+                'success' => true,
+                'message' => "Synced $itemsSynced vehicles.",
+                'items' => $itemsSynced,
+                'hasMore' => $hasMore,
+                'nextOffset' => $nextOffset
+            ];
+
+        } catch (\Exception $e) {
+            \Log::error('Odoo SyncVehicles Error: ' . $e->getMessage());
+            $this->logHistory($sourceType, 'Failed', 0, 'Exception: ' . $e->getMessage() . " line " . $e->getLine());
             return ['success' => false, 'message' => "Error: " . $e->getMessage()];
         }
     }
