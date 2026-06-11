@@ -523,7 +523,8 @@ class OdooSyncService
                     );
                 }
 
-                Dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
+                // Delete existing lines for both the old invoice number (job number) and the new bill number
+                Dtransaksi::whereIn('nomor_invoice', [$htransaksi->nomor_invoice, $invoiceNo])->delete();
                 
                 if (isset($billLinesMap[$move['id']])) {
                     foreach ($billLinesMap[$move['id']] as $line) {
@@ -542,7 +543,7 @@ class OdooSyncService
                         }
 
                         Dtransaksi::create([
-                            'nomor_invoice' => $htransaksi->nomor_invoice,
+                            'nomor_invoice' => $invoiceNo,
                             'deskripsi' => $cleanName,
                             'tanggal_part_keluar' => null,
                             'jumlah' => $line['quantity'],
