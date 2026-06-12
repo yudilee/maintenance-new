@@ -70,7 +70,7 @@ class OdooSyncService
                 } elseif ($lastSyncUTC) {
                     $roDomain[] = ['write_date', '>=', $lastSyncUTC];
                 } else {
-                    $roDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
+                    $roDomain[] = ['create_date', '>=', '2025-11-30 00:00:00'];
                 }
 
                 $rosData = $this->odooCall('object', 'execute_kw', [
@@ -102,7 +102,7 @@ class OdooSyncService
                 } elseif ($lastSyncUTC) {
                     $billDomain[] = ['write_date', '>=', $lastSyncUTC];
                 } else {
-                    $billDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
+                    $billDomain[] = ['create_date', '>=', '2025-11-30 00:00:00'];
                 }
 
                 $movesData = $this->odooCall('object', 'execute_kw', [
@@ -271,8 +271,8 @@ class OdooSyncService
                 // schedule_date can be backdated (e.g. a JO created in Jan 2026 may have
                 // schedule_date in Nov 2025), which would incorrectly skip legitimate orders.
                 $jobDate = $ro['create_date'] ? Carbon::parse($ro['create_date'])->format('Y-m-d') : null;
-                if ($jobDate && $jobDate < '2025-12-08') {
-                    Log::info('Skipping JO due to create_date < 2025-12-08: ' . ($ro['name'] ?? 'unknown') . ' (' . $jobDate . ')');
+                if ($jobDate && $jobDate < '2025-11-30') {
+                    Log::info('Skipping JO due to create_date < 2025-11-30: ' . ($ro['name'] ?? 'unknown') . ' (' . $jobDate . ')');
                     continue;
                 }
 
@@ -385,10 +385,12 @@ class OdooSyncService
 
                 $htransaksi = Htransaksi::updateOrCreate(['nomor_job' => $jobNo], $headerData);
 
-                // If vendor is OTHERS (O-10404), override state to cancel.
-                // This is a workaround for jobs that are cancelled in Odoo but
-                // marked as "close" with the vendor changed to OTHERS.
-                if ($supplierId === 'O-10404') {
+                // Override state to cancel if:
+                // 1. Vendor is OTHERS (O-10404) - workaround for cancelled jobs, OR
+                // 2. Repair notes contain cancellation keywords (batal, cancel, etc.)
+                $repairNotes = strip_tags($ro['compute_job_card_repair_notes'] ?? '');
+                $hasCancelKeyword = preg_match('/\b(batal|cancel|dibatalkan|cancelled|void|pembatalan)\b/i', $repairNotes);
+                if ($supplierId === 'O-10404' || $hasCancelKeyword) {
                     $htransaksi->update(['state' => 'cancel']);
                 }
 
@@ -640,14 +642,14 @@ class OdooSyncService
         } elseif ($lastSyncUTC) {
             $roDomain[] = ['write_date', '>=', $lastSyncUTC];
         } else {
-            $roDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
+            $roDomain[] = ['create_date', '>=', '2025-11-30 00:00:00'];
         }
 
         $billDomain = [['repair_id', '!=', false], ['state', '!=', 'cancel'], ['name', 'like', 'BILLS/']];
         if ($lastSyncUTC) {
             $billDomain[] = ['write_date', '>=', $lastSyncUTC];
         } else {
-            $billDomain[] = ['create_date', '>=', '2025-12-08 00:00:00'];
+            $billDomain[] = ['create_date', '>=', '2025-11-30 00:00:00'];
         }
 
         $roCount = $this->odooCall('object', 'execute_kw', [$this->db, $uid, $this->apiKey, 'repair.order', 'search_count', [$roDomain]]);
@@ -661,7 +663,7 @@ class OdooSyncService
         ];
     }
 
-    public function backfillIsInternal($startDate = '2025-12-08 00:00:00')
+    public function backfillIsInternal($startDate = '2025-11-30 00:00:00')
     {
         if (!$this->setting) {
             return ['success' => false, 'message' => 'Odoo settings not configured.'];
