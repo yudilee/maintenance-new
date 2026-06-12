@@ -25,7 +25,8 @@ class MainController extends Controller
         $vehicleResults = collect();
         $mobilDetail = null;
         $hasFilters = false;
-        $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
+        $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
+            ->where('state', '!=', 'cancel');
 
         if ($request->filled('nama_customer')) {
             $customer = Customer::where('kode_customer', $request->nama_customer)->first();
@@ -117,7 +118,9 @@ class MainController extends Controller
         if ($request->filled('nama_customer') && !$request->filled('nomor_polisi')) {
             $customer = Customer::where('kode_customer', $request->nama_customer)->first();
             if ($customer) {
-                $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])->where('id_customer', $customer->id);
+                $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
+                    ->where('id_customer', $customer->id)
+                    ->where('state', '!=', 'cancel');
 
                 if ($request->start_date && $request->end_date) {
                     $htransaksiQuery->whereBetween('tanggal_job', [$request->start_date, $request->end_date]);
@@ -134,7 +137,8 @@ class MainController extends Controller
         // If both nomor_polisi and nama_customer are selected
         elseif ($request->filled('nama_customer') && $request->filled('nomor_polisi')) {
             $customer = Customer::where('kode_customer', $request->nama_customer)->first();
-            $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
+            $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
+                ->where('state', '!=', 'cancel');
             if ($customer) {
                 $query->where('id_customer', $customer->id);
             }
@@ -156,7 +160,8 @@ class MainController extends Controller
         }
         // If only nomor_polisi or other cases
         else {
-            $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi']);
+            $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
+                ->where('state', '!=', 'cancel');
             if ($request->nomor_polisi) {
                 $query->whereHas('mobil', function ($q) use ($request) {
                     $q->where('nomor_polisi', $request->nomor_polisi);

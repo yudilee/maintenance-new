@@ -302,7 +302,8 @@ class VehicleTransactionController extends Controller
                 $q->whereIn('state', $closedStates)
                   ->orWhereNull('state')
                   ->orWhere('state', '');
-            });
+            })
+            ->where('state', '!=', 'cancel');
 
         if ($nama_customer) {
             $customer = Customer::where('kode_customer', $nama_customer)->first();
@@ -339,7 +340,7 @@ class VehicleTransactionController extends Controller
             $q->whereIn('state', $closedStates)
               ->orWhereNull('state')
               ->orWhere('state', '');
-        });
+        })->where('state', '!=', 'cancel');
 
         if ($nama_customer) {
             $customer = Customer::where('kode_customer', $nama_customer)->first();

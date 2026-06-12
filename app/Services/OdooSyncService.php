@@ -385,6 +385,13 @@ class OdooSyncService
 
                 $htransaksi = Htransaksi::updateOrCreate(['nomor_job' => $jobNo], $headerData);
 
+                // If vendor is OTHERS (O-10404), override state to cancel.
+                // This is a workaround for jobs that are cancelled in Odoo but
+                // marked as "close" with the vendor changed to OTHERS.
+                if ($supplierId === 'O-10404') {
+                    $htransaksi->update(['state' => 'cancel']);
+                }
+
                 // Sync Detail Lines (Draft from JO)
                 Dtransaksi::where('nomor_invoice', $htransaksi->nomor_invoice)->delete();
                 $totalJO = 0;

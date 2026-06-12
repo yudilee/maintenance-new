@@ -12,7 +12,7 @@ class RepairJobController extends Controller
         $openStates = ['confirmed', 'under_repair', 'draft', 'on_hold_repair'];
         $closedStates = ['done', 'close'];
 
-        $totalJobs = Htransaksi::count();
+        $totalJobs = Htransaksi::where('state', '!=', 'cancel')->count();
         $openJobs = Htransaksi::whereIn('state', $openStates)->count();
         $closedJobs = Htransaksi::whereIn('state', $closedStates)->count();
 
@@ -36,7 +36,8 @@ class RepairJobController extends Controller
         $openStates = ['confirmed', 'under_repair', 'ready'];
         $closedStates = ['done', '2binvoiced'];
 
-        $query = Htransaksi::with(['mobil', 'supplier']);
+        $query = Htransaksi::with(['mobil', 'supplier'])
+            ->where('state', '!=', 'cancel');
 
         // Status filter
         $statusFilter = $request->input('status', 'all');
