@@ -267,9 +267,12 @@ class OdooSyncService
                     if (!empty($lot['color_id']) && is_array($lot['color_id'])) $warna = $lot['color_id'][1];
                 }
 
-                $jobDate = $ro['schedule_date'] ? Carbon::parse($ro['schedule_date'])->format('Y-m-d') : null;
+                // Use create_date for the date filter instead of schedule_date, because
+                // schedule_date can be backdated (e.g. a JO created in Jan 2026 may have
+                // schedule_date in Nov 2025), which would incorrectly skip legitimate orders.
+                $jobDate = $ro['create_date'] ? Carbon::parse($ro['create_date'])->format('Y-m-d') : null;
                 if ($jobDate && $jobDate < '2025-12-08') {
-                    Log::info('Skipping JO due to date < 2025-12-08: ' . ($ro['name'] ?? 'unknown') . ' (' . $jobDate . ')');
+                    Log::info('Skipping JO due to create_date < 2025-12-08: ' . ($ro['name'] ?? 'unknown') . ' (' . $jobDate . ')');
                     continue;
                 }
 
