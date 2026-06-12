@@ -25,11 +25,14 @@ class GlobalSearchController extends Controller
         // Clean the query by removing spaces for fuzzy matching
         $cleanQuery = str_replace(' ', '', $query);
 
-        // Search Repair Jobs
+        // Search Repair Jobs (exclude cancelled)
         $jobs = Htransaksi::with(['customer', 'mobil'])
-            ->whereRaw("REPLACE(nomor_job, ' ', '') LIKE ?", ['%' . $cleanQuery . '%'])
-            ->orWhereRaw("REPLACE(nomor_chassis, ' ', '') LIKE ?", ['%' . $cleanQuery . '%'])
-            ->orWhereRaw("REPLACE(nomor_invoice, ' ', '') LIKE ?", ['%' . $cleanQuery . '%'])
+            ->where('state', '!=', 'cancel')
+            ->where(function ($q) use ($cleanQuery) {
+                $q->whereRaw("REPLACE(nomor_job, ' ', '') LIKE ?", ['%' . $cleanQuery . '%'])
+                  ->orWhereRaw("REPLACE(nomor_chassis, ' ', '') LIKE ?", ['%' . $cleanQuery . '%'])
+                  ->orWhereRaw("REPLACE(nomor_invoice, ' ', '') LIKE ?", ['%' . $cleanQuery . '%']);
+            })
             ->limit(20)
             ->get();
 

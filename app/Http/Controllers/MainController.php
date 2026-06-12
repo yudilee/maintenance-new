@@ -62,7 +62,8 @@ class MainController extends Controller
                 ->unique('nomor_chassis')
                 ->values()
                 ->map(function ($vehicle) use ($request, $customerID) {
-                    $baseQuery = Htransaksi::where('nomor_chassis', $vehicle->nomor_chassis);
+                    $baseQuery = Htransaksi::where('nomor_chassis', $vehicle->nomor_chassis)
+                        ->where('state', '!=', 'cancel');
                     
                     if ($customerID) {
                         $baseQuery->where('id_customer', $customerID);
@@ -88,6 +89,7 @@ class MainController extends Controller
                     
                     // Fetch the absolute last job of the vehicle ignoring date and customer filters
                     $lastJob = Htransaksi::where('nomor_chassis', $vehicle->nomor_chassis)
+                        ->where('state', '!=', 'cancel')
                         ->where(function($q) use ($closedStates) {
                             $q->whereIn('state', $closedStates)
                               ->orWhereNull('state')

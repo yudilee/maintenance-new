@@ -30,6 +30,19 @@ odoo_debug_output.json
 LotSerial*
 Odoo Repair Order*
 
+# Data files (DBF, CSV, analysis)
+*.dbf
+*.cdx
+*.fpt
+*.csv
+23-01-2026/
+DBF_DATA_ANALYSIS.md
+dbf_comparison_report.md
+dbf_missing_*.csv
+backup_htransaksi_*.csv
+plans/
+scripts/
+
 # Custom untracked files
 *.sql
 test_*.php
