@@ -9,6 +9,22 @@ use App\Models\Mobil;
 
 class VehicleTransactionController extends Controller
 {
+    /**
+     * Safely parse a date string, returning formatted date or default value.
+     * Handles null, 0000-00-00, and invalid date values.
+     */
+    private function safeParseDate($value, string $format = 'd-m-Y', string $default = ''): string
+    {
+        if (empty($value) || $value === '0000-00-00' || $value === '0000-00-00 00:00:00') {
+            return $default;
+        }
+        try {
+            return \Carbon\Carbon::parse($value)->format($format);
+        } catch (\Exception $e) {
+            return $default;
+        }
+    }
+
     public function index(Request $request)
     {
         $mobilDetail = null;
@@ -78,7 +94,7 @@ class VehicleTransactionController extends Controller
                 
                 $data[] = [
                     'nomor_job' => $transaction->nomor_job . ' - ' . ($transaction->supplier->kode_supplier ?? '-') . ' - ' . ($transaction->supplier->nama_supplier ?? '-'),
-                    'tanggal_job' => \Carbon\Carbon::parse($transaction->tanggal_job)->format('d-m-Y'),
+                    'tanggal_job' => $this->safeParseDate($transaction->tanggal_job),
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
@@ -87,13 +103,13 @@ class VehicleTransactionController extends Controller
                     'workshop_harent' => $workshopHarent,
                     'product' => $details->first()->product ?? '',
                     'deskripsi' => $details->first()->deskripsi ?? '-',
-                    'tanggal_part_keluar' => $details->first()->tanggal_part_keluar ? \Carbon\Carbon::parse($details->first()->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
+                    'tanggal_part_keluar' => $this->safeParseDate($details->first()->tanggal_part_keluar, 'd-m-Y H:i:s'),
                     'jumlah' => $details->first()->jumlah ?? '-',
                     'harga' => number_format($details->first()->harga ?? 0, 0, ',', '.'),
                     'harga_total' => ($transaction->harga_total ?? 0) != 0 ? number_format($transaction->harga_total, 0, ',', '.') : '-',
                     'harga_pajak' => ($transaction->harga_pajak ?? 0) != 0 ? number_format($transaction->harga_pajak, 0, ',', '.') : '-',
                     'keterangan' => $details->first()->keterangan ?? ($transaction->keterangan ?? '-'),
-                    'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
+                    'tanggal_close' => $this->safeParseDate($transaction->tanggal_close),
                     'is_detail' => false
                 ];
 
@@ -111,13 +127,13 @@ class VehicleTransactionController extends Controller
                         'workshop_harent' => '',
                         'product' => $detail->product ?? '',
                         'deskripsi' => $detail->deskripsi ?? '-',
-                        'tanggal_part_keluar' => $detail->tanggal_part_keluar ? \Carbon\Carbon::parse($detail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
+                        'tanggal_part_keluar' => $this->safeParseDate($detail->tanggal_part_keluar, 'd-m-Y H:i:s'),
                         'jumlah' => $isTaxLine ? '' : ($detail->jumlah ?? '-'),
                         'harga' => $isTaxLine ? '' : number_format($detail->harga ?? 0, 0, ',', '.'),
                         'harga_total' => '',
                         'harga_pajak' => $isTaxLine ? number_format($detail->value ?? 0, 0, ',', '.') : '',
                         'keterangan' => '',
-                        'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
+                        'tanggal_close' => $this->safeParseDate($transaction->tanggal_close),
                         'is_detail' => true
                     ];
                 }
@@ -128,7 +144,7 @@ class VehicleTransactionController extends Controller
                 
                 $data[] = [
                     'nomor_job' => $transaction->nomor_job . ' - ' . ($transaction->supplier->kode_supplier ?? '-') . ' - ' . ($transaction->supplier->nama_supplier ?? '-'),
-                    'tanggal_job' => \Carbon\Carbon::parse($transaction->tanggal_job)->format('d-m-Y'),
+                    'tanggal_job' => $this->safeParseDate($transaction->tanggal_job),
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
@@ -143,7 +159,7 @@ class VehicleTransactionController extends Controller
                     'harga_total' => number_format($transaction->harga_total ?? 0, 0, ',', '.'),
                     'harga_pajak' => number_format($transaction->harga_pajak ?? 0, 0, ',', '.'),
                     'keterangan' => $transaction->keterangan ?? '-',
-                    'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
+                    'tanggal_close' => $this->safeParseDate($transaction->tanggal_close),
                     'is_detail' => false
                 ];
             }
@@ -217,7 +233,7 @@ class VehicleTransactionController extends Controller
                 // First row with first detail
                 $exportData[] = [
                     'nomor_job' => $nomorJobFull,
-                    'tanggal_job' => \Carbon\Carbon::parse($transaction->tanggal_job)->format('d-m-Y'),
+                    'tanggal_job' => $this->safeParseDate($transaction->tanggal_job),
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
@@ -226,13 +242,13 @@ class VehicleTransactionController extends Controller
                     'maintenance_service' => $maintenanceService,
                     'product' => $details->first()->product ?? '',
                     'deskripsi' => $details->first()->deskripsi ?? '-',
-                    'tanggal_part_keluar' => $details->first()->tanggal_part_keluar ? \Carbon\Carbon::parse($details->first()->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
+                    'tanggal_part_keluar' => $this->safeParseDate($details->first()->tanggal_part_keluar, 'd-m-Y H:i:s'),
                     'jumlah' => $details->first()->jumlah ?? '-',
                     'harga' => $details->first()->harga ?? 0,
                     'harga_total' => $transaction->harga_total ?? 0,
                     'harga_pajak' => $transaction->harga_pajak ?? 0,
                     'keterangan' => $details->first()->keterangan ?? ($transaction->keterangan ?? '-'),
-                    'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
+                    'tanggal_close' => $this->safeParseDate($transaction->tanggal_close),
                     'is_detail' => false
                 ];
 
@@ -249,20 +265,20 @@ class VehicleTransactionController extends Controller
                         'maintenance_service' => '',
                         'product' => $detail->product ?? '',
                         'deskripsi' => $detail->deskripsi ?? '-',
-                        'tanggal_part_keluar' => $detail->tanggal_part_keluar ? \Carbon\Carbon::parse($detail->tanggal_part_keluar)->format('d-m-Y H:i:s') : '',
+                        'tanggal_part_keluar' => $this->safeParseDate($detail->tanggal_part_keluar, 'd-m-Y H:i:s'),
                         'jumlah' => $detail->jumlah ?? '-',
                         'harga' => $detail->harga ?? 0,
                         'harga_total' => '',
                         'harga_pajak' => '',
                         'keterangan' => '',
-                        'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
+                        'tanggal_close' => $this->safeParseDate($transaction->tanggal_close),
                         'is_detail' => true
                     ];
                 }
             } else {
                 $exportData[] = [
                     'nomor_job' => $nomorJobFull,
-                    'tanggal_job' => \Carbon\Carbon::parse($transaction->tanggal_job)->format('d-m-Y'),
+                    'tanggal_job' => $this->safeParseDate($transaction->tanggal_job),
                     'posisi_km' => $transaction->posisi_km,
                     'nomor_chassis' => $transaction->mobil->nomor_chassis ?? '-',
                     'nomor_polisi' => $transaction->mobil->nomor_polisi ?? '-',
@@ -277,7 +293,7 @@ class VehicleTransactionController extends Controller
                     'harga_total' => $transaction->harga_total ?? 0,
                     'harga_pajak' => $transaction->harga_pajak ?? 0,
                     'keterangan' => $transaction->keterangan ?? '-',
-                    'tanggal_close' => \Carbon\Carbon::parse($transaction->tanggal_close)->format('d-m-Y'),
+                    'tanggal_close' => $this->safeParseDate($transaction->tanggal_close),
                     'is_detail' => false
                 ];
             }
@@ -303,7 +319,10 @@ class VehicleTransactionController extends Controller
                   ->orWhereNull('state')
                   ->orWhere('state', '');
             })
-            ->where('state', '!=', 'cancel');
+            ->where(function($q) {
+                $q->where('state', '!=', 'cancel')
+                  ->orWhereNull('state');
+            });
 
         if ($nama_customer) {
             $customer = Customer::where('kode_customer', $nama_customer)->first();
@@ -340,7 +359,10 @@ class VehicleTransactionController extends Controller
             $q->whereIn('state', $closedStates)
               ->orWhereNull('state')
               ->orWhere('state', '');
-        })->where('state', '!=', 'cancel');
+        })->where(function($q) {
+            $q->where('state', '!=', 'cancel')
+              ->orWhereNull('state');
+        });
 
         if ($nama_customer) {
             $customer = Customer::where('kode_customer', $nama_customer)->first();
