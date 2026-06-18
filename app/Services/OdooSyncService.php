@@ -820,20 +820,37 @@ class OdooSyncService
                         }
                     }
 
-                    Mobil::updateOrCreate(
-                        ['nomor_chassis' => $chassisNo],
-                        [
+                    $existingMobil = Mobil::where('nomor_chassis', $chassisNo)->first();
+                    if ($existingMobil) {
+                        $updateData = [
                             'nomor_polisi' => mb_substr($plateNo, 0, 25, 'UTF-8'),
                             'nopol' => mb_substr($nopol ?: $plateNo, 0, 25, 'UTF-8'),
                             'warna' => $warna ?: '',
-                            'tanggal_pembelian' => $purchaseDate,
+                            'tahun_pembuatan' => $vehicleYear ?: now()->format('Y'),
+                            'nomor_mesin' => $engineNumber ?: '',
+                        ];
+                        // Only overwrite model if we have a value from Odoo
+                        if ($vehicleModel) {
+                            $updateData['model'] = $vehicleModel;
+                        }
+                        if ($purchaseDate) {
+                            $updateData['tanggal_pembelian'] = $purchaseDate;
+                        }
+                        $existingMobil->update($updateData);
+                    } else {
+                        Mobil::create([
+                            'nomor_chassis' => $chassisNo,
+                            'nomor_polisi' => mb_substr($plateNo, 0, 25, 'UTF-8'),
+                            'nopol' => mb_substr($nopol ?: $plateNo, 0, 25, 'UTF-8'),
+                            'warna' => $warna ?: '',
+                            'tanggal_pembelian' => $purchaseDate ?: now()->format('Y-m-d'),
                             'tahun_pembuatan' => $vehicleYear ?: now()->format('Y'),
                             'nomor_mesin' => $engineNumber ?: '',
                             'nomor_kk' => '',
                             'model' => $vehicleModel,
                             'kode_sup' => '',
-                        ]
-                    );
+                        ]);
+                    }
 
                     $itemsSynced++;
                 } catch (\Exception $lotEx) {
