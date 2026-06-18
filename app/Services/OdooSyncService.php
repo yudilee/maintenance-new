@@ -171,7 +171,7 @@ class OdooSyncService
             // Fetch Lots (Vehicles)
             $lotsMap = [];
             if (!empty($allLotIds)) {
-                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'stock.lot', 'read', [$allLotIds], ['fields' => ['name', 'ref', 'color_id', 'purchase_date', 'vehicle_year', 'engine_number']]]);
+                $res = $this->odooCall('object', 'execute_kw', [$this->db, $this->uid, $this->apiKey, 'stock.lot', 'read', [$allLotIds], ['fields' => ['name', 'ref', 'color_id', 'purchase_date', 'vehicle_year', 'engine_number', 'product_id']]]);
                 if ($res['success']) foreach ($res['result'] as $l) $lotsMap[$l['id']] = $l;
             }
 
@@ -280,6 +280,14 @@ class OdooSyncService
 
                 // Sync Vehicle
                 $mobil = Mobil::where('nomor_chassis', $chassisNo)->first();
+
+                // Extract vehicle model from product_id if available (Odoo stock.lot -> product.product)
+                // product_id is a many2one [id, display_name] e.g. [9025, "[TYT-ALPG25-AT-B] TOYOTA ALPHARD 2.5 G A/T BENSIN"]
+                $vehicleModel = '';
+                if (!empty($lot['product_id']) && is_array($lot['product_id'])) {
+                    $vehicleModel = mb_substr($lot['product_id'][1], 0, 100, 'UTF-8');
+                }
+
                 if ($mobil) {
                     $updateData = ['nomor_polisi' => $plateNo ?: $mobil->nomor_polisi];
                     
@@ -296,6 +304,9 @@ class OdooSyncService
                     if ($warna) {
                         $updateData['warna'] = $warna;
                     }
+                    if ($vehicleModel) {
+                        $updateData['model'] = $vehicleModel;
+                    }
                     
                     $mobil->update($updateData);
                 } else {
@@ -306,7 +317,7 @@ class OdooSyncService
                         'warna' => $warna ?: '',
                         'tanggal_pembelian' => $purchaseDate ?: now()->format('Y-m-d'),
                         'nomor_kk' => '',
-                        'model' => '',
+                        'model' => $vehicleModel,
                         'tahun_pembuatan' => $vehicleYear ?: now()->format('Y'),
                         'nomor_mesin' => $engineNumber ?: '',
                         'kode_sup' => '',
@@ -754,7 +765,7 @@ class OdooSyncService
                 'stock.lot', 'search_read',
                 [$domain],
                 [
-                    'fields' => ['name', 'ref', 'color_id', 'purchase_date', 'vehicle_year', 'engine_number'],
+                    'fields' => ['name', 'ref', 'color_id', 'purchase_date', 'vehicle_year', 'engine_number', 'product_id'],
                     'limit' => $limit,
                     'offset' => $offset,
                     'order' => 'create_date asc'
@@ -790,6 +801,12 @@ class OdooSyncService
                         $warna = $lot['color_id'][1];
                     }
 
+                    // Extract vehicle model from product_id (many2one [id, display_name])
+                    $vehicleModel = '';
+                    if (!empty($lot['product_id']) && is_array($lot['product_id'])) {
+                        $vehicleModel = mb_substr($lot['product_id'][1], 0, 100, 'UTF-8');
+                    }
+
                     if (!$chassisNo) continue;
 
                     // Format nopol: "B -1382-HZK"
@@ -813,7 +830,7 @@ class OdooSyncService
                             'tahun_pembuatan' => $vehicleYear ?: now()->format('Y'),
                             'nomor_mesin' => $engineNumber ?: '',
                             'nomor_kk' => '',
-                            'model' => '',
+                            'model' => $vehicleModel,
                             'kode_sup' => '',
                         ]
                     );
