@@ -27,7 +27,10 @@ class GlobalSearchController extends Controller
 
         // Search Repair Jobs (exclude cancelled)
         $jobs = Htransaksi::with(['customer', 'mobil'])
-            ->where('state', '!=', 'cancel')
+            ->where(function($q) {
+                $q->where('state', '!=', 'cancel')
+                  ->orWhereNull('state');
+            })
             ->where(function ($q) use ($cleanQuery) {
                 $q->whereRaw("REPLACE(nomor_job, ' ', '') LIKE ?", ['%' . $cleanQuery . '%'])
                   ->orWhereRaw("REPLACE(nomor_chassis, ' ', '') LIKE ?", ['%' . $cleanQuery . '%'])

@@ -26,7 +26,10 @@ class MainController extends Controller
         $mobilDetail = null;
         $hasFilters = false;
         $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
-            ->where('state', '!=', 'cancel');
+            ->where(function($q) {
+                $q->where('state', '!=', 'cancel')
+                  ->orWhereNull('state');
+            });
 
         if ($request->filled('nama_customer')) {
             $customer = Customer::where('kode_customer', $request->nama_customer)->first();
@@ -63,7 +66,10 @@ class MainController extends Controller
                 ->values()
                 ->map(function ($vehicle) use ($request, $customerID) {
                     $baseQuery = Htransaksi::where('nomor_chassis', $vehicle->nomor_chassis)
-                        ->where('state', '!=', 'cancel');
+                        ->where(function($q) {
+                            $q->where('state', '!=', 'cancel')
+                              ->orWhereNull('state');
+                        });
                     
                     if ($customerID) {
                         $baseQuery->where('id_customer', $customerID);
@@ -89,7 +95,10 @@ class MainController extends Controller
                     
                     // Fetch the absolute last job of the vehicle ignoring date and customer filters
                     $lastJob = Htransaksi::where('nomor_chassis', $vehicle->nomor_chassis)
-                        ->where('state', '!=', 'cancel')
+                        ->where(function($q) {
+                            $q->where('state', '!=', 'cancel')
+                              ->orWhereNull('state');
+                        })
                         ->where(function($q) use ($closedStates) {
                             $q->whereIn('state', $closedStates)
                               ->orWhereNull('state')
@@ -122,7 +131,10 @@ class MainController extends Controller
             if ($customer) {
                 $htransaksiQuery = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
                     ->where('id_customer', $customer->id)
-                    ->where('state', '!=', 'cancel');
+                    ->where(function($q) {
+                        $q->where('state', '!=', 'cancel')
+                          ->orWhereNull('state');
+                    });
 
                 if ($request->start_date && $request->end_date) {
                     $htransaksiQuery->whereBetween('tanggal_job', [$request->start_date, $request->end_date]);
@@ -140,7 +152,10 @@ class MainController extends Controller
         elseif ($request->filled('nama_customer') && $request->filled('nomor_polisi')) {
             $customer = Customer::where('kode_customer', $request->nama_customer)->first();
             $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
-                ->where('state', '!=', 'cancel');
+                ->where(function($q) {
+                    $q->where('state', '!=', 'cancel')
+                      ->orWhereNull('state');
+                });
             if ($customer) {
                 $query->where('id_customer', $customer->id);
             }
@@ -163,7 +178,10 @@ class MainController extends Controller
         // If only nomor_polisi or other cases
         else {
             $query = Htransaksi::with(['mobil', 'supplier', 'dtransaksi'])
-                ->where('state', '!=', 'cancel');
+                ->where(function($q) {
+                    $q->where('state', '!=', 'cancel')
+                      ->orWhereNull('state');
+                });
             if ($request->nomor_polisi) {
                 $query->whereHas('mobil', function ($q) use ($request) {
                     $q->where('nomor_polisi', $request->nomor_polisi);
